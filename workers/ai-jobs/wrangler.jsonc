@@ -1,0 +1,57 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nutriai-ai-jobs",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "APP_ENV": "development",
+    "SERVICE_NAME": "nutriai-ai-jobs",
+    "APP_VERSION": "1.0.0",
+  },
+  "queues": {
+    "consumers": [
+      {
+        "queue": "nutriai-ai-jobs-dev",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+      },
+    ],
+  },
+  "env": {
+    "staging": {
+      "name": "nutriai-ai-jobs-staging",
+      "vars": {
+        "APP_ENV": "staging",
+        "SERVICE_NAME": "nutriai-ai-jobs-staging",
+        "APP_VERSION": "1.0.0",
+      },
+      "queues": {
+        "consumers": [
+          {
+            "queue": "nutriai-ai-jobs-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+          },
+        ],
+      },
+    },
+    "production": {
+      "name": "nutriai-ai-jobs-production",
+      "vars": {
+        "APP_ENV": "production",
+        "SERVICE_NAME": "nutriai-ai-jobs-production",
+        "APP_VERSION": "1.0.0",
+      },
+      "queues": {
+        "consumers": [
+          {
+            "queue": "nutriai-ai-jobs-prod",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+          },
+        ],
+      },
+    },
+  },
+}

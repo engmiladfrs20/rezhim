@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/types" },
+    { "path": "./packages/schemas" },
+    { "path": "./packages/localization" },
+    { "path": "./packages/storage" },
+    { "path": "./packages/testing" },
+    { "path": "./apps/web" },
+    { "path": "./apps/admin" },
+    { "path": "./apps/mobile" },
+    { "path": "./workers/api" },
+    { "path": "./workers/ai-jobs" }
+  ]
+}

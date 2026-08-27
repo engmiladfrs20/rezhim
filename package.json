@@ -1,0 +1,67 @@
+{
+  "name": "nutriai-persia-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20 <23",
+    "pnpm": "9.15.9"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,jsonc}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,jsonc}\"",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.1",
+    "eslint-config-prettier": "^10.0.1",
+    "globals": "^15.15.0",
+    "prettier": "^3.5.1",
+    "turbo": "^2.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "tar": ">=6.2.2",
+      "image-size": ">=2.0.2",
+      "postcss@<8.5.10": ">=8.5.10",
+      "@xmldom/xmldom@<0.8.12": ">=0.8.12",
+      "@xmldom/xmldom@<0.8.13": ">=0.8.13",
+      "uuid@<11.1.1": ">=11.1.1",
+      "postcss@<=8.5.11": ">=8.5.12",
+      "postcss@<=8.5.22": ">=8.5.23",
+      "postcss@<=8.5.17": ">=8.5.18"
+    },
+    "auditConfig": {
+      "ignoreCves": [
+        "GHSA-wh4c-j3r5-mjhp",
+        "GHSA-2v35-w6hq-6mfw",
+        "GHSA-f6ww-3ggp-fr8h",
+        "GHSA-x6wf-f3px-wcqx",
+        "GHSA-j759-j44w-7fr8",
+        "GHSA-6g55-p6wh-862q",
+        "GHSA-w3rx-r6r6-pgpr",
+        "GHSA-5p2g-fcmc-qvqq",
+        "GHSA-r28c-9q8g-f849",
+        "GHSA-qx2v-qp2m-jg93",
+        "GHSA-w5hq-g745-h8pq",
+        "GHSA-fxqj-rqcc-2cmp",
+        "GHSA-23hp-3jrh-7fpw",
+        "CVE-2024-21512",
+        "CVE-2022-25883",
+        "CVE-2023-28154",
+        "CVE-2025-71330",
+        "CVE-2025-71329"
+      ]
+    }
+  }
+}

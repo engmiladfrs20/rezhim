@@ -1,0 +1,89 @@
+# NutriAI Persia (فاز ۱ - پایه و معماری فنی)
+
+پلتفرم هوشمند پایش و تغذیه ایرانی با معماری پیشرفته **TypeScript Monorepo** مبتنی بر **Turborepo** و **pnpm**، به همراه سرورلس ابری **Cloudflare Workers (Hono)**، فضای ذخیره‌سازی **Backblaze B2** و پشتیبانی کامل دوجهته از خط و زبان فارسی و انگلیسی (**RTL/LTR**).
+
+---
+
+## ۱. ساختار Monorepo
+
+```text
+├── apps/
+│   ├── web/           # سامانه وب React 18 + Vite + Tailwind (پوسته اصلی کاربر)
+│   ├── admin/         # پنل مدیریت React 18 + Vite (پوسته ایزوله ادمین)
+│   └── mobile/        # اپلیکیشن موبایل React Native + Expo (پشتیبانی کامل از اندروید و RTL)
+├── workers/
+│   ├── api/           # وب‌سرویس REST مبتنی بر Cloudflare Workers و فریم‌ورک Hono
+│   └── ai-jobs/       # پردازشگر پس‌زمینه صف‌های هوش مصنوعی (Placeholder فاز ۱)
+├── packages/
+│   ├── config/        # تنظیمات اشتراکی TSConfig، ESLint و Prettier
+│   ├── types/         # تایپ‌های اشتراکی دامنه، API، Storage و Cloudflare
+│   ├── schemas/       # اسکیمای اعتبارسنجی Zod برای متغیرهای محیطی، سلامت و فایل‌ها
+│   ├── localization/  # دیکشنری‌های fa/en، ساختار RTL و فرمت‌کننده‌های Intl
+│   ├── storage/       # رابط StorageProvider و ارائه‌دهنده Backblaze B2 S3 API
+│   └── testing/       # ابزارها و ماک‌های تست
+├── docs/              # مستندات تصمیمات معماری (ADR) و استراتژی‌ها
+└── .github/workflows/ # فرآیندهای یکپارچه‌سازی و استقرار مداوم (CI/CD)
+```
+
+---
+
+## ۲. پیش‌نیازها و نصب وابستگی‌ها
+
+- **Node.js**: `22`
+- **pnpm**: `9.15.9` (`packageManager: "pnpm@9.15.9"`)
+
+```bash
+# فعال‌سازی پکیج‌منیجر از طریق Corepack
+corepack enable
+
+# نصب وابستگی‌ها با Lockfile یکپارچه
+pnpm install --frozen-lockfile
+```
+
+---
+
+## ۳. دستورات اجرایی و تست‌ها
+
+تمامی دستورات از ریشه مخزن توسط Turborepo مدیریت می‌شوند:
+
+```bash
+# 1. Install with frozen lockfile
+pnpm install --frozen-lockfile
+
+# 2. Format check
+pnpm format:check
+
+# 3. Lint
+pnpm lint
+
+# 4. Typecheck
+pnpm typecheck
+
+# 5. Tests with coverage
+pnpm test:coverage
+
+# 6. Build all workspaces
+pnpm build
+
+# 7. Dependency audit
+pnpm audit --prod --audit-level=critical
+```
+
+---
+
+## ۴. امنیت، ذخیره‌سازی و سرویس‌ها
+
+- **Cloudflare Workers**: مسیر `GET /health` وضعیت سرویس را با امنیت بالا و بدون افشای سکرت‌ها برمی‌گرداند.
+- **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
+- **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
+
+مستندات تکمیلی در پوشه `docs/` در دسترس است.
+
+## 5. Security & Audit Policy
+
+We run a strict dependency audit in CI to prevent vulnerable dependencies. The mandated severity policy is to fail on **critical** vulnerabilities.
+
+High-severity advisories are reported under the documented temporary policy in `docs/SECURITY.md`, but Critical advisories must fail CI.
+
+For verification, we run transparently:
+`pnpm audit --prod --audit-level=critical`

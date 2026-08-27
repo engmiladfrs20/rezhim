@@ -1,0 +1,11 @@
+node_modules/
+.turbo/
+.wrangler/
+.expo/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+*.log
+.env*
+!.env.example

@@ -1,0 +1,21 @@
+{
+  "name": "@nutriai/config",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.react.json",
+    "tsconfig.mobile.json",
+    "tsconfig.worker.json",
+    "tsconfig.node.json",
+    "index.js"
+  ],
+  "scripts": {
+    "build": "echo \"config: no build step\"",
+    "typecheck": "echo \"config: no typecheck\"",
+    "lint": "eslint .",
+    "clean": "echo \"config: nothing to clean\""
+  }
+}

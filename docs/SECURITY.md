@@ -1,0 +1,16 @@
+# Security Policy
+
+## Identified Risks & Temporary Acceptances
+
+### React Native & Metro inherited vulnerabilities
+
+**Advisory:** CVE-2025-71329 / GHSA-5p2g-fcmc-qvqq & CVE-2025-71330 / GHSA-w3rx-r6r6-pgpr
+**Component:** `image-size@2.0.2` used by `@react-native/community-cli-plugin` and `metro` (via `expo`)
+**Severity:** High
+**Practical Exposure:** Extremely Low. This dependency is only used indirectly in build-time CLI tools for resolving bundling and assets (Expo, Metro bundler). The application does not use this dependency to process untrusted images in server-side request paths. Malicious image vectors are strictly contained to developer workstations overriding the bundler pipeline.
+**Currently Cannot Be Upgraded:** Expo/React Native strictly binds to a dependency resolution tree where `image-size` patches have not natively cascaded to an uncompromised version for `metro`.
+**Compensating Controls:** Developer workstation antivirus policies. The library is absent from runtime APIs, cloud edge environments, or any backend logic processing untrusted inputs.
+**Owner:** Core Maintainers (Milad)
+**Review Date:** 2026-08-27
+**Expiration Date:** 2026-10-27
+**Upgrade/Removal Condition:** When `expo` or `@react-native` releases a patched `metro` dependency pipeline that adopts a secure version of `image-size`, or the underlying CLI plugins migrate from the affected package, the `image-size` overrides and exemptions will be pulled.
