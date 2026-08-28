@@ -7,6 +7,20 @@ export interface HealthCheckResponse {
   timestamp: string;
 }
 
+export interface ReadinessCheckResponse {
+  status: HealthStatus;
+  service: string;
+  database: 'connected' | 'disconnected';
+  timestamp: string;
+}
+
+export interface SystemMetadata {
+  id: string;
+  key: string;
+  value: string;
+  updated_at: string;
+}
+
 export interface ApiResponse<T> {
   success: true;
   data: T;

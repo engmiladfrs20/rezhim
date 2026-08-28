@@ -5,7 +5,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       thresholds: {
         lines: 30,
         functions: 30,

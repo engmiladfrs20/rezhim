@@ -2,6 +2,10 @@
 
 پلتفرم هوشمند پایش و تغذیه ایرانی با معماری پیشرفته **TypeScript Monorepo** مبتنی بر **Turborepo** و **pnpm**، به همراه سرورلس ابری **Cloudflare Workers (Hono)**، فضای ذخیره‌سازی **Backblaze B2** و پشتیبانی کامل دوجهته از خط و زبان فارسی و انگلیسی (**RTL/LTR**).
 
+- **[x] Phase 1**: Monorepo Setup & CI Structuring
+- **[x] Phase 2**: Cloudflare Workers API Foundation & Data Layer Setup
+- **[ ] Phase 3**: Authentication and Users
+
 ---
 
 ## ۱. ساختار Monorepo

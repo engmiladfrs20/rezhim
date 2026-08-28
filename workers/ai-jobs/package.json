@@ -18,9 +18,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250224.0",
     "@nutriai/config": "workspace:*",
-    "@vitest/coverage-v8": "^3.0.7",
+    "@vitest/coverage-v8": "^4.1.0",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.7",
+    "vitest": "^4.1.0",
     "wrangler": "^3.111.0"
   }
 }

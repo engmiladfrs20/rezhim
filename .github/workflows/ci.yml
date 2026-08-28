@@ -57,6 +57,9 @@ jobs:
       - name: Unit Tests with Coverage
         run: pnpm test:coverage
 
+      - name: Local D1 Migration & Readiness Check
+        run: pnpm --filter @nutriai/worker-api run db:migrations:apply:local
+
       - name: Build Workspaces & Worker Bundling
         run: pnpm build
 

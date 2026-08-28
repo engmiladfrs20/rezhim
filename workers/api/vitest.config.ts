@@ -1,17 +1,35 @@
 import { defineConfig } from 'vitest/config';
+import { readD1Migrations, cloudflareTest } from '@cloudflare/vitest-plugin';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export default defineConfig({
-  test: {
-    environment: 'node',
-    globals: true,
-    coverage: {
-      provider: 'v8',
-      thresholds: {
-        lines: 30,
-        functions: 30,
-        branches: 30,
-        statements: 30,
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default async () => {
+  const migrationsPath = path.join(__dirname, 'migrations');
+  const migrations = await readD1Migrations(migrationsPath);
+
+  return defineConfig({
+    plugins: [
+      cloudflareTest({
+        wrangler: { configPath: './wrangler.jsonc' },
+        miniflare: {
+          bindings: { TEST_MIGRATIONS: migrations },
+        },
+      }),
+    ],
+    test: {
+      setupFiles: ['./test/apply-migrations.ts'],
+      coverage: {
+        provider: 'istanbul',
+        thresholds: {
+          lines: 70,
+          functions: 50,
+          branches: 50,
+          statements: 70,
+        },
       },
     },
-  },
-});
+  });
+};

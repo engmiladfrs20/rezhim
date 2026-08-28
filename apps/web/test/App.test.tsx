@@ -36,7 +36,7 @@ describe('Web Application Shell (apps/web)', () => {
   });
 
   it('handles health check success', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         status: 'ok',
@@ -61,7 +61,7 @@ describe('Web Application Shell (apps/web)', () => {
   });
 
   it('handles health check failures gracefully (degraded)', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
     });
 
@@ -76,7 +76,7 @@ describe('Web Application Shell (apps/web)', () => {
   });
 
   it('handles network error fallback rendering', async () => {
-    global.fetch = vi.fn().mockRejectedValue(new Error('Network failure'));
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network failure'));
 
     render(<App />);
     const checkBtn = screen.getByText(/تست GET \/health/i);
