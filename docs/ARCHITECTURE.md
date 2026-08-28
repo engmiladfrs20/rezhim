@@ -1,4 +1,4 @@
-# NutriAI Persia - Architecture Specification (Phase 1)
+# NutriAI Persia - Architecture Specification
 
 ## 1. Monorepo Overview
 
@@ -28,6 +28,7 @@ NutriAI Persia is built as a modular TypeScript Monorepo:
 - **`apps/web`**: Single-page application shell delivering accessible Persian/English navigation and runtime locale/direction switching.
 - **`apps/admin`**: Isolated operational shell with protected area layout.
 - **`apps/mobile`**: React Native/Expo Android-compatible shell with RTL architecture.
-- **`workers/api`**: Serverless edge API handling HTTP requests, `GET /health`, security headers, request ID tracking, and safe error normalization.
+- **`workers/api`**: Serverless edge API built with **Hono**, managing robust Cloudflare HTTP interactions. Uses isolated controllers targeting native decoupled Repositories (e.g. `SystemRepository`) routing queries securely against **Cloudflare D1** SQLite databases stripped of injection risks.
+- **`workers/api/test`**: Integration tests execute exactly matching the remote worker contexts powered natively by `@cloudflare/vitest-plugin`, simulating exact real D1 bounds directly leveraging bound miniflare executions securely without external mocks.
 - **`packages/storage`**: Decoupled cloud storage layer utilizing Backblaze B2 S3 API with Web Stream support.
 - **`packages/localization`**: Centralized, typed localization with fallback and Intl formatters.

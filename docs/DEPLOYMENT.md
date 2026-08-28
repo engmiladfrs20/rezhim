@@ -5,12 +5,14 @@
 To deploy the API worker to Cloudflare:
 
 ```bash
-# Staging Deployment
+# Staging Deployment & Migrations (Replace <database_id_staging>)
 cd workers/api
+pnpm run wrangler d1 migrations apply APP_DB --env staging --remote
 pnpm run wrangler deploy --env staging
 
-# Production Deployment
+# Production Deployment & Migrations (Replace <database_id_production>)
 cd workers/api
+pnpm run wrangler d1 migrations apply APP_DB --env production --remote
 pnpm run wrangler deploy --env production
 ```
 

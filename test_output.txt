@@ -1,0 +1,32 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":">=20 <23"} (current: {"node":"v24.18.0","pnpm":"9.15.9"})
+
+> @nutriai/worker-api@1.0.0 test D:\rezhim\workers\api
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mD:/rezhim/workers/api[39m
+
+ [31m❯[39m test/app.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 96[2mms[22m[39m
+       [32m✓[39m returns 200 ok for liveness probe without accessing D1 binding[32m 17[2mms[22m[39m
+       [32m✓[39m returns 200 and connected status when D1 database is healthy[32m 18[2mms[22m[39m
+       [32m✓[39m gracefully degrades returning 503 if D1 binding is completely missing[32m 3[2mms[22m[39m
+       [32m✓[39m returns system metadata safely stripping internals[32m 13[2mms[22m[39m
+[31m       [31m×[31m returns a typed 503 ApiErrorResponse when system metadata is missing[39m[32m 12[2mms[22m[39m
+       [32m✓[39m generates missing RequestIds natively on 404 boundaries[32m 1[2mms[22m[39m
+       [32m✓[39m preserves valid client-side X-Request-Id[32m 1[2mms[22m[39m
+       [32m✓[39m injects standard security headers globally[32m 0[2mms[22m[39m
+       [32m✓[39m allows permitted origins securely[32m 6[2mms[22m[39m
+[31m       [31m×[31m omits Access-Control-Allow-Origin for illegitimate standard origins[39m[32m 1[2mms[22m[39m
+       [32m✓[39m returns FEATURE_NOT_AVAILABLE for unprotected /api/storage/ tests[32m 1[2mms[22m[39m
+       [32m✓[39m returns FEATURE_NOT_AVAILABLE for unprotected /api/ai/ tests[32m 0[2mms[22m[39m
+       [32m✓[39m throws ReadinessError when fetching metadata with disconnected or missing D1 binding[32m 2[2mms[22m[39m
+       [32m✓[39m ensures prepared statements strip SQL injections natively as raw strings mapping D1 constraints cleanly[32m 17[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 06:58:51
+[2m   Duration [22m 2.33s[2m (transform 327ms, setup 615ms, import 33ms, tests 96ms, environment 0ms)[22m
+
+D:\rezhim\workers\api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @nutriai/worker-api@1.0.0 test: `vitest run`
+Exit status 1

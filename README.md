@@ -1,4 +1,4 @@
-# NutriAI Persia (فاز ۱ - پایه و معماری فنی)
+# NutriAI Persia
 
 پلتفرم هوشمند پایش و تغذیه ایرانی با معماری پیشرفته **TypeScript Monorepo** مبتنی بر **Turborepo** و **pnpm**، به همراه سرورلس ابری **Cloudflare Workers (Hono)**، فضای ذخیره‌سازی **Backblaze B2** و پشتیبانی کامل دوجهته از خط و زبان فارسی و انگلیسی (**RTL/LTR**).
 
@@ -87,7 +87,7 @@ pnpm audit --prod --audit-level=critical
 
 We run a strict dependency audit in CI to prevent vulnerable dependencies. The mandated severity policy is to fail on **critical** vulnerabilities.
 
-High-severity advisories are reported under the documented temporary policy in `docs/SECURITY.md`, but Critical advisories must fail CI.
+We currently have 0 Critical and 2 documented High vulnerability advisories allowed securely by policy under `docs/SECURITY.md`. Critical advisories must always fail CI natively.
 
 For verification, we run transparently:
 `pnpm audit --prod --audit-level=critical`

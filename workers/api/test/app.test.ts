@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
 import worker from '../src/index';
 
-import { env } from 'cloudflare:workers';
+import { env, type ProvidedEnv } from 'cloudflare:workers';
+const testEnv = env as ProvidedEnv;
 
 import { SystemRepository } from '../src/db/system.repository';
 
@@ -22,7 +23,7 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
 
   describe('GET /ready', () => {
     it('returns 200 and connected status when D1 database is healthy', async () => {
-      const repo = new SystemRepository(env.DB);
+      const repo = new SystemRepository(testEnv.DB);
       await repo.setMetadata(
         'sys-01',
         'schema_version',
@@ -59,7 +60,7 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
     it('returns system metadata safely stripping internals', async () => {
       const request = new Request('http://localhost/api/v1/system');
 
-      const repo = new SystemRepository(env.DB);
+      const repo = new SystemRepository(testEnv.DB);
       await repo.setMetadata('sys-01', 'schema_version', 'mocked_v1', new Date().toISOString());
 
       const ctx = createExecutionContext();
@@ -75,6 +76,34 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
       expect(payload.success).toBe(true);
       expect(payload.data.schema_version).toBe('mocked_v1');
       expect(payload.requestId).toBeDefined();
+    });
+
+    it('returns a typed 503 ApiErrorResponse when system metadata is missing', async () => {
+      // Temporarily remove metadata to simulate missing state
+      await testEnv.DB!.prepare("DELETE FROM system_metadata WHERE key = 'schema_version'").run();
+
+      const request = new Request('http://localhost/api/v1/system');
+      const ctx = createExecutionContext();
+      const response = await worker.fetch(request, testEnv, ctx);
+      await waitOnExecutionContext(ctx);
+
+      expect(response.status).toBe(503);
+      const payload = await response.json<{
+        success: boolean;
+        error: { code: string; message: string };
+        requestId: string;
+      }>();
+
+      expect(payload.success).toBe(false);
+      expect(payload.error.code).toBe('METADATA_NOT_FOUND');
+      expect(payload.requestId).toBeDefined();
+
+      // Restore metadata to avoid breaking other tests
+      await testEnv
+        .DB!.prepare(
+          "INSERT INTO system_metadata (id, key, value, updated_at) VALUES ('sys-01', 'schema_version', 'mocked_restored_v1', CURRENT_TIMESTAMP)",
+        )
+        .run();
     });
   });
 
@@ -124,7 +153,7 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
       expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
     });
 
-    it('blocks illegitimate standard origins immediately yielding 403 bounds', async () => {
+    it('omits Access-Control-Allow-Origin for illegitimate standard origins', async () => {
       const req = new Request('http://localhost/api/v1/system', {
         method: 'OPTIONS',
         headers: {
@@ -136,6 +165,7 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
       const res = await worker.fetch(req, modifiedEnv, ctx);
       await waitOnExecutionContext(ctx);
 
+      expect(res.status).toBe(204); // Hono OPTIONS returns 204 natively, omitting Origin explicitly.
       expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
     });
   });
@@ -158,9 +188,18 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
     });
   });
 
-  describe('SystemRepository SQL Bind Integrity Testing', () => {
+  describe('SystemRepository SQL Bind Integrity Testing and Untested Paths', () => {
+    it('throws ReadinessError when fetching metadata with disconnected or missing D1 binding', async () => {
+      // Testing an untested failure path of SystemRepository directly
+      const repo = new SystemRepository(undefined as unknown as D1Database);
+
+      await expect(repo.getMetadata('schema_version')).rejects.toThrowError(
+        'Database binding (DB) is missing in the environment scope.',
+      );
+    });
+
     it('ensures prepared statements strip SQL injections natively as raw strings mapping D1 constraints cleanly', async () => {
-      const repo = new SystemRepository(env.DB);
+      const repo = new SystemRepository(testEnv.DB);
 
       // Testing raw payload execution - it should not execute dropping
       const injectionStr = "' OR 1=1; DROP TABLE system_metadata; --";
@@ -171,7 +210,7 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
       expect(val?.value).toBe('safe');
 
       // Verifies the db still exists
-      const safeCheck = await env.DB!.prepare('SELECT 1').first();
+      const safeCheck = await testEnv.DB!.prepare('SELECT 1').first();
       expect(safeCheck).not.toBeNull();
     });
   });
