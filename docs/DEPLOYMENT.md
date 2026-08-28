@@ -5,16 +5,18 @@
 To deploy the API worker to Cloudflare:
 
 ```bash
-# Staging Deployment & Migrations (Replace <database_id_staging>)
+# Staging Deployment & Migrations
 cd workers/api
-pnpm run wrangler d1 migrations apply APP_DB --env staging --remote
-pnpm run wrangler deploy --env staging
+pnpm exec wrangler d1 migrations apply DB --env staging --remote
+pnpm exec wrangler deploy --env staging
 
-# Production Deployment & Migrations (Replace <database_id_production>)
+# Production Deployment & Migrations
 cd workers/api
-pnpm run wrangler d1 migrations apply APP_DB --env production --remote
-pnpm run wrangler deploy --env production
+pnpm exec wrangler d1 migrations apply DB --env production --remote
+pnpm exec wrangler deploy --env production
 ```
+
+**IMPORTANT:** Before any real deployment, you must explicitly replace the placeholder database IDs (`<database_id_staging>`, `<database_id_production>`) and domains inside `wrangler.jsonc`.
 
 ## 2. Cloudflare Secrets Management
 
