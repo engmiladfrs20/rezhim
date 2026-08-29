@@ -4,6 +4,7 @@ import './apply-migrations';
 import { env, type ProvidedEnv } from 'cloudflare:workers';
 import type { ApiResponse, ApiErrorResponse, PublicUser } from '@nutriai/types';
 import type { AuthSessionRecord, LoginAttemptRecord } from '../src/db/models';
+import { AuthService } from '../src/services/auth.service';
 
 const testEnv = env as ProvidedEnv;
 
@@ -83,8 +84,8 @@ describe('Authentication API & Security Integration Tests', () => {
     }, 30000);
   });
 
-  describe('Login, Cookies, Bearer Tokens & D1 Token Hashing', () => {
-    it('issues HttpOnly cookie in dev and production formats', async () => {
+  describe('Login, Cookies, Bearer Tokens & Sensitive Field Stripping', () => {
+    it('issues HttpOnly cookie in dev and production formats and strips sensitive fields', async () => {
       await app.request(
         '/api/v1/auth/register',
         {
@@ -119,6 +120,9 @@ describe('Authentication API & Security Integration Tests', () => {
       expect(devCookie).toContain('HttpOnly');
       expect(devCookie).toContain('SameSite=Lax');
 
+      const devData = (await devResp.json()) as ApiResponse<{ user: PublicUser }>;
+      expectPublicUser(devData.data.user as unknown as Record<string, unknown>);
+
       // Production environment login
       const prodResp = await app.request(
         '/api/v1/auth/login',
@@ -139,9 +143,12 @@ describe('Authentication API & Security Integration Tests', () => {
       expect(prodCookie).toContain('Secure');
       expect(prodCookie).toContain('HttpOnly');
       expect(prodCookie).toContain('SameSite=Lax');
+
+      const prodData = (await prodResp.json()) as ApiResponse<{ user: PublicUser }>;
+      expectPublicUser(prodData.data.user as unknown as Record<string, unknown>);
     }, 30000);
 
-    it('verifies raw token is never stored in D1 database', async () => {
+    it('verifies raw token is never stored in D1 database and strips sensitive fields on /token', async () => {
       await app.request(
         '/api/v1/auth/register',
         {
@@ -173,6 +180,7 @@ describe('Authentication API & Security Integration Tests', () => {
       }>;
       const rawToken = tokenPayload.data.token;
       expect(rawToken).toBeTruthy();
+      expectPublicUser(tokenPayload.data.user as unknown as Record<string, unknown>);
 
       // Check D1 database directly
       const sessionInDb = await testEnv
@@ -185,7 +193,7 @@ describe('Authentication API & Security Integration Tests', () => {
     }, 30000);
   });
 
-  describe('CORS, Preflight & CSRF Security', () => {
+  describe('CORS, Preflight & CSRF Security with Referer & Origin', () => {
     it('returns Access-Control-Allow-Credentials and handles PATCH preflight', async () => {
       // OPTIONS Preflight
       const preflight = await app.request(
@@ -207,8 +215,7 @@ describe('Authentication API & Security Integration Tests', () => {
       expect(preflight.headers.get('Access-Control-Allow-Methods')).toContain('PATCH');
     });
 
-    it('rejects missing, restricted, and malformed origins on cookie mutations', async () => {
-      // Register and get cookie session token
+    it('validates allowed Origin and Referer and rejects missing, restricted, and malformed origins', async () => {
       await app.request(
         '/api/v1/auth/register',
         {
@@ -234,7 +241,39 @@ describe('Authentication API & Security Integration Tests', () => {
       );
       const token = ((await loginRes.json()) as ApiResponse<{ token: string }>).data.token;
 
-      // 1. Missing Origin/Referer on cookie mutating request
+      // 1. Allowed Origin succeeds
+      const validOriginRes = await app.request(
+        '/api/v1/users/me',
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: `nutriai_session=${token}`,
+            Origin: 'https://app.nutriai.persia',
+          },
+          body: JSON.stringify({ display_name: 'Legit Name' }),
+        },
+        { ...testEnv, ALLOWED_ORIGINS: 'https://app.nutriai.persia' },
+      );
+      expect(validOriginRes.status).toBe(200);
+
+      // 2. Allowed Referer without Origin succeeds
+      const validRefererRes = await app.request(
+        '/api/v1/users/me',
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: `nutriai_session=${token}`,
+            Referer: 'https://app.nutriai.persia/profile/edit',
+          },
+          body: JSON.stringify({ display_name: 'Legit Name Referer' }),
+        },
+        { ...testEnv, ALLOWED_ORIGINS: 'https://app.nutriai.persia' },
+      );
+      expect(validRefererRes.status).toBe(200);
+
+      // 3. Missing Origin & Referer on cookie mutating request -> 403
       const noOriginRes = await app.request(
         '/api/v1/users/me',
         {
@@ -249,7 +288,7 @@ describe('Authentication API & Security Integration Tests', () => {
       );
       expect(noOriginRes.status).toBe(403);
 
-      // 2. Restricted / Unallowed Origin
+      // 4. Restricted / Unallowed Origin -> 403
       const evilOriginRes = await app.request(
         '/api/v1/users/me',
         {
@@ -265,7 +304,7 @@ describe('Authentication API & Security Integration Tests', () => {
       );
       expect(evilOriginRes.status).toBe(403);
 
-      // 3. Malformed Origin
+      // 5. Malformed Origin -> 403
       const malformedOriginRes = await app.request(
         '/api/v1/users/me',
         {
@@ -280,10 +319,26 @@ describe('Authentication API & Security Integration Tests', () => {
         { ...testEnv, ALLOWED_ORIGINS: 'https://app.nutriai.persia' },
       );
       expect(malformedOriginRes.status).toBe(403);
+
+      // 6. Malformed Referer -> 403
+      const malformedRefererRes = await app.request(
+        '/api/v1/users/me',
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: `nutriai_session=${token}`,
+            Referer: '///invalid-referer-format',
+          },
+          body: JSON.stringify({ display_name: 'Hacked Name' }),
+        },
+        { ...testEnv, ALLOWED_ORIGINS: 'https://app.nutriai.persia' },
+      );
+      expect(malformedRefererRes.status).toBe(403);
     }, 30000);
   });
 
-  describe('Rate Limiting & Timing Attack Mitigations', () => {
+  describe('Rate Limiting, Stale Attempt Cleanup & HMAC Secret Environments', () => {
     it('returns identical 401 INVALID_CREDENTIALS for wrong password, unknown user, and disabled user', async () => {
       // Register user
       await app.request(
@@ -415,123 +470,239 @@ describe('Authentication API & Security Integration Tests', () => {
       expect(record?.attempts).toBeGreaterThanOrEqual(5);
     }, 30000);
 
-    it('requires RATE_LIMIT_HMAC_SECRET in production returning 503 if missing', async () => {
-      const prodMissingSecretEnv = {
-        ...testEnv,
-        APP_ENV: 'production',
-        RATE_LIMIT_HMAC_SECRET: undefined,
-      };
+    it('cleans up stale auth_login_attempts older than window duration', async () => {
+      const db = testEnv.DB!;
+      const staleTime = new Date(Date.now() - 20 * 60 * 1000).toISOString(); // 20 mins ago
 
-      const res = await app.request(
+      await db
+        .prepare(
+          `INSERT INTO auth_login_attempts (email_hash, ip_hash, window_start, attempts)
+           VALUES (?, ?, ?, ?)`,
+        )
+        .bind('old_email_hash', 'old_ip_hash', staleTime, 3)
+        .run();
+
+      const beforeCleanup = await db
+        .prepare('SELECT * FROM auth_login_attempts WHERE email_hash = ? AND ip_hash = ?')
+        .bind('old_email_hash', 'old_ip_hash')
+        .first<LoginAttemptRecord>();
+      expect(beforeCleanup).toBeTruthy();
+
+      // Trigger cleanup
+      const authService = new AuthService(db);
+      await authService.cleanStaleAttempts();
+
+      const afterCleanup = await db
+        .prepare('SELECT * FROM auth_login_attempts WHERE email_hash = ? AND ip_hash = ?')
+        .bind('old_email_hash', 'old_ip_hash')
+        .first<LoginAttemptRecord>();
+      expect(afterCleanup).toBeNull();
+    });
+
+    it('permits development/test HMAC fallback and fails with 503 in production/staging when secret is missing', async () => {
+      // 1. Dev/Test permits fallback
+      const devRes = await app.request(
         '/api/v1/auth/login',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'test@example.com', password: 'Password123!' }),
+          body: JSON.stringify({ email: 'devfallback@example.com', password: 'Password123!' }),
         },
-        prodMissingSecretEnv,
+        { ...testEnv, APP_ENV: 'development', RATE_LIMIT_HMAC_SECRET: undefined },
       );
+      expect(devRes.status).toBe(401); // Evaluated credentials, did not 503
 
-      expect(res.status).toBe(503);
-      const err = (await res.json()) as ApiErrorResponse;
-      expect(err.error.code).toBe('NOT_READY');
+      // 2. Staging fails closed with 503
+      const stagingRes = await app.request(
+        '/api/v1/auth/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'staging@example.com', password: 'Password123!' }),
+        },
+        { ...testEnv, APP_ENV: 'staging', RATE_LIMIT_HMAC_SECRET: undefined },
+      );
+      expect(stagingRes.status).toBe(503);
+      const stagingErr = (await stagingRes.json()) as ApiErrorResponse;
+      expect(stagingErr.error.code).toBe('NOT_READY');
+
+      // 3. Production fails closed with 503
+      const prodRes = await app.request(
+        '/api/v1/auth/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'prod@example.com', password: 'Password123!' }),
+        },
+        { ...testEnv, APP_ENV: 'production', RATE_LIMIT_HMAC_SECRET: undefined },
+      );
+      expect(prodRes.status).toBe(503);
+      const prodErr = (await prodRes.json()) as ApiErrorResponse;
+      expect(prodErr.error.code).toBe('NOT_READY');
     });
   });
 
-  describe('Session Lifecycle, Expiry, Logout & Logout-All', () => {
-    it('manages token session lifecycle, profile update, logout, and logout-all', async () => {
-      await app.request(
+  describe('Session Expiry, Multi-Session Lifecycle & Logout-All', () => {
+    it('returns 401 SESSION_EXPIRED for genuinely expired sessions in D1', async () => {
+      const db = testEnv.DB!;
+      const userId = 'user_expired_test_id';
+      const now = new Date().toISOString();
+      const expiredAt = new Date(Date.now() - 3600 * 1000).toISOString(); // 1 hour ago
+
+      await db
+        .prepare(
+          `INSERT INTO users (id, email, email_normalized, password_hash, password_salt, password_algorithm, password_iterations, display_name, role, status, locale, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          userId,
+          'expired_user@example.com',
+          'expired_user@example.com',
+          'dummyhash',
+          'dummysalt',
+          'pbkdf2-sha256',
+          600000,
+          'Expired User',
+          'user',
+          'active',
+          'fa',
+          now,
+          now,
+        )
+        .run();
+
+      const rawToken = 'genuinely_expired_token_12345';
+      const tokenHashBuffer = await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(rawToken),
+      );
+      const tokenHashHex = Array.from(new Uint8Array(tokenHashBuffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      await db
+        .prepare(
+          `INSERT INTO auth_sessions (id, user_id, token_hash, created_at, last_seen_at, expires_at, revoked_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind('sess_expired_1', userId, tokenHashHex, expiredAt, expiredAt, expiredAt, null)
+        .run();
+
+      const res = await app.request(
+        '/api/v1/auth/me',
+        {
+          headers: { Authorization: `Bearer ${rawToken}` },
+        },
+        testEnv,
+      );
+
+      expect(res.status).toBe(401);
+      const data = (await res.json()) as ApiErrorResponse;
+      expect(data.error.code).toBe('SESSION_EXPIRED');
+    });
+
+    it('revokes multiple independently active sessions simultaneously on logout-all', async () => {
+      const regRes = await app.request(
         '/api/v1/auth/register',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: 'lifecycle@example.com',
-            password: 'LifecyclePass123!',
-            display_name: 'Initial Name',
+            email: 'multisession@example.com',
+            password: 'MultiPassword123!',
+            display_name: 'Multi Session User',
           }),
         },
         testEnv,
       );
+      const regData = (await regRes.json()) as ApiResponse<{ user: PublicUser }>;
+      const userId = regData.data.user.id;
 
-      const tokRes = await app.request(
+      // Session 1 (e.g. Web Client)
+      const res1 = await app.request(
         '/api/v1/auth/token',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'lifecycle@example.com', password: 'LifecyclePass123!' }),
-        },
-        testEnv,
-      );
-      const token = ((await tokRes.json()) as ApiResponse<{ token: string }>).data.token;
-
-      // Profile edit
-      const patchRes = await app.request(
-        '/api/v1/users/me',
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ display_name: 'Updated Name', locale: 'en' }),
-        },
-        testEnv,
-      );
-      expect(patchRes.status).toBe(200);
-
-      // Verify me
-      const meRes = await app.request(
-        '/api/v1/auth/me',
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-        testEnv,
-      );
-      expect(meRes.status).toBe(200);
-      const meData = (await meRes.json()) as ApiResponse<{ user: PublicUser }>;
-      expect(meData.data.user.display_name).toBe('Updated Name');
-      expect(meData.data.user.locale).toBe('en');
-      expectPublicUser(meData.data.user as unknown as Record<string, unknown>);
-
-      // Password change
-      const pwChangeRes = await app.request(
-        '/api/v1/auth/change-password',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
-            current_password: 'LifecyclePass123!',
-            new_password: 'NewLifecyclePass456!',
+            email: 'multisession@example.com',
+            password: 'MultiPassword123!',
           }),
         },
         testEnv,
       );
-      expect(pwChangeRes.status).toBe(200);
+      const token1 = ((await res1.json()) as ApiResponse<{ token: string }>).data.token;
 
-      // Logout All
+      // Session 2 (e.g. Mobile Client)
+      const res2 = await app.request(
+        '/api/v1/auth/token',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'multisession@example.com',
+            password: 'MultiPassword123!',
+          }),
+        },
+        testEnv,
+      );
+      const token2 = ((await res2.json()) as ApiResponse<{ token: string }>).data.token;
+
+      expect(token1).not.toBe(token2);
+
+      // Both tokens are valid
+      const me1Before = await app.request(
+        '/api/v1/auth/me',
+        { headers: { Authorization: `Bearer ${token1}` } },
+        testEnv,
+      );
+      const me2Before = await app.request(
+        '/api/v1/auth/me',
+        { headers: { Authorization: `Bearer ${token2}` } },
+        testEnv,
+      );
+      expect(me1Before.status).toBe(200);
+      expect(me2Before.status).toBe(200);
+
+      // Call logout-all using token 1
       const logoutAllRes = await app.request(
         '/api/v1/auth/logout-all',
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token1}` },
         },
         testEnv,
       );
       expect(logoutAllRes.status).toBe(200);
 
-      // After logout all, session is revoked -> 401
-      const expiredRes = await app.request(
+      // Both session 1 and session 2 must be revoked
+      const me1After = await app.request(
         '/api/v1/auth/me',
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        { headers: { Authorization: `Bearer ${token1}` } },
         testEnv,
       );
-      expect(expiredRes.status).toBe(401);
-      const expiredData = (await expiredRes.json()) as ApiErrorResponse;
-      expect(expiredData.error.code).toBe('SESSION_EXPIRED');
+      const me2After = await app.request(
+        '/api/v1/auth/me',
+        { headers: { Authorization: `Bearer ${token2}` } },
+        testEnv,
+      );
+      expect(me1After.status).toBe(401);
+      expect(me2After.status).toBe(401);
+      expect(((await me1After.json()) as ApiErrorResponse).error.code).toBe('SESSION_EXPIRED');
+      expect(((await me2After.json()) as ApiErrorResponse).error.code).toBe('SESSION_EXPIRED');
+
+      // Verify 0 active (non-revoked) sessions remain in D1 for user
+      const remaining = await testEnv
+        .DB!.prepare(
+          'SELECT COUNT(*) as count FROM auth_sessions WHERE user_id = ? AND revoked_at IS NULL',
+        )
+        .bind(userId)
+        .first<{ count: number }>();
+      expect(remaining?.count).toBe(0);
     }, 30000);
   });
 
-  describe('RBAC & Admin Management Protection', () => {
+  describe('RBAC, Sensitive Field Stripping & Admin Self-Disable Prevention', () => {
     it('enforces RBAC, lists users with pagination, views user detail, and prevents admin self-disable', async () => {
       // Create user
       await app.request(
@@ -619,6 +790,7 @@ describe('Authentication API & Security Integration Tests', () => {
       }>;
       expect(listData.data.users.length).toBe(2);
       expectPublicUser(listData.data.users[0] as unknown as Record<string, unknown>);
+      expectPublicUser(listData.data.users[1] as unknown as Record<string, unknown>);
 
       const regUser = listData.data.users.find((u) => u.email === 'regular_user@example.com')!;
       expect(regUser).toBeDefined();

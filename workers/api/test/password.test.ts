@@ -41,7 +41,7 @@ describe('PasswordService Cryptography Bounds', () => {
     expect(match2).toBe(false);
   }, 20000);
 
-  it('rejects wrong-algorithm natively', async () => {
+  it('rejects unsupported hash algorithms', async () => {
     const { hash, salt, iterations } = await PasswordService.hash('Password');
     const match = await PasswordService.verify('Password', hash, salt, iterations, 'MD5');
     expect(match).toBe(false);

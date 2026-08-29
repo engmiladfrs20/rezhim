@@ -87,7 +87,7 @@ pnpm audit --prod --audit-level=critical
 
 We run a strict dependency audit in CI to prevent vulnerable dependencies. The mandated severity policy is to fail on **critical** vulnerabilities.
 
-We currently have 0 Critical and 2 documented High vulnerability advisories allowed securely by policy under `docs/SECURITY.md`. Critical advisories must always fail CI natively.
+We currently have 0 Critical and 2 documented High vulnerability advisories allowed by policy under `docs/SECURITY.md`. Critical advisories fail CI automatically.
 
-For verification, we run transparently:
+For verification, run:
 `pnpm audit --prod --audit-level=critical`

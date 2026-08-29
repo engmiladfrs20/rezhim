@@ -23,15 +23,15 @@
 - **Iteration Count:** 600,000 minimum
 - **Salt Generation:** 16-bytes securely random (`crypto.getRandomValues`)
 - **Hash Dimensions:** 32-bytes securely random (`crypto.getRandomValues`)
-- **Comparison Engine:** Node natively emulated `crypto.timingSafeEqual`
+- **Comparison Method:** Constant-time comparison (`crypto.subtle.timingSafeEqual`)
 
 ### Session Management Strategy
 
-- Cloudflare D1 Native Database Stores (Avoids untrusted third-party IdP liabilities)
-- Standardized Opaque tokens generated through `Base64URL` and `crypto.getRandomValues(32)`
-- Strict Referer/Origin CSRF bounds protecting APIs inherently
+- Cloudflare D1 Database session storage
+- Standardized opaque tokens generated with `crypto.getRandomValues(32)` encoded as Base64URL
+- Origin/Referer CSRF protection for cookie-authenticated mutating requests
 
 ### Rate-Limiting Framework
 
-- HMAC Keyed payloads mapped to `window_start` (30 seconds) isolating raw tracking leaks gracefully.
-- Explicit atomic D1 `UPSERT` bound checks rejecting beyond 5 concurrent failures synchronously preventing blind spot delays natively.
+- HMAC-SHA256 keyed IP and email identifiers mapped to a 15-minute sliding window.
+- Atomic D1 UPSERT operations rejecting attempts beyond 5 failures per window.

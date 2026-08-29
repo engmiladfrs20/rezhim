@@ -25,7 +25,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await resp.json();
       const loadedUser = data.data?.user;
       if (loadedUser && loadedUser.role !== 'admin') {
-        // Auto-logout safely matching bounds elegantly avoiding arbitrary shell mapping correctly protecting natively accurately safely
+        // Log out non-admin accounts accessing the admin portal
         await fetch(`${API_URL}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' });
         return null;
       }

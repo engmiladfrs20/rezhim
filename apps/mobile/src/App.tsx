@@ -54,10 +54,8 @@ export const MainApp: FC = () => {
     i18n.setLocale(target);
     setLocale(target);
     const isRTL = target === 'fa';
-    if (I18nManager.isRTL !== isRTL) {
-      I18nManager.allowRTL(isRTL);
-      I18nManager.forceRTL(isRTL);
-    }
+    I18nManager.allowRTL(isRTL);
+    I18nManager.forceRTL(isRTL);
   };
 
   const handleUpdateProfile = async () => {

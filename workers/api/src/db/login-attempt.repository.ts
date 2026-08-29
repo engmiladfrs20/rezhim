@@ -11,6 +11,17 @@ export class LoginAttemptRepository {
     return this.db;
   }
 
+  async cleanStaleAttempts(limitWindowIso: string): Promise<void> {
+    try {
+      await this.getDb()
+        .prepare('DELETE FROM auth_login_attempts WHERE window_start < ?')
+        .bind(limitWindowIso)
+        .run();
+    } catch {
+      throw new DatabaseError('Failed to clean stale login attempts');
+    }
+  }
+
   async recordAttempt(
     emailHash: string,
     ipHash: string,
@@ -18,10 +29,7 @@ export class LoginAttemptRepository {
     attemptedAt: string,
   ): Promise<number> {
     try {
-      await this.getDb()
-        .prepare('DELETE FROM auth_login_attempts WHERE window_start < ?')
-        .bind(limitWindowIso)
-        .run();
+      await this.cleanStaleAttempts(limitWindowIso);
 
       const stmt = this.getDb()
         .prepare(

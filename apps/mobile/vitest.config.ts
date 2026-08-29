@@ -5,12 +5,12 @@ export default defineConfig({
     jsx: 'automatic',
   },
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/auth/api.ts'],
+      exclude: ['src/index.ts', 'vitest.config.ts', 'vitest.setup.ts', '**/*.d.ts'],
       thresholds: {
         lines: 70,
         functions: 70,

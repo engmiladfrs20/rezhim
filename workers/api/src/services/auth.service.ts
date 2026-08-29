@@ -34,12 +34,16 @@ export class AuthService {
     return email.trim().toLowerCase();
   }
 
+  async cleanStaleAttempts(): Promise<void> {
+    const limitWindowIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    await this.loginAttemptRepo.cleanStaleAttempts(limitWindowIso);
+  }
+
   async register(data: RegisterDto): Promise<PublicUser> {
     const normalized = AuthService.normalizeEmail(data.email);
 
     const { hash, salt, iterations, algorithm } = await PasswordService.hash(data.password);
 
-    // Explicitly safe mapping avoiding injected external payloads
     const newUser: UserRecord = {
       id: crypto.randomUUID(),
       email: data.email.trim(),
@@ -49,7 +53,7 @@ export class AuthService {
       password_iterations: iterations,
       password_algorithm: algorithm,
       display_name: data.display_name.trim(),
-      role: 'user', // strictly enforced dynamically.
+      role: 'user',
       status: 'active',
       locale: 'fa',
       email_verified_at: null,
@@ -92,7 +96,6 @@ export class AuthService {
     const emailHashBuffer = await crypto.subtle.sign('HMAC', hmacKey, encoder.encode(normalized));
     const emailHash = PasswordService.bufferToBase64Url(emailHashBuffer);
 
-    // Rate Limiting evaluates bounds tracking gracefully: 5 attempts per 15 minutes mapped window
     const limitWindowIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const startAttemptIso = new Date().toISOString();
 
@@ -109,7 +112,6 @@ export class AuthService {
 
     const user = await this.userRepo.findByNormalizedEmail(normalized);
 
-    // Secure Timing dummy blocks matching missing bounds
     if (!user || user.status !== 'active') {
       await PasswordService.dummyVerify();
       throw new AppError('INVALID_CREDENTIALS', 'Invalid credentials.');
@@ -135,7 +137,7 @@ export class AuthService {
     const rawToken = SessionService.generateSessionToken();
     const tokenHash = await SessionService.hashSessionToken(rawToken);
 
-    const expIso = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 Days
+    const expIso = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
     const newSession: AuthSessionRecord = {
       id: crypto.randomUUID(),

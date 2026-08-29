@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest';
 
 describe('PBKDF2 Web Crypto Benchmarks (Cloudflare Constraints)', () => {
-  it('measures 600,000 iterations to verify CPU bounds natively without panicking', async () => {
+  it('measures 600,000 iterations to verify CPU bounds', async () => {
     const password = 'BenchmarkPassword_12#';
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iterations = 600000;
@@ -28,8 +28,5 @@ describe('PBKDF2 Web Crypto Benchmarks (Cloudflare Constraints)', () => {
     const timeMs = performance.now() - start;
 
     console.log(`[BENCHMARK] PBKDF2 600K iterations took: ${timeMs.toFixed(2)}ms`);
-
-    // Web Crypto executes PBKDF2 internally using native engines (OpenSSL/BoringSSL)
-    // Cloudflare handles it natively, wait we just want to see how long it takes.
   });
 });

@@ -64,6 +64,8 @@ export const MobileLoginScreen = ({ onSwap }: { onSwap?: () => void }) => {
             Email
           </Text>
           <TextInput
+            placeholder="Enter your email"
+            testID="login-email-input"
             style={{
               backgroundColor: '#f8fafc',
               borderWidth: 1,
@@ -85,6 +87,8 @@ export const MobileLoginScreen = ({ onSwap }: { onSwap?: () => void }) => {
             Password
           </Text>
           <TextInput
+            placeholder="Enter your password"
+            testID="login-password-input"
             style={{
               backgroundColor: '#f8fafc',
               borderWidth: 1,

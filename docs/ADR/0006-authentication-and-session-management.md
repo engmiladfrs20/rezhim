@@ -2,22 +2,25 @@
 
 ## Status
 
-Accepted (Finalized in Phase 3)
+Accepted (Phase 3)
 
 ## Context
 
-Phase 3 required an Authentication capability integrating safely inside Cloudflare Workers (`workers/api`) storing states on D1 securely without arbitrary external providers. JWTs suffer from expiration syncing faults natively while standard HTTP cookies lack cross-platform transparency securely. We needed robust cross-platform synchronization extending Web DOM layouts via CORS with precise Mobile React Native headers avoiding complex configurations.
+Phase 3 requires an authentication and session management architecture within Cloudflare Workers (`workers/api`) backed by Cloudflare D1 storage. We chose opaque database-backed sessions over stateless JWTs to avoid revocation complexity and token state synchronization issues, while supporting both cookie-based web clients and token-based mobile clients.
 
 ## Decision
 
-1. **Opaque Tokens**: Generates fully random Base64URL session tokens locally verified across SHA-256 mappings.
-2. **Strict Cryptography Constraints**: Passwords are mathematically hashed natively using `PBKDF2-HMAC-SHA256`, strictly iterating at a predefined integer of `600,000` cycles eliminating basic hardware acceleration attacks efficiently. Comparisons are strictly processed natively across constant-time algorithms (`timingSafeEqual`) ensuring accurate measurements.
-3. **Double Header Bindings**: Issues `Set-Cookie` tracking `__Host-nutriai_session` targeting frontends seamlessly with `SameSite=Lax; HttpOnly; Secure` bypassing any domain properties cleanly. Returns accurate opaque token boundaries explicitly for Mobile Bearer integrations seamlessly.
-4. **CORS and Origin Security**: Integrations actively inspect Request `Origin` or `Referer` variables checking strict matching boundaries preventing CSRF compromises dynamically.
-5. **HMAC-Keyed Rate Limits**: Aggregates login limits reliably averting physical identity leaks through unique cryptographic fingerprints stored dynamically on D1 accurately efficiently. Atomic `UPSERT` ensures stable concurrency boundaries dynamically.
-6. **Internal Models mapping**: Raw database layouts are never leaked manually guaranteeing responses implement `PublicUser` boundaries actively successfully effortlessly dynamically.
+1. **Opaque Session Tokens**: High-entropy random tokens generated via `crypto.getRandomValues`. Raw tokens are never persisted to D1; only their SHA-256 hashes are stored.
+2. **Password Cryptography**: Passwords use `PBKDF2-HMAC-SHA256` via the Web Crypto API with 600,000 iterations, 16-byte random salt, and 32-byte derived key hash. Byte comparisons use constant-time checking to eliminate timing side-channels, and non-existent users trigger dummy verification.
+3. **Dual Transport Architecture**:
+   - Web and Admin frontends use `HttpOnly; SameSite=Lax` session cookies (`__Host-nutriai_session` with `Secure` in production).
+   - Mobile clients receive the bearer token in the JSON response body and store it encrypted in device storage using `expo-secure-store`.
+4. **CSRF & Origin Verification**: Mutating cookie requests validate `Origin` and `Referer` headers against configured allowed origins.
+5. **HMAC-Keyed Rate Limiting**: Login rate limits are tracked in D1 using HMAC-SHA256 hashed IP and email identifiers (5 attempts per 15-minute sliding window). Plaintext IPs and emails are not persisted in attempt logs.
+6. **Data Minimization**: Database records are transformed to `PublicUser` objects before response serialization, stripping all password and token hashes.
 
 ## Consequences
 
-- Full control over authentication flows seamlessly cleanly cleanly accurately securely safely smoothly intelligently responsibly dependably intelligently organically securely.
-- Cross-platform deployments smoothly effortlessly organically proficiently completely.
+- Direct control over session lifecycle, revocation (`logout-all`), and account status.
+- Unified backend API supporting web, admin, and mobile clients with appropriate transport security for each platform.
+- Cryptographic execution within Cloudflare Worker CPU limits.

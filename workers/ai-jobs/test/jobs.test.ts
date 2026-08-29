@@ -19,7 +19,7 @@ describe('AI Jobs Worker (workers/ai-jobs)', () => {
     expect(body.service).toBe('nutriai-ai-jobs');
   });
 
-  it('handles queue batches gracefully in Phase 1 placeholder', async () => {
+  it('processes queue batches in Phase 1 placeholder', async () => {
     const mockBatch = {
       messages: [],
       queue: 'nutriai-ai-jobs-dev',

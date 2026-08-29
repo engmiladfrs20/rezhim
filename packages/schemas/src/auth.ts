@@ -12,7 +12,7 @@ export type RegisterDto = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({
   email: z.string().trim().email('Invalid email address').max(100),
-  password: z.string().min(1, 'Password is required'), // Login simply accepts minimum 1 char securely, verifying against dummy limits accurately avoiding arbitrary rule leakage.
+  password: z.string().min(1, 'Password is required'),
 });
 export type LoginDto = z.infer<typeof loginSchema>;
 

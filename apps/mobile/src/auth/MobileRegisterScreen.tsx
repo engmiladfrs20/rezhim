@@ -66,6 +66,8 @@ export const MobileRegisterScreen = ({ onSwap }: { onSwap: () => void }) => {
             Display Name
           </Text>
           <TextInput
+            placeholder="Enter your name"
+            testID="register-name-input"
             style={{
               backgroundColor: '#f8fafc',
               borderWidth: 1,
@@ -86,6 +88,8 @@ export const MobileRegisterScreen = ({ onSwap }: { onSwap: () => void }) => {
             Email
           </Text>
           <TextInput
+            placeholder="Enter your email"
+            testID="register-email-input"
             style={{
               backgroundColor: '#f8fafc',
               borderWidth: 1,
@@ -107,6 +111,8 @@ export const MobileRegisterScreen = ({ onSwap }: { onSwap: () => void }) => {
             Password
           </Text>
           <TextInput
+            placeholder="Enter your password"
+            testID="register-password-input"
             style={{
               backgroundColor: '#f8fafc',
               borderWidth: 1,

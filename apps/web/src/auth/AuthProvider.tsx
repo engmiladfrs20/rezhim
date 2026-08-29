@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(err.error?.message || 'Registration failed');
       }
 
-      // Auto-login after register. Wait, registration doesn't login automatically matching native isolation mapping gracefully? Let's just login
+      // Log in immediately following registration
       const loginResp = await fetch(`${API_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

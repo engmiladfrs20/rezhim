@@ -3,14 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import type { PublicUser } from '@nutriai/types';
 import type { LoginDto } from '@nutriai/schemas';
-import { MobileAuthApi } from './api';
+import { MobileAuthApi, MobileApiError } from './api';
 
 export interface MobileAuthContextType {
   user: PublicUser | null;
   isLoading: boolean;
   login: (data: LoginDto) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: { display_name?: string; locale?: 'fa' | 'en' }) => Promise<PublicUser>;
+  updateProfile: (data: {
+    display_name?: string | undefined;
+    locale?: 'fa' | 'en' | undefined;
+  }) => Promise<PublicUser>;
   changePassword: (data: { current_password: string; new_password: string }) => Promise<void>;
 }
 
@@ -44,13 +47,17 @@ export const MobileAuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const me = await MobileAuthApi.getMe(token);
         return me;
-      } catch {
-        try {
-          await SecureStore.deleteItemAsync(TOKEN_KEY);
-        } finally {
-          setToken(null);
+      } catch (err: unknown) {
+        if (err instanceof MobileApiError && err.status === 401) {
+          try {
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
+          } finally {
+            setToken(null);
+          }
+          return null;
         }
-        return null;
+        // Retain token and session on network failures or 5xx server issues
+        throw err;
       }
     },
     enabled: !!token,
@@ -86,8 +93,8 @@ export const MobileAuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const updateProfile = async (data: {
-    display_name?: string;
-    locale?: 'fa' | 'en';
+    display_name?: string | undefined;
+    locale?: 'fa' | 'en' | undefined;
   }): Promise<PublicUser> => {
     if (!token) throw new Error('Not authenticated');
     const updated = await MobileAuthApi.updateProfile(token, data);
