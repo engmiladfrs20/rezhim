@@ -14,3 +14,24 @@ export class ReadinessError extends DatabaseError {
     this.name = 'ReadinessError';
   }
 }
+
+export class FoodNotFoundError extends Error {
+  constructor(message: string = 'Food item not found') {
+    super(message);
+    this.name = 'FoodNotFoundError';
+  }
+}
+
+export class FoodConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FoodConflictError';
+  }
+}
+
+export class FoodValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FoodValidationError';
+  }
+}

@@ -12,6 +12,10 @@ import { systemRouter } from './routes/system';
 import { authRouter } from './routes/auth';
 import { usersRouter } from './routes/users';
 import { adminUsersRouter } from './routes/admin-users';
+import { foodsRouter } from './routes/foods';
+import { foodCategoriesRouter } from './routes/food-categories';
+import { nutrientsRouter } from './routes/nutrients';
+import { adminFoodsRouter } from './routes/admin-foods';
 
 const app = new Hono<AppEnv>();
 
@@ -24,6 +28,10 @@ app.use('/api/*', corsMiddleware);
 app.use('/api/v1/auth/*', databaseMiddleware);
 app.use('/api/v1/users/*', databaseMiddleware);
 app.use('/api/v1/admin/users/*', databaseMiddleware);
+app.use('/api/v1/foods/*', databaseMiddleware);
+app.use('/api/v1/food-categories/*', databaseMiddleware);
+app.use('/api/v1/nutrients/*', databaseMiddleware);
+app.use('/api/v1/admin/foods/*', databaseMiddleware);
 
 // Centralized Safe Error Handling
 app.onError(errorHandler);
@@ -37,6 +45,10 @@ app.route('/api/v1/system', systemRouter);
 app.route('/api/v1/auth', authRouter);
 app.route('/api/v1/users', usersRouter);
 app.route('/api/v1/admin/users', adminUsersRouter);
+app.route('/api/v1/foods', foodsRouter);
+app.route('/api/v1/food-categories', foodCategoriesRouter);
+app.route('/api/v1/nutrients', nutrientsRouter);
+app.route('/api/v1/admin/foods', adminFoodsRouter);
 
 // Disabled Phase 1 placeholders
 app.all('/api/storage/*', (c) => {

@@ -32,3 +32,97 @@ export interface LoginAttemptRecord {
   window_start: string;
   attempts: number;
 }
+
+export interface FoodCategoryRecord {
+  id: string;
+  slug: string;
+  parent_id: string | null;
+  status: 'active' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FoodCategoryTranslationRecord {
+  id: string;
+  category_id: string;
+  locale: 'fa' | 'en';
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FoodSourceRecord {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  url: string | null;
+  license: string | null;
+  acquisition_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NutrientDefinitionRecord {
+  id: string;
+  code: string;
+  name_fa: string;
+  name_en: string;
+  unit: 'kcal' | 'g' | 'mg' | 'mcg' | 'IU';
+  sort_order: number;
+  is_essential: number | boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FoodRecord {
+  id: string;
+  category_id: string | null;
+  food_type: 'generic' | 'branded';
+  brand_name: string | null;
+  barcode: string | null;
+  status: 'draft' | 'active' | 'archived';
+  source_id: string | null;
+  external_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FoodTranslationRecord {
+  id: string;
+  food_id: string;
+  locale: 'fa' | 'en';
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FoodAliasRecord {
+  id: string;
+  food_id: string;
+  locale: 'fa' | 'en';
+  alias: string;
+  created_at: string;
+}
+
+export interface FoodNutrientRecord {
+  id: string;
+  food_id: string;
+  nutrient_id: string;
+  amount_per_100g: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FoodServingRecord {
+  id: string;
+  food_id: string;
+  name_fa: string;
+  name_en: string;
+  weight_g: number;
+  household_unit: string | null;
+  created_at: string;
+  updated_at: string;
+}

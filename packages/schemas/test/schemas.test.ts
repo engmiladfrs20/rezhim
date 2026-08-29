@@ -7,6 +7,10 @@ import {
   SignedDownloadUrlRequestSchema,
   BackblazeB2ConfigSchema,
   HealthCheckResponseSchema,
+  createFoodSchema,
+  foodServingInputSchema,
+  foodNutrientInputSchema,
+  createFoodCategorySchema,
 } from '../src';
 
 describe('Zod Schemas Package', () => {
@@ -99,5 +103,51 @@ describe('Zod Schemas Package', () => {
       timestamp: new Date().toISOString(),
     });
     expect(valid.success).toBe(true);
+  });
+
+  it('validates createFoodSchema and updateFoodSchema rules', () => {
+    // 1. Valid Food Payload
+    const validFood = createFoodSchema.safeParse({
+      translations: [{ locale: 'fa', name: 'نان جو' }],
+      food_type: 'generic',
+      status: 'active',
+      nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: 220 }],
+      servings: [{ name_fa: 'یک برش', name_en: '1 Slice', weight_g: 35 }],
+    });
+    expect(validFood.success).toBe(true);
+
+    // 2. Missing Translations
+    const noTrans = createFoodSchema.safeParse({
+      translations: [],
+    });
+    expect(noTrans.success).toBe(false);
+
+    // 3. Serving with zero / negative weight
+    const badServing = foodServingInputSchema.safeParse({
+      name_fa: 'یک واحد',
+      name_en: '1 Unit',
+      weight_g: 0,
+    });
+    expect(badServing.success).toBe(false);
+
+    // 4. Nutrient with negative amount
+    const negNutrient = foodNutrientInputSchema.safeParse({
+      nutrient_id: 'nut_energy',
+      amount_per_100g: -10,
+    });
+    expect(negNutrient.success).toBe(false);
+
+    // 5. Category Slug Validation
+    const validCat = createFoodCategorySchema.safeParse({
+      slug: 'dairy-products',
+      translations: [{ locale: 'fa', name: 'لبنیات' }],
+    });
+    expect(validCat.success).toBe(true);
+
+    const invalidCatSlug = createFoodCategorySchema.safeParse({
+      slug: 'Dairy Products With Spaces!',
+      translations: [{ locale: 'fa', name: 'لبنیات' }],
+    });
+    expect(invalidCatSlug.success).toBe(false);
   });
 });

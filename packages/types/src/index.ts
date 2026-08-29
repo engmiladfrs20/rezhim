@@ -4,3 +4,4 @@ export * from './auth';
 export * from './cloudflare';
 export * from './localization';
 export * from './domain';
+export * from './food';

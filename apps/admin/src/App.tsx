@@ -3,9 +3,10 @@ import type { FC } from 'react';
 import { useAdminAuth } from './auth/AdminAuthProvider';
 import { AdminLoginScreen } from './auth/AdminLoginScreen';
 import { i18n, type SupportedLocale, type Direction } from '@nutriai/localization';
-import { Shield, Users, Power, PowerOff, Eye, X, AlertCircle } from 'lucide-react';
+import { Shield, Users, Power, PowerOff, Eye, X, AlertCircle, UtensilsCrossed } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PublicUser, ApiResponse } from '@nutriai/types';
+import { FoodCatalogManager } from './foods/FoodCatalogManager';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
 
@@ -351,6 +352,7 @@ const AdminUserList: FC<{ currentUser: PublicUser }> = ({ currentUser }) => {
 export const App: FC = () => {
   const [locale, setLocale] = useState<SupportedLocale>(i18n.getLocale());
   const [direction, setDirection] = useState<Direction>(i18n.getDirection());
+  const [activeTab, setActiveTab] = useState<'users' | 'foods'>('users');
   const { user, logout, isLoading } = useAdminAuth();
 
   const toggleLocale = (target: SupportedLocale) => {
@@ -381,13 +383,38 @@ export const App: FC = () => {
         id="admin-header"
         className="w-full bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold">
-            <Shield className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold">
+              <Shield className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-base font-semibold">
+              {i18n.t('apps.admin.title') || 'Admin Portal'}
+            </h1>
           </div>
-          <h1 className="text-base font-semibold">
-            {i18n.t('apps.admin.title') || 'Admin Portal'}
-          </h1>
+
+          <nav className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'users'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+              }`}
+            >
+              <Users className="w-4 h-4" /> Users
+            </button>
+            <button
+              onClick={() => setActiveTab('foods')}
+              className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'foods'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+              }`}
+            >
+              <UtensilsCrossed className="w-4 h-4" /> Food Catalog
+            </button>
+          </nav>
         </div>
 
         <div className="flex gap-2 text-xs items-center">
@@ -419,7 +446,7 @@ export const App: FC = () => {
       </header>
 
       <div className="flex-1 max-w-5xl mx-auto w-full p-8 flex flex-col gap-6">
-        <AdminUserList currentUser={user} />
+        {activeTab === 'users' ? <AdminUserList currentUser={user} /> : <FoodCatalogManager />}
       </div>
     </main>
   );

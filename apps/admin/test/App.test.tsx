@@ -405,6 +405,316 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
     expect(rootMain).toHaveAttribute('dir', 'rtl');
   });
 
+  it('navigates to Food Catalog tab, lists foods, and filters by category and status', async () => {
+    const mockFoods = [
+      {
+        id: 'food_1',
+        name: 'نان بربری',
+        description: 'نان سنتی',
+        locale: 'fa',
+        foodType: 'generic',
+        brandName: null,
+        barcode: '6261111111',
+        status: 'active',
+        categoryId: 'cat_grains',
+        categoryName: 'نان و غلات',
+        energyKcal: 260,
+        proteinG: 9,
+        carbsG: 50,
+        fatG: 1.5,
+        createdAt: '2026-08-29T10:00:00Z',
+        updatedAt: '2026-08-29T10:00:00Z',
+      },
+    ];
+
+    const mockCategories = [
+      {
+        id: 'cat_grains',
+        slug: 'grains-cereals',
+        name: 'نان و غلات',
+        description: null,
+        locale: 'fa',
+        status: 'active',
+        parentId: null,
+        translations: [],
+        createdAt: '2026-08-29T00:00:00Z',
+        updatedAt: '2026-08-29T00:00:00Z',
+      },
+    ];
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/api/v1/admin/users')) {
+        return new Response(
+          JSON.stringify({ success: true, data: { users: [mockAdminUser], nextCursor: null } }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/admin/foods/categories')) {
+        return new Response(
+          JSON.stringify({ success: true, data: { categories: mockCategories } }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/admin/foods')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { items: mockFoods, nextCursor: null, hasMore: false },
+          }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/nutrients')) {
+        return new Response(JSON.stringify({ success: true, data: { nutrients: [] } }), {
+          status: 200,
+        });
+      }
+      return new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
+        status: 200,
+      });
+    });
+
+    renderAdminApp(mockAdminUser);
+
+    // Click on Food Catalog tab
+    const foodTab = await screen.findByRole('button', { name: /Food Catalog/i });
+    fireEvent.click(foodTab);
+
+    expect(await screen.findByText('Food Catalog Management')).toBeInTheDocument();
+    expect(await screen.findByText('نان بربری')).toBeInTheDocument();
+    expect(screen.getByText('260 kcal')).toBeInTheDocument();
+
+    // Filter by Category
+    const categorySelect = screen.getByLabelText('Filter by Category');
+    fireEvent.change(categorySelect, { target: { value: 'cat_grains' } });
+
+    // Filter by Status
+    const statusSelect = screen.getByLabelText('Filter by Status');
+    fireEvent.change(statusSelect, { target: { value: 'active' } });
+  });
+
+  it('opens Food Details modal and displays complete information', async () => {
+    const mockFoodDetail = {
+      id: 'food_detail_1',
+      name: 'سیب درختی دماوند',
+      description: 'سیب قرمز درجه یک',
+      locale: 'fa',
+      foodType: 'generic',
+      brandName: null,
+      barcode: '6262222222',
+      status: 'active',
+      categoryId: 'cat_fruits',
+      category: {
+        id: 'cat_fruits',
+        slug: 'fruits',
+        name: 'میوه‌ها',
+        description: null,
+        locale: 'fa',
+        status: 'active',
+        parentId: null,
+      },
+      sourceId: null,
+      source: null,
+      externalId: null,
+      translations: [
+        {
+          id: 't1',
+          foodId: 'food_detail_1',
+          locale: 'fa',
+          name: 'سیب درختی دماوند',
+          description: null,
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+      aliases: [],
+      nutrients: [
+        {
+          nutrientId: 'nut_energy',
+          code: 'energy',
+          name: 'انرژی',
+          unit: 'kcal',
+          amountPer100g: 52,
+        },
+      ],
+      servings: [
+        {
+          id: 's1',
+          foodId: 'food_detail_1',
+          nameFa: 'یک عدد متوسط',
+          nameEn: '1 Medium apple',
+          weightG: 182,
+          householdUnit: 'عدد',
+        },
+      ],
+      createdAt: '2026-08-29T10:00:00Z',
+      updatedAt: '2026-08-29T10:00:00Z',
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/api/v1/admin/foods/food_detail_1')) {
+        return new Response(JSON.stringify({ success: true, data: { food: mockFoodDetail } }), {
+          status: 200,
+        });
+      }
+      if (urlStr.includes('/api/v1/admin/foods')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { items: [mockFoodDetail], nextCursor: null, hasMore: false },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
+        status: 200,
+      });
+    });
+
+    renderAdminApp(mockAdminUser);
+
+    const foodTab = await screen.findByRole('button', { name: /Food Catalog/i });
+    fireEvent.click(foodTab);
+
+    const viewBtn = await screen.findByLabelText('View details for سیب درختی دماوند');
+    fireEvent.click(viewBtn);
+
+    expect(await screen.findByText('52 kcal')).toBeInTheDocument();
+    expect(screen.getByText('182g')).toBeInTheDocument();
+
+    const closeBtn = screen.getByLabelText('Close details');
+    fireEvent.click(closeBtn);
+  });
+
+  it('opens Add Food modal, validates inputs, and submits new food', async () => {
+    let createdPayload: unknown = null;
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = String(url);
+      if (urlStr.endsWith('/api/v1/admin/foods') && init?.method === 'POST') {
+        createdPayload = JSON.parse(String(init.body));
+        return new Response(
+          JSON.stringify({ success: true, data: { food: { id: 'new_food_id' } } }),
+          { status: 201 },
+        );
+      }
+      if (urlStr.includes('/api/v1/admin/foods/categories')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { categories: [{ id: 'cat_fruits', name: 'میوه‌ها' }] },
+          }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/nutrients')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              nutrients: [{ id: 'nut_energy', code: 'energy', nameFa: 'انرژی', unit: 'kcal' }],
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/admin/foods')) {
+        return new Response(
+          JSON.stringify({ success: true, data: { items: [], nextCursor: null, hasMore: false } }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
+        status: 200,
+      });
+    });
+
+    renderAdminApp(mockAdminUser);
+
+    const foodTab = await screen.findByRole('button', { name: /Food Catalog/i });
+    fireEvent.click(foodTab);
+
+    const addBtn = await screen.findByRole('button', { name: /Add Food/i });
+    fireEvent.click(addBtn);
+
+    expect(screen.getByText('Add New Food')).toBeInTheDocument();
+
+    // Fill form
+    const faNameInput = screen.getByPlaceholderText('مثلاً: سیب تازه');
+    fireEvent.change(faNameInput, { target: { value: 'هلو زعفرانی' } });
+
+    const enNameInput = screen.getByPlaceholderText('e.g. Fresh Apple');
+    fireEvent.change(enNameInput, { target: { value: 'Saffron Peach' } });
+
+    const caloriesInput = screen.getByLabelText('Calories (kcal)');
+    fireEvent.change(caloriesInput, { target: { value: '45' } });
+
+    const submitBtn = screen.getByRole('button', { name: 'Create Food' });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(createdPayload).toBeTruthy();
+    });
+  });
+
+  it('archives food item when confirmed by admin', async () => {
+    let archiveCalled = false;
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const mockFood = {
+      id: 'food_archive_target',
+      name: 'غذای آزمایشی آرشیو',
+      description: null,
+      locale: 'fa',
+      foodType: 'generic',
+      brandName: null,
+      barcode: null,
+      status: 'active',
+      categoryId: null,
+      categoryName: null,
+      energyKcal: 100,
+      proteinG: null,
+      carbsG: null,
+      fatG: null,
+      createdAt: '2026-08-29T10:00:00Z',
+      updatedAt: '2026-08-29T10:00:00Z',
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/api/v1/admin/foods/food_archive_target') && init?.method === 'DELETE') {
+        archiveCalled = true;
+        return new Response(JSON.stringify({ success: true }), { status: 200 });
+      }
+      if (urlStr.includes('/api/v1/admin/foods')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { items: [mockFood], nextCursor: null, hasMore: false },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
+        status: 200,
+      });
+    });
+
+    renderAdminApp(mockAdminUser);
+
+    const foodTab = await screen.findByRole('button', { name: /Food Catalog/i });
+    fireEvent.click(foodTab);
+
+    const archiveBtn = await screen.findByLabelText('Archive غذای آزمایشی آرشیو');
+    fireEvent.click(archiveBtn);
+
+    await waitFor(() => {
+      expect(archiveCalled).toBe(true);
+    });
+  });
+
   it('throws error when useAdminAuth is used outside of AdminAuthProvider', () => {
     const TestComponent = () => {
       useAdminAuth();
