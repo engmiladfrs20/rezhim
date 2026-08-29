@@ -20,6 +20,7 @@ export default async () => {
       }),
     ],
     test: {
+      fileParallelism: false,
       setupFiles: ['./test/apply-migrations.ts'],
       coverage: {
         provider: 'istanbul',

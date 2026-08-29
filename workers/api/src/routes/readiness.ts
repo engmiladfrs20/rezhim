@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import type { CloudflareEnv } from '@nutriai/types';
 import { ReadinessService } from '../services/readiness.service';
+import type { AppEnv } from '../types';
 
-const readinessRouter = new Hono<{ Bindings: CloudflareEnv }>();
+const readinessRouter = new Hono<AppEnv>();
 
 readinessRouter.get('/', async (c) => {
   const service = new ReadinessService(c.env);

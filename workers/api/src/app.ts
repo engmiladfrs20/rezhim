@@ -1,15 +1,18 @@
 import { Hono } from 'hono';
-import type { CloudflareEnv, ApiErrorResponse } from '@nutriai/types';
+import type { ApiErrorResponse } from '@nutriai/types';
+import type { AppEnv } from './types';
 import { requestIdMiddleware } from './middleware/request-id';
 import { securityHeadersMiddleware } from './middleware/security-headers';
 import { corsMiddleware } from './middleware/cors';
 import { errorHandler } from './middleware/error-handler';
+import { databaseMiddleware } from './middleware/database';
 import { healthRouter } from './routes/health';
 import { readinessRouter } from './routes/readiness';
 import { systemRouter } from './routes/system';
-import type { Context } from 'hono';
+import { authRouter } from './routes/auth';
+import { usersRouter } from './routes/users';
+import { adminUsersRouter } from './routes/admin-users';
 
-export type AppEnv = { Bindings: CloudflareEnv; Variables: { requestId: string } };
 const app = new Hono<AppEnv>();
 
 // Core Middleware
@@ -18,18 +21,25 @@ app.use('*', securityHeadersMiddleware);
 
 // Restrictive CORS
 app.use('/api/*', corsMiddleware);
+app.use('/api/v1/auth/*', databaseMiddleware);
+app.use('/api/v1/users/*', databaseMiddleware);
+app.use('/api/v1/admin/users/*', databaseMiddleware);
 
 // Centralized Safe Error Handling
 app.onError(errorHandler);
 
 // Routes
 app.get('/', (c) => c.text('NutriAI Persia API Worker (Cloudflare Hono)'));
+
 app.route('/health', healthRouter);
 app.route('/ready', readinessRouter);
 app.route('/api/v1/system', systemRouter);
+app.route('/api/v1/auth', authRouter);
+app.route('/api/v1/users', usersRouter);
+app.route('/api/v1/admin/users', adminUsersRouter);
 
 // Disabled Phase 1 placeholders
-const notAvailableHandler = (c: Context<AppEnv>) => {
+app.all('/api/storage/*', (c) => {
   const requestId = c.get('requestId') || c.req.header('X-Request-Id') || 'unknown';
   const errorResponse: ApiErrorResponse = {
     success: false,
@@ -40,10 +50,20 @@ const notAvailableHandler = (c: Context<AppEnv>) => {
     requestId,
   };
   return c.json(errorResponse, 501);
-};
+});
 
-app.all('/api/storage/*', notAvailableHandler);
-app.all('/api/ai/*', notAvailableHandler);
+app.all('/api/ai/*', (c) => {
+  const requestId = c.get('requestId') || c.req.header('X-Request-Id') || 'unknown';
+  const errorResponse: ApiErrorResponse = {
+    success: false,
+    error: {
+      code: 'FEATURE_NOT_AVAILABLE',
+      message: 'This feature is disabled during Phase 1 & 2 boundaries.',
+    },
+    requestId,
+  };
+  return c.json(errorResponse, 501);
+});
 
 // 404 Fallback
 app.notFound((c) => {

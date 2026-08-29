@@ -30,8 +30,23 @@ export interface ApiResponse<T> {
 export interface ApiErrorResponse {
   success: false;
   error: {
-    code: string;
+    code:
+      | string
+      | 'INITIALIZATION_FAILED'
+      | 'MISSING_BINDING'
+      | 'NOT_READY'
+      | 'INTERNAL_ERROR'
+      | 'VALIDATION_ERROR'
+      | 'EMAIL_ALREADY_EXISTS'
+      | 'INVALID_CREDENTIALS'
+      | 'AUTHENTICATION_REQUIRED'
+      | 'SESSION_EXPIRED'
+      | 'ACCOUNT_DISABLED'
+      | 'RATE_LIMITED'
+      | 'FORBIDDEN'
+      | 'USER_NOT_FOUND';
     message: string;
+    details?: unknown;
   };
   requestId?: string;
 }

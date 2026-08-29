@@ -14,3 +14,24 @@
 **Review Date:** 2026-08-27
 **Expiration Date:** 2026-10-27
 **Upgrade/Removal Condition:** When `expo` or `@react-native` releases a patched `metro` dependency pipeline that adopts a secure version of `image-size`, or the underlying CLI plugins migrate from the affected package, the `image-size` overrides and exemptions will be pulled.
+
+## Authentication and Session Management (Phase 3)
+
+### Cryptographic Configuration
+
+- **Hashing Algorithm:** PBKDF2 with HMAC-SHA256 (`PBKDF2-HMAC-SHA256`)
+- **Iteration Count:** 600,000 minimum
+- **Salt Generation:** 16-bytes securely random (`crypto.getRandomValues`)
+- **Hash Dimensions:** 32-bytes securely random (`crypto.getRandomValues`)
+- **Comparison Engine:** Node natively emulated `crypto.timingSafeEqual`
+
+### Session Management Strategy
+
+- Cloudflare D1 Native Database Stores (Avoids untrusted third-party IdP liabilities)
+- Standardized Opaque tokens generated through `Base64URL` and `crypto.getRandomValues(32)`
+- Strict Referer/Origin CSRF bounds protecting APIs inherently
+
+### Rate-Limiting Framework
+
+- HMAC Keyed payloads mapped to `window_start` (30 seconds) isolating raw tracking leaks gracefully.
+- Explicit atomic D1 `UPSERT` bound checks rejecting beyond 5 concurrent failures synchronously preventing blind spot delays natively.

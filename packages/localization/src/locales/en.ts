@@ -43,4 +43,18 @@ export const en: TranslationDictionary = {
     error: 'Connection Error',
     service: 'Service',
   },
+  auth: {
+    login: 'Login',
+    logout: 'Logout',
+    email: 'Email address',
+    password: 'Password',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    changePassword: 'Change Password',
+    profile: 'User Profile',
+    displayName: 'Display Name',
+    saveChanges: 'Save Changes',
+    register: 'Create Account',
+    success: 'Operation Successful',
+  },
 };

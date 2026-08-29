@@ -41,4 +41,18 @@ export const fa = {
     error: 'خطا در برقراری ارتباط',
     service: 'سرویس',
   },
+  auth: {
+    login: 'ورود',
+    logout: 'خروج',
+    email: 'پست الکترونیک',
+    password: 'رمز عبور',
+    currentPassword: 'رمز عبور فعلی',
+    newPassword: 'رمز عبور جدید',
+    changePassword: 'تغییر رمز عبور',
+    profile: 'نمایه کاربری',
+    displayName: 'نام نمایشی',
+    saveChanges: 'ذخیره تغییرات',
+    register: 'ثبت‌نام',
+    success: 'عملیات موفق',
+  },
 } as const;

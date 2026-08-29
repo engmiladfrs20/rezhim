@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
+import { useAuth } from './auth/AuthProvider';
+import { LoginScreen } from './auth/LoginScreen';
+import { Profile } from './auth/Profile';
+import { RegisterScreen } from './auth/RegisterScreen';
 import {
   i18n,
   formatNumber,
@@ -24,6 +28,8 @@ export const App: FC = () => {
   const [direction, setDirection] = useState<Direction>(i18n.getDirection());
   const [healthStatus, setHealthStatus] = useState<HealthCheckResponse | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
+  const { user, logout, isLoading: authLoading } = useAuth();
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
     // Synchronize HTML element lang & dir attributes
@@ -78,6 +84,22 @@ export const App: FC = () => {
 
   const currentDate = new Date();
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return authView === 'login' ? (
+      <LoginScreen onSwap={() => setAuthView('register')} />
+    ) : (
+      <RegisterScreen onSwap={() => setAuthView('login')} />
+    );
+  }
+
   return (
     <main id="app-root" className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* Header */}
@@ -128,6 +150,13 @@ export const App: FC = () => {
               English (EN)
             </button>
           </div>
+
+          <button
+            onClick={() => logout()}
+            className="px-4 py-1.5 ml-2 mr-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
+          >
+            {i18n.t('auth.logout') || 'Logout'}
+          </button>
         </nav>
       </header>
 
@@ -157,6 +186,10 @@ export const App: FC = () => {
               {i18n.t('common.direction')}: <strong>{direction.toUpperCase()}</strong>
             </span>
           </div>
+        </section>
+
+        <section aria-label="User Profile Area" className="w-full">
+          <Profile />
         </section>
 
         {/* Monorepo Architecture Overview Grid */}

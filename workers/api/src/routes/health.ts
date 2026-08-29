@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
-import type { CloudflareEnv, HealthCheckResponse } from '@nutriai/types';
+import type { HealthCheckResponse } from '@nutriai/types';
 import { CloudflareEnvSchema } from '@nutriai/schemas';
+import type { AppEnv } from '../types';
 
-const healthRouter = new Hono<{ Bindings: CloudflareEnv }>();
+const healthRouter = new Hono<AppEnv>();
 
 healthRouter.get('/', async (c) => {
   let serviceName = 'nutriai-api';

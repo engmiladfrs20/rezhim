@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import type { CloudflareEnv, ApiResponse, ApiErrorResponse } from '@nutriai/types';
+import type { ApiResponse, ApiErrorResponse } from '@nutriai/types';
 import { ReadinessService } from '../services/readiness.service';
+import type { AppEnv } from '../types';
 
-type AppEnv = { Bindings: CloudflareEnv; Variables: { requestId: string } };
 const systemRouter = new Hono<AppEnv>();
 
 systemRouter.get('/', async (c) => {
@@ -10,7 +10,7 @@ systemRouter.get('/', async (c) => {
   const metadata = await service.getSystemMetadata();
 
   if (!metadata) {
-    const requestId = c.get('requestId') as string;
+    const requestId = c.get('requestId');
     const errorResponse: ApiErrorResponse = {
       success: false,
       requestId,
@@ -30,7 +30,7 @@ systemRouter.get('/', async (c) => {
     last_migration: string;
   }> = {
     success: true,
-    requestId: c.get('requestId') as string,
+    requestId: c.get('requestId'),
     data: {
       service: c.env.SERVICE_NAME || 'nutriai-api',
       version: c.env.APP_VERSION || '1.0.0',

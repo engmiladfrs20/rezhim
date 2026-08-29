@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
+import type { AppEnv } from '../types';
 
 const REQUEST_ID_REGEX = /^[a-zA-Z0-9_-]{8,64}$/;
 
@@ -9,7 +10,7 @@ export function sanitizeOrGenerateRequestId(clientRequestId: string | undefined 
   return crypto.randomUUID();
 }
 
-export const requestIdMiddleware: MiddlewareHandler = async (c, next) => {
+export const requestIdMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const clientHeader = c.req.header('X-Request-Id');
   const requestId = sanitizeOrGenerateRequestId(clientHeader);
   c.header('X-Request-Id', requestId);

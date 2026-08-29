@@ -1,7 +1,8 @@
 import type { ErrorHandler } from 'hono';
 import type { ApiErrorResponse } from '@nutriai/types';
+import type { AppEnv } from '../types';
 
-export const errorHandler: ErrorHandler = (err, c) => {
+export const errorHandler: ErrorHandler<AppEnv> = (err, c) => {
   const requestId = c.get('requestId') || c.req.header('X-Request-Id') || 'unknown';
 
   // Safe internal structured JSON logging

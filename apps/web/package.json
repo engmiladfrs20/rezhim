@@ -14,13 +14,17 @@
     "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo','coverage','.expo','.wrangler'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\""
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@nutriai/localization": "workspace:*",
     "@nutriai/schemas": "workspace:*",
     "@nutriai/types": "workspace:*",
+    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-query-devtools": "^5.102.8",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.86.0",
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {

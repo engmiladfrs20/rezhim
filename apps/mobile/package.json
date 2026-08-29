@@ -15,14 +15,21 @@
     "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo','coverage','.expo','.wrangler'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\""
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@nutriai/localization": "workspace:*",
+    "@nutriai/schemas": "workspace:^",
     "@nutriai/types": "workspace:*",
+    "@tanstack/react-query": "^5.102.8",
     "expo": "~52.0.0",
+    "expo-secure-store": "~14.0.1",
     "react": "18.3.1",
-    "react-native": "0.76.6"
+    "react-hook-form": "^7.86.0",
+    "react-native": "0.76.9",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@nutriai/config": "workspace:*",
+    "@testing-library/react-native": "^14.0.1",
     "@types/react": "~18.3.12",
     "@vitest/coverage-v8": "^4.1.0",
     "typescript": "^5.7.3",

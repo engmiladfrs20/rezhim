@@ -16,6 +16,7 @@ export interface CloudflareEnv {
   ALLOWED_ORIGINS?: string | undefined;
 
   // Security & Storage Secrets
+  RATE_LIMIT_HMAC_SECRET?: string | undefined;
   B2_ENDPOINT?: string | undefined;
   B2_REGION?: string | undefined;
   B2_BUCKET_NAME?: string | undefined;
