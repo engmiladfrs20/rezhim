@@ -15,12 +15,12 @@ Phase 3 establishes the authentication, authorization, session management, and r
 - **Salt & Hash Parameters**: 16-byte random salt, 32-byte derived key hash.
 - **Comparison**: Constant-time byte-by-byte comparison (`crypto.subtle.timingSafeEqual` with length guard) to prevent timing side-channels.
 - **Timing Equalization (`dummyVerify`)**: Fixed-cost dummy verification executed for non-existent users and disabled accounts to maintain consistent response latency.
-- **Measured Benchmark**: Measured runtime for 600,000 PBKDF2 iterations in the Cloudflare Worker runtime is 465 ms to 474 ms.
+- **Measured Benchmark**: Measured runtime for 600,000 PBKDF2 iterations in the Cloudflare Worker runtime is 463 ms to 491 ms.
 
 ### Session Management & Dual Transport
 
 - **Opaque Session Tokens**: 32-byte cryptographically random tokens generated via `crypto.getRandomValues` and Base64URL-encoded.
-- **D1 Storage**: Raw tokens are never persisted in the database; only SHA-256 hashes (`token_hash`) are stored in Cloudflare D1.
+- **D1 Storage**: Raw tokens are never persisted in the database; only SHA-256 Base64URL digests (`token_hash`) generated via `SessionService.hashSessionToken` are stored in Cloudflare D1.
 - **Web & Admin Transport**: `HttpOnly; SameSite=Lax` cookies with `__Host-nutriai_session` prefix and `Secure` flag in production, and `nutriai_session` in development. All client requests specify `credentials: 'include'`.
 - **Mobile Transport**: Bearer token headers stored encrypted in device storage using `expo-secure-store`. Automatic token cleanup occurs exclusively on HTTP 401 Unauthorized responses. Session tokens are retained during network errors, timeouts, or 5xx server responses.
 - **Mobile API Layer**: `MobileAuthApi` dynamically reads `EXPO_PUBLIC_API_URL` with a development fallback for non-production environments and throws an error if unconfigured in production. Errors are typed with HTTP status, error code, and details via `MobileApiError`.
@@ -49,7 +49,7 @@ Phase 3 establishes the authentication, authorization, session management, and r
 
 ## 3. Verified Monorepo Test Metrics & Coverage
 
-All test suites execute real Vitest commands without placeholder, skipped, empty, or synthetic tests. Results are derived from a full, uncached execution (`turbo run test:coverage --force`):
+All test suites execute real Vitest commands with React Native Testing Library on mobile, without placeholder, skipped, empty, or synthetic tests. Results are derived from a full, uncached execution (`turbo run test:coverage --force`):
 
 | Workspace / Package     | Test Files | Passed Tests   | Stmts %  | Branch % | Funcs %  | Lines %  |
 | :---------------------- | :--------- | :------------- | :------- | :------- | :------- | :------- |
@@ -58,11 +58,11 @@ All test suites execute real Vitest commands without placeholder, skipped, empty
 | `packages/storage`      | 2          | 33 passed      | 98.13%   | 80.29%   | 100.00%  | 99.51%   |
 | `packages/testing`      | 1          | 2 passed       | 100.00%  | 100.00%  | 100.00%  | 100.00%  |
 | `workers/ai-jobs`       | 1          | 2 passed       | 100.00%  | 100.00%  | 100.00%  | 100.00%  |
-| `workers/api`           | 4          | 36 passed      | 79.57%   | 57.87%   | 90.36%   | 79.86%   |
+| `workers/api`           | 4          | 37 passed      | 79.74%   | 58.52%   | 90.36%   | 79.86%   |
 | `apps/web`              | 1          | 12 passed      | 93.10%   | 70.16%   | 92.68%   | 93.66%   |
 | `apps/admin`            | 1          | 11 passed      | 94.06%   | 75.00%   | 96.77%   | 95.49%   |
 | `apps/mobile`           | 1          | 17 passed      | 93.06%   | 78.50%   | 92.30%   | 94.92%   |
-| **Total Monorepo**      | **13**     | **128 passed** | **PASS** | **PASS** | **PASS** | **PASS** |
+| **Total Monorepo**      | **13**     | **129 passed** | **PASS** | **PASS** | **PASS** | **PASS** |
 
 _Note on Mobile Coverage_: Mobile coverage measures all executable application source files under `apps/mobile/src` (`src/App.tsx`, `src/auth/api.ts`, `src/auth/MobileAuthProvider.tsx`, `src/auth/MobileLoginScreen.tsx`, `src/auth/MobileRegisterScreen.tsx`), excluding only the entry point (`src/index.ts`) and TypeScript declaration/config files.
 
@@ -74,7 +74,7 @@ _Note on Mobile Coverage_: Mobile coverage measures all executable application s
 2. `pnpm format:check`: **PASS** (All files match Prettier standards)
 3. `pnpm lint`: **PASS** (0 errors, 0 warnings across 11 packages)
 4. `pnpm typecheck`: **PASS** (0 TypeScript errors across 11 packages)
-5. `pnpm exec turbo run test:coverage --force`: **PASS** (128/128 tests passed across 13 test files)
+5. `pnpm exec turbo run test:coverage --force`: **PASS** (129/129 tests passed across 13 test files)
 6. `pnpm exec turbo run build --force`: **PASS** (All 11 packages and bundles built)
 7. Fresh D1 Migrations: **PASS** (Applied `0001_system_metadata.sql` and `0002_auth_users.sql` to clean local persistence directory)
 8. `pnpm audit --prod --audit-level=critical`: **PASS** (0 critical vulnerabilities, 2 high documented build-time dependencies)

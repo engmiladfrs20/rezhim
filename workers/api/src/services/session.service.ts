@@ -4,8 +4,7 @@ export class SessionService {
   private static readonly TOKEN_LENGTH_BYTES = 32;
 
   /**
-   * Generates a raw opaque cryptographically secure 32-byte token Native to WebCrypto.
-   * Returns identical encoded variants tracking native generation limits securely.
+   * Generates a cryptographically random 32-byte opaque session token encoded as Base64URL.
    */
   static generateSessionToken(): string {
     const rawBuffer = crypto.getRandomValues(new Uint8Array(this.TOKEN_LENGTH_BYTES));
@@ -13,7 +12,7 @@ export class SessionService {
   }
 
   /**
-   * Hashes the raw Base64Url token using SHA-256 preventing DB leakage native behaviors tracking correctly.
+   * Hashes the raw Base64URL token using SHA-256 and returns the Base64URL-encoded digest.
    */
   static async hashSessionToken(rawToken: string): Promise<string> {
     const data = new TextEncoder().encode(rawToken);

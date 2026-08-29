@@ -5,6 +5,7 @@ import { env, type ProvidedEnv } from 'cloudflare:workers';
 import type { ApiResponse, ApiErrorResponse, PublicUser } from '@nutriai/types';
 import type { AuthSessionRecord, LoginAttemptRecord } from '../src/db/models';
 import { AuthService } from '../src/services/auth.service';
+import { SessionService } from '../src/services/session.service';
 
 const testEnv = env as ProvidedEnv;
 
@@ -190,6 +191,65 @@ describe('Authentication API & Security Integration Tests', () => {
       expect(sessionInDb).toBeTruthy();
       expect(sessionInDb?.token_hash).not.toBe(rawToken);
       expect(sessionInDb?.token_hash).toBeTruthy();
+    }, 30000);
+
+    it('returns authenticated user profile on /me and strips all sensitive fields', async () => {
+      await app.request(
+        '/api/v1/auth/register',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'me_sensitive_check@example.com',
+            password: 'MeSensitivePass123!',
+            display_name: 'Me Sensitive User',
+          }),
+        },
+        testEnv,
+      );
+
+      const tokenResp = await app.request(
+        '/api/v1/auth/token',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'me_sensitive_check@example.com',
+            password: 'MeSensitivePass123!',
+          }),
+        },
+        testEnv,
+      );
+      const token = ((await tokenResp.json()) as ApiResponse<{ token: string }>).data.token;
+
+      // 1. Check /me with Bearer token
+      const bearerMe = await app.request(
+        '/api/v1/auth/me',
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+        testEnv,
+      );
+      expect(bearerMe.status).toBe(200);
+      const bearerData = (await bearerMe.json()) as ApiResponse<{ user: PublicUser }>;
+      expect(bearerData.success).toBe(true);
+      expect(bearerData.data.user.email).toBe('me_sensitive_check@example.com');
+      expect(bearerData.data.user.display_name).toBe('Me Sensitive User');
+      expectPublicUser(bearerData.data.user as unknown as Record<string, unknown>);
+
+      // 2. Check /me with Cookie
+      const cookieMe = await app.request(
+        '/api/v1/auth/me',
+        {
+          headers: { Cookie: `nutriai_session=${token}` },
+        },
+        testEnv,
+      );
+      expect(cookieMe.status).toBe(200);
+      const cookieData = (await cookieMe.json()) as ApiResponse<{ user: PublicUser }>;
+      expect(cookieData.success).toBe(true);
+      expect(cookieData.data.user.email).toBe('me_sensitive_check@example.com');
+      expectPublicUser(cookieData.data.user as unknown as Record<string, unknown>);
     }, 30000);
   });
 
@@ -510,7 +570,7 @@ describe('Authentication API & Security Integration Tests', () => {
         },
         { ...testEnv, APP_ENV: 'development', RATE_LIMIT_HMAC_SECRET: undefined },
       );
-      expect(devRes.status).toBe(401); // Evaluated credentials, did not 503
+      expect(devRes.status).toBe(401);
 
       // 2. Staging fails closed with 503
       const stagingRes = await app.request(
@@ -572,21 +632,24 @@ describe('Authentication API & Security Integration Tests', () => {
         .run();
 
       const rawToken = 'genuinely_expired_token_12345';
-      const tokenHashBuffer = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(rawToken),
-      );
-      const tokenHashHex = Array.from(new Uint8Array(tokenHashBuffer))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
+      const tokenHash = await SessionService.hashSessionToken(rawToken);
 
       await db
         .prepare(
           `INSERT INTO auth_sessions (id, user_id, token_hash, created_at, last_seen_at, expires_at, revoked_at)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
         )
-        .bind('sess_expired_1', userId, tokenHashHex, expiredAt, expiredAt, expiredAt, null)
+        .bind('sess_expired_1', userId, tokenHash, expiredAt, expiredAt, expiredAt, null)
         .run();
+
+      // Assert inserted record can be retrieved using production-generated hash before calling /api/v1/auth/me
+      const sessionInDb = await db
+        .prepare('SELECT * FROM auth_sessions WHERE token_hash = ?')
+        .bind(tokenHash)
+        .first<AuthSessionRecord>();
+      expect(sessionInDb).toBeTruthy();
+      expect(sessionInDb?.id).toBe('sess_expired_1');
+      expect(sessionInDb?.user_id).toBe(userId);
 
       const res = await app.request(
         '/api/v1/auth/me',
@@ -650,7 +713,7 @@ describe('Authentication API & Security Integration Tests', () => {
 
       expect(token1).not.toBe(token2);
 
-      // Both tokens are valid
+      // Both tokens are valid and /me strips sensitive fields
       const me1Before = await app.request(
         '/api/v1/auth/me',
         { headers: { Authorization: `Bearer ${token1}` } },
@@ -663,6 +726,9 @@ describe('Authentication API & Security Integration Tests', () => {
       );
       expect(me1Before.status).toBe(200);
       expect(me2Before.status).toBe(200);
+
+      const me1Data = (await me1Before.json()) as ApiResponse<{ user: PublicUser }>;
+      expectPublicUser(me1Data.data.user as unknown as Record<string, unknown>);
 
       // Call logout-all using token 1
       const logoutAllRes = await app.request(

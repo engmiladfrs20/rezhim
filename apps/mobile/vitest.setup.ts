@@ -1,5 +1,26 @@
-import React from 'react';
+import path from 'path';
+import Module from 'module';
 import { vi } from 'vitest';
+
+const mockPath = path.resolve(__dirname, './test/react-native-mock.ts');
+
+// Intercept CJS require for 'react-native' to route directly to our native component mock
+// @ts-expect-error - Module._resolveFilename is internal Node API
+const origResolve = Module._resolveFilename;
+// @ts-expect-error - Module._resolveFilename is internal Node API
+Module._resolveFilename = function (
+  request: string,
+  parent: unknown,
+  isMain: boolean,
+  options: unknown,
+) {
+  if (request === 'react-native' || request.startsWith('react-native/')) {
+    return mockPath;
+  }
+  return origResolve.call(this, request, parent, isMain, options);
+};
+
+import { mockI18nManager } from './test/react-native-mock';
 
 (globalThis as Record<string, unknown>).expo = { EventEmitter: class {} };
 
@@ -16,87 +37,4 @@ vi.mock('expo-secure-store', () => ({
   _store: secureStoreMap,
 }));
 
-export const mockI18nManager = {
-  isRTL: false,
-  allowRTL: vi.fn((val: boolean) => {
-    mockI18nManager.isRTL = val;
-  }),
-  forceRTL: vi.fn((val: boolean) => {
-    mockI18nManager.isRTL = val;
-  }),
-};
-
-vi.mock('react-native', () => ({
-  StyleSheet: { create: (obj: unknown) => obj },
-  View: ({ children, style, ...rest }: { children?: React.ReactNode; style?: unknown }) =>
-    React.createElement('div', { ...rest, style: style as React.CSSProperties }, children),
-  Text: ({ children, style, ...rest }: { children?: React.ReactNode; style?: unknown }) =>
-    React.createElement('span', { ...rest, style: style as React.CSSProperties }, children),
-  TouchableOpacity: ({
-    disabled,
-    onPress,
-    children,
-    style,
-    testID,
-  }: {
-    disabled?: boolean;
-    onPress?: () => void;
-    children?: React.ReactNode;
-    style?: unknown;
-    testID?: string;
-  }) =>
-    React.createElement(
-      'button',
-      {
-        onClick: disabled ? undefined : onPress,
-        type: 'button',
-        disabled,
-        'data-testid': testID,
-        style: style as React.CSSProperties,
-      },
-      children,
-    ),
-  SafeAreaView: ({ children, style, ...rest }: { children?: React.ReactNode; style?: unknown }) =>
-    React.createElement('div', { ...rest, style: style as React.CSSProperties }, children),
-  ScrollView: ({
-    children,
-    style,
-  }: {
-    children?: React.ReactNode;
-    style?: unknown;
-    contentContainerStyle?: unknown;
-  }) => React.createElement('div', { style: style as React.CSSProperties }, children),
-  TextInput: ({
-    value,
-    onChangeText,
-    secureTextEntry,
-    placeholder,
-    style,
-    testID,
-  }: {
-    value?: string;
-    onChangeText?: (text: string) => void;
-    secureTextEntry?: boolean;
-    placeholder?: string;
-    style?: unknown;
-    testID?: string;
-    keyboardType?: string;
-    autoCapitalize?: string;
-  }) =>
-    React.createElement('input', {
-      placeholder,
-      value: value ?? '',
-      onChange: (e: { target: { value: string } }) => onChangeText && onChangeText(e.target.value),
-      type: secureTextEntry ? 'password' : 'text',
-      'data-testid': testID,
-      style: style as React.CSSProperties,
-    }),
-  ActivityIndicator: ({ style }: { size?: string; color?: string; style?: unknown }) =>
-    React.createElement(
-      'div',
-      { style: style as React.CSSProperties, 'data-testid': 'activity-indicator' },
-      'Loading...',
-    ),
-  Platform: { OS: 'ios', select: (obj: Record<string, unknown>) => obj.ios || obj.default },
-  I18nManager: mockI18nManager,
-}));
+export { mockI18nManager };

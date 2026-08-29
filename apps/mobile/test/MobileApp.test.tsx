@@ -1,7 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom/vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MobileAuthApi, MobileApiError } from '../src/auth/api';
@@ -9,7 +8,7 @@ import { MobileAuthProvider, useMobileAuth, TOKEN_KEY } from '../src/auth/Mobile
 import App, { MainApp } from '../src/App';
 import type { PublicUser, ApiResponse } from '@nutriai/types';
 import { i18n } from '@nutriai/localization';
-import { mockI18nManager } from '../vitest.setup';
+import { I18nManager } from 'react-native';
 
 const mockUser: PublicUser = {
   id: 'mob-12345678-abcd',
@@ -274,12 +273,10 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
         return new Response(JSON.stringify({}), { status: 200 });
       });
 
-      // Initial token is stored in SecureStore
       renderWithClient(<MainApp />, 'expired_token_123');
 
-      // The provider attempts getMe, receives 401, deletes the token, and presents the login screen
-      expect(await screen.findByText('NutriAI Persia')).toBeInTheDocument();
-      expect(await screen.findByText('Sign In')).toBeInTheDocument();
+      expect(await screen.findByText('NutriAI Persia')).toBeTruthy();
+      expect(await screen.findByText('Sign In')).toBeTruthy();
 
       const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
       expect(storedToken).toBeNull();
@@ -298,7 +295,6 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
 
       renderWithClient(<MainApp />, 'valid_offline_token_456');
 
-      // Token must NOT be deleted from SecureStore on server/network errors
       await waitFor(() => {
         const storedToken = (SecureStore as unknown as { _store: Map<string, string> })._store.get(
           TOKEN_KEY,
@@ -335,15 +331,15 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
 
       // Submit with empty inputs -> shows validation format error
       const signInBtn = screen.getByText('Sign In');
-      fireEvent.click(signInBtn);
+      fireEvent.press(signInBtn);
 
-      expect(await screen.findByText(/Invalid email|Invalid format/i)).toBeInTheDocument();
+      expect(await screen.findByText(/Invalid email|Invalid format/i)).toBeTruthy();
 
-      // Enter valid credentials
-      fireEvent.change(emailInput, { target: { value: 'mobile@example.com' } });
-      fireEvent.change(passwordInput, { target: { value: 'ValidPassword123!' } });
+      // Enter valid credentials with fireEvent.changeText
+      fireEvent.changeText(emailInput, 'mobile@example.com');
+      fireEvent.changeText(passwordInput, 'ValidPassword123!');
 
-      fireEvent.click(signInBtn);
+      fireEvent.press(signInBtn);
 
       await waitFor(() => {
         expect(loginSubmitted).toBe(true);
@@ -379,20 +375,20 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
 
       // Switch to Sign Up view
       const swapBtn = await screen.findByText(/Don't have an account\? Sign Up/i);
-      fireEvent.click(swapBtn);
+      fireEvent.press(swapBtn);
 
-      expect(await screen.findByText('Create a new account')).toBeInTheDocument();
+      expect(await screen.findByText('Create a new account')).toBeTruthy();
 
       const nameInput = screen.getByPlaceholderText('Enter your name');
       const emailInput = screen.getByPlaceholderText('Enter your email');
       const passwordInput = screen.getByPlaceholderText('Enter your password');
 
-      fireEvent.change(nameInput, { target: { value: 'New Registrant' } });
-      fireEvent.change(emailInput, { target: { value: 'newreg@example.com' } });
-      fireEvent.change(passwordInput, { target: { value: 'SecurePassword123!' } });
+      fireEvent.changeText(nameInput, 'New Registrant');
+      fireEvent.changeText(emailInput, 'newreg@example.com');
+      fireEvent.changeText(passwordInput, 'SecurePassword123!');
 
       const signUpBtn = screen.getByText('Sign Up');
-      fireEvent.click(signUpBtn);
+      fireEvent.press(signUpBtn);
 
       await waitFor(() => {
         expect(regSubmitted).toBe(true);
@@ -437,48 +433,48 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
       renderWithClient(<MainApp />, 'valid_user_session_token');
 
       // 1. Verify User Profile Display
-      expect(await screen.findByText('User Profile')).toBeInTheDocument();
-      expect(screen.getByText('mobile@example.com')).toBeInTheDocument();
+      expect(await screen.findByText('User Profile')).toBeTruthy();
+      expect(screen.getByText('mobile@example.com')).toBeTruthy();
 
       // 2. Edit Profile
       const displayNameInput = screen.getByDisplayValue('Mobile User');
-      fireEvent.change(displayNameInput, { target: { value: 'Updated Name' } });
+      fireEvent.changeText(displayNameInput, 'Updated Name');
 
       const saveProfileBtn = screen.getByText('Save Profile');
-      fireEvent.click(saveProfileBtn);
+      fireEvent.press(saveProfileBtn);
 
-      expect(await screen.findByText('Profile updated successfully')).toBeInTheDocument();
+      expect(await screen.findByText('Profile updated successfully')).toBeTruthy();
       expect(profilePatched).toBe(true);
 
       // 3. Change Password
       const currentPwInput = screen.getByPlaceholderText('Current Password');
       const newPwInput = screen.getByPlaceholderText('New Password (12+ chars)');
 
-      fireEvent.change(currentPwInput, { target: { value: 'OldPassword123!' } });
-      fireEvent.change(newPwInput, { target: { value: 'BrandNewPassword456!' } });
+      fireEvent.changeText(currentPwInput, 'OldPassword123!');
+      fireEvent.changeText(newPwInput, 'BrandNewPassword456!');
 
       const updatePwBtn = screen.getByText('Update Password');
-      fireEvent.click(updatePwBtn);
+      fireEvent.press(updatePwBtn);
 
-      expect(await screen.findByText('Password changed successfully')).toBeInTheDocument();
+      expect(await screen.findByText('Password changed successfully')).toBeTruthy();
       expect(passwordChanged).toBe(true);
 
       // 4. RTL / Locale Switching
       const enBtn = screen.getByText('English');
-      fireEvent.click(enBtn);
+      fireEvent.press(enBtn);
 
       expect(i18n.getLocale()).toBe('en');
-      expect(mockI18nManager.forceRTL).toHaveBeenCalledWith(false);
+      expect(I18nManager.forceRTL).toHaveBeenCalledWith(false);
 
       const faBtn = screen.getByText('فارسی');
-      fireEvent.click(faBtn);
+      fireEvent.press(faBtn);
 
       expect(i18n.getLocale()).toBe('fa');
-      expect(mockI18nManager.forceRTL).toHaveBeenCalledWith(true);
+      expect(I18nManager.forceRTL).toHaveBeenCalledWith(true);
 
       // 5. Logout
       const logoutBtn = screen.getByText('Logout');
-      fireEvent.click(logoutBtn);
+      fireEvent.press(logoutBtn);
 
       await waitFor(() => {
         expect(logoutCalled).toBe(true);
@@ -491,7 +487,7 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
       });
 
       render(<App />);
-      expect(await screen.findByText('NutriAI Persia')).toBeInTheDocument();
+      expect(await screen.findByText('NutriAI Persia')).toBeTruthy();
     });
   });
 });
