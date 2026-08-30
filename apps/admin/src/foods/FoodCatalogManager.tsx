@@ -182,6 +182,12 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
   const [nameEn, setNameEn] = useState(
     foodToEdit?.translations.find((t) => t.locale === 'en')?.name || '',
   );
+  const [descFa, setDescFa] = useState(
+    foodToEdit?.translations.find((t) => t.locale === 'fa')?.description || '',
+  );
+  const [descEn, setDescEn] = useState(
+    foodToEdit?.translations.find((t) => t.locale === 'en')?.description || '',
+  );
   const [categoryId, setCategoryId] = useState(foodToEdit?.categoryId || '');
   const [foodType, setFoodType] = useState<'generic' | 'branded'>(
     foodToEdit?.foodType || 'generic',
@@ -192,7 +198,14 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
     foodToEdit?.status || 'active',
   );
 
-  // Nutrients state (Energy, Protein, Carbs, Fat, Fiber)
+  const [aliases, setAliases] = useState<Array<{ locale: 'fa' | 'en'; alias: string }>>(
+    foodToEdit?.aliases
+      ? foodToEdit.aliases.map((a) => ({ locale: a.locale, alias: a.alias }))
+      : [],
+  );
+  const [newAliasText, setNewAliasText] = useState('');
+  const [newAliasLocale, setNewAliasLocale] = useState<'fa' | 'en'>('fa');
+
   const getNutVal = (code: string) => {
     const found = foodToEdit?.nutrients.find((n) => n.code === code);
     return found ? String(found.amountPer100g) : '';
@@ -203,16 +216,26 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
   const [fatG, setFatG] = useState(getNutVal('fat_total'));
   const [fiberG, setFiberG] = useState(getNutVal('fiber'));
 
-  // Serving state
-  const [servingNameFa, setServingNameFa] = useState(foodToEdit?.servings[0]?.nameFa || '');
-  const [servingNameEn, setServingNameEn] = useState(foodToEdit?.servings[0]?.nameEn || '');
-  const [servingWeightG, setServingWeightG] = useState(
-    foodToEdit?.servings[0] ? String(foodToEdit.servings[0].weightG) : '',
+  const [servings, setServings] = useState<
+    Array<{ name_fa: string; name_en: string; weight_g: number; household_unit?: string | null }>
+  >(
+    foodToEdit?.servings
+      ? foodToEdit.servings.map((s) => ({
+          name_fa: s.nameFa,
+          name_en: s.nameEn,
+          weight_g: s.weightG,
+          household_unit: s.householdUnit,
+        }))
+      : [],
   );
+
+  const [newServingFa, setNewServingFa] = useState('');
+  const [newServingEn, setNewServingEn] = useState('');
+  const [newServingWeight, setNewServingWeight] = useState('');
+  const [newServingUnit, setNewServingUnit] = useState('');
 
   const [formError, setFormError] = useState('');
 
-  // Fetch categories & nutrient definitions
   const { data: catData } = useQuery<ApiResponse<{ categories: FoodCategoryDetail[] }>>({
     queryKey: ['admin-categories'],
     queryFn: async () => {
@@ -261,6 +284,37 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
     },
   });
 
+  const handleAddAlias = () => {
+    if (!newAliasText.trim()) return;
+    setAliases((prev) => [...prev, { locale: newAliasLocale, alias: newAliasText.trim() }]);
+    setNewAliasText('');
+  };
+
+  const handleRemoveAlias = (index: number) => {
+    setAliases((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddServing = () => {
+    if (!newServingFa.trim() || !newServingEn.trim() || !newServingWeight) return;
+    setServings((prev) => [
+      ...prev,
+      {
+        name_fa: newServingFa.trim(),
+        name_en: newServingEn.trim(),
+        weight_g: Number(newServingWeight),
+        household_unit: newServingUnit.trim() || null,
+      },
+    ]);
+    setNewServingFa('');
+    setNewServingEn('');
+    setNewServingWeight('');
+    setNewServingUnit('');
+  };
+
+  const handleRemoveServing = (index: number) => {
+    setServings((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!nameFa.trim() && !nameEn.trim()) {
@@ -268,11 +322,27 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
       return;
     }
 
-    const translations = [];
-    if (nameFa.trim()) translations.push({ locale: 'fa' as const, name: nameFa.trim() });
-    if (nameEn.trim()) translations.push({ locale: 'en' as const, name: nameEn.trim() });
+    if (foodType === 'branded' && !brandName.trim()) {
+      setFormError('Branded food requires a valid brand name');
+      return;
+    }
 
-    const nutrients = [];
+    const translations = [];
+    if (nameFa.trim()) {
+      translations.push({
+        locale: 'fa' as const,
+        name: nameFa.trim(),
+        description: descFa.trim() || null,
+      });
+    }
+    if (nameEn.trim()) {
+      translations.push({
+        locale: 'en' as const,
+        name: nameEn.trim(),
+        description: descEn.trim() || null,
+      });
+    }
+
     const nutrientsList = nutData?.data?.nutrients || [];
     const energyDef = nutrientsList.find((n) => n.code === 'energy');
     const proteinDef = nutrientsList.find((n) => n.code === 'protein');
@@ -280,23 +350,43 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
     const fatDef = nutrientsList.find((n) => n.code === 'fat_total');
     const fiberDef = nutrientsList.find((n) => n.code === 'fiber');
 
-    if (energyDef && energyKcal)
-      nutrients.push({ nutrient_id: energyDef.id, amount_per_100g: Number(energyKcal) });
-    if (proteinDef && proteinG)
-      nutrients.push({ nutrient_id: proteinDef.id, amount_per_100g: Number(proteinG) });
-    if (carbsDef && carbsG)
-      nutrients.push({ nutrient_id: carbsDef.id, amount_per_100g: Number(carbsG) });
-    if (fatDef && fatG) nutrients.push({ nutrient_id: fatDef.id, amount_per_100g: Number(fatG) });
-    if (fiberDef && fiberG)
-      nutrients.push({ nutrient_id: fiberDef.id, amount_per_100g: Number(fiberG) });
+    const standardCodes = new Set(['energy', 'protein', 'carbohydrate', 'fat_total', 'fiber']);
 
-    const servings = [];
-    if (servingNameFa && servingNameEn && servingWeightG) {
-      servings.push({
-        name_fa: servingNameFa.trim(),
-        name_en: servingNameEn.trim(),
-        weight_g: Number(servingWeightG),
-      });
+    const finalNutrients: Array<{ nutrient_id: string; amount_per_100g: number }> = [];
+    if (foodToEdit?.nutrients) {
+      for (const n of foodToEdit.nutrients) {
+        if (!standardCodes.has(n.code)) {
+          finalNutrients.push({ nutrient_id: n.nutrientId, amount_per_100g: n.amountPer100g });
+        }
+      }
+    }
+
+    if (energyDef && energyKcal !== '')
+      finalNutrients.push({ nutrient_id: energyDef.id, amount_per_100g: Number(energyKcal) });
+    if (proteinDef && proteinG !== '')
+      finalNutrients.push({ nutrient_id: proteinDef.id, amount_per_100g: Number(proteinG) });
+    if (carbsDef && carbsG !== '')
+      finalNutrients.push({ nutrient_id: carbsDef.id, amount_per_100g: Number(carbsG) });
+    if (fatDef && fatG !== '')
+      finalNutrients.push({ nutrient_id: fatDef.id, amount_per_100g: Number(fatG) });
+    if (fiberDef && fiberG !== '')
+      finalNutrients.push({ nutrient_id: fiberDef.id, amount_per_100g: Number(fiberG) });
+
+    let finalServings = [...servings];
+    if (
+      finalServings.length === 0 &&
+      newServingFa.trim() &&
+      newServingEn.trim() &&
+      newServingWeight
+    ) {
+      finalServings = [
+        {
+          name_fa: newServingFa.trim(),
+          name_en: newServingEn.trim(),
+          weight_g: Number(newServingWeight),
+          household_unit: newServingUnit.trim() || null,
+        },
+      ];
     }
 
     const payload: CreateFoodDto = {
@@ -306,9 +396,9 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
       barcode: barcode.trim() || undefined,
       status,
       translations,
-      aliases: [],
-      nutrients,
-      servings,
+      aliases,
+      nutrients: finalNutrients,
+      servings: finalServings,
     };
 
     saveMutation.mutate(payload);
@@ -343,9 +433,7 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
-                Persian Name (نام فارسی) *
-              </label>
+              <label className="block text-xs text-slate-400 mb-1">Persian Name *</label>
               <input
                 type="text"
                 value={nameFa}
@@ -362,7 +450,30 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
                 placeholder="e.g. Fresh Apple"
-                dir="ltr"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Persian Description</label>
+              <input
+                type="text"
+                value={descFa}
+                onChange={(e) => setDescFa(e.target.value)}
+                placeholder="توضیحات اختیاری"
+                dir="rtl"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-hidden focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">English Description</label>
+              <input
+                type="text"
+                value={descEn}
+                onChange={(e) => setDescEn(e.target.value)}
+                placeholder="Optional description"
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-hidden focus:border-indigo-500"
               />
             </div>
@@ -429,6 +540,53 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
                 placeholder="e.g. 6260123456789"
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-hidden focus:border-indigo-500"
               />
+            </div>
+          </div>
+
+          <div className="border-t border-slate-700 pt-4">
+            <h4 className="text-sm font-semibold text-slate-200 mb-2">Aliases / نام‌های دیگر</h4>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {aliases.map((a, idx) => (
+                <span
+                  key={idx}
+                  className="bg-slate-900 border border-slate-700 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5"
+                >
+                  <span className="text-indigo-400 uppercase text-[10px]">{a.locale}</span>
+                  <span>{a.alias}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAlias(idx)}
+                    className="text-slate-500 hover:text-red-400"
+                    aria-label={`Remove alias ${a.alias}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={newAliasLocale}
+                onChange={(e) => setNewAliasLocale(e.target.value as 'fa' | 'en')}
+                className="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 text-slate-300"
+              >
+                <option value="fa">FA</option>
+                <option value="en">EN</option>
+              </select>
+              <input
+                type="text"
+                value={newAliasText}
+                onChange={(e) => setNewAliasText(e.target.value)}
+                placeholder="Add alias..."
+                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-100"
+              />
+              <button
+                type="button"
+                onClick={handleAddAlias}
+                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-medium"
+              >
+                Add
+              </button>
             </div>
           </div>
 
@@ -504,42 +662,63 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
           </div>
 
           <div className="border-t border-slate-700 pt-4">
-            <h4 className="text-sm font-semibold text-slate-200 mb-3">Serving Size (Optional)</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Serving Name (FA)</label>
-                <input
-                  type="text"
-                  value={servingNameFa}
-                  onChange={(e) => setServingNameFa(e.target.value)}
-                  placeholder="مثلاً: یک لیوان"
-                  dir="rtl"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100"
-                />
+            <h4 className="text-sm font-semibold text-slate-200 mb-2">Servings / واحدهای مصرف</h4>
+            {servings.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {servings.map((s, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-slate-900 border border-slate-700 p-2.5 rounded-lg flex items-center justify-between text-xs"
+                  >
+                    <div className="flex gap-4">
+                      <span className="font-medium text-slate-200">{s.name_fa}</span>
+                      <span className="text-slate-400">{s.name_en}</span>
+                      <span className="font-mono text-indigo-400">{s.weight_g}g</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveServing(idx)}
+                      className="text-slate-500 hover:text-red-400 p-1"
+                      aria-label={`Remove serving ${s.name_fa}`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Serving Name (EN)</label>
-                <input
-                  type="text"
-                  value={servingNameEn}
-                  onChange={(e) => setServingNameEn(e.target.value)}
-                  placeholder="e.g. 1 Cup"
-                  dir="ltr"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Weight in Grams (g)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  value={servingWeightG}
-                  onChange={(e) => setServingWeightG(e.target.value)}
-                  placeholder="e.g. 240"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100"
-                />
-              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <input
+                type="text"
+                value={newServingFa}
+                onChange={(e) => setNewServingFa(e.target.value)}
+                placeholder="نام سروینگ (فا)"
+                dir="rtl"
+                className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-100"
+              />
+              <input
+                type="text"
+                value={newServingEn}
+                onChange={(e) => setNewServingEn(e.target.value)}
+                placeholder="Serving name (EN)"
+                className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-100"
+              />
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                value={newServingWeight}
+                onChange={(e) => setNewServingWeight(e.target.value)}
+                placeholder="Weight (g)"
+                className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-100"
+              />
+              <button
+                type="button"
+                onClick={handleAddServing}
+                className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-medium"
+              >
+                Add Serving
+              </button>
             </div>
           </div>
 
@@ -554,9 +733,9 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
             <button
               type="submit"
               disabled={saveMutation.isPending}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              {saveMutation.isPending ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Food'}
+              {saveMutation.isPending ? 'Saving...' : isEditing ? 'Update Food' : 'Create Food'}
             </button>
           </div>
         </form>
@@ -566,9 +745,8 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
 };
 
 export const FoodCatalogManager: FC = () => {
-  const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'draft' | 'active' | 'archived' | 'all'>('all');
   const [cursor, setCursor] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [selectedFoodId, setSelectedFoodId] = useState<string | null>(null);
@@ -577,7 +755,8 @@ export const FoodCatalogManager: FC = () => {
   const [feedbackMsg, setFeedbackMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Categories query for filter
+  const queryClient = useQueryClient();
+
   const { data: catData } = useQuery<ApiResponse<{ categories: FoodCategoryDetail[] }>>({
     queryKey: ['admin-categories'],
     queryFn: async () => {
@@ -588,15 +767,19 @@ export const FoodCatalogManager: FC = () => {
     },
   });
 
-  // Food list query
   const { data, isLoading, error } = useQuery<ApiResponse<PaginatedResult<FoodSummary>>>({
     queryKey: ['admin-foods', statusFilter, categoryFilter, cursor],
     queryFn: async () => {
-      let url = `${API_URL}/api/v1/admin/foods?limit=10&status=${statusFilter}`;
-      if (categoryFilter) url += `&category_id=${categoryFilter}`;
-      if (cursor) url += `&cursor=${cursor}`;
+      const params = new URLSearchParams({
+        limit: '10',
+        status: statusFilter,
+      });
+      if (categoryFilter) params.set('category_id', categoryFilter);
+      if (cursor) params.set('cursor', cursor);
 
-      const res = await fetch(url, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/v1/admin/foods?${params.toString()}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch food catalog');
       return res.json() as Promise<ApiResponse<PaginatedResult<FoodSummary>>>;
     },
@@ -689,7 +872,7 @@ export const FoodCatalogManager: FC = () => {
             aria-label="Filter by Status"
             value={statusFilter}
             onChange={(e) => {
-              setStatusFilter(e.target.value);
+              setStatusFilter(e.target.value as 'draft' | 'active' | 'archived' | 'all');
               setCursor(null);
               setHistory([]);
             }}

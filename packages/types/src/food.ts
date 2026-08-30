@@ -22,6 +22,8 @@ export interface FoodCategorySummary {
   name: string;
   description: string | null;
   locale: SupportedLocale;
+  resolvedLocale: SupportedLocale;
+  requestedLocale?: SupportedLocale;
 }
 
 export interface FoodCategoryDetail extends FoodCategorySummary {
@@ -94,6 +96,8 @@ export interface FoodSummary {
   name: string;
   description: string | null;
   locale: SupportedLocale;
+  resolvedLocale: SupportedLocale;
+  requestedLocale?: SupportedLocale;
   foodType: FoodType;
   brandName: string | null;
   barcode: string | null;
@@ -113,6 +117,8 @@ export interface FoodDetail {
   name: string;
   description: string | null;
   locale: SupportedLocale;
+  resolvedLocale: SupportedLocale;
+  requestedLocale?: SupportedLocale;
   foodType: FoodType;
   brandName: string | null;
   barcode: string | null;

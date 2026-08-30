@@ -366,6 +366,13 @@ export class FoodService {
   }
 
   async createCategory(dto: CreateFoodCategoryDto): Promise<FoodCategoryDetail> {
+    if (dto.parent_id) {
+      const parent = await this.catRepo.findById(dto.parent_id);
+      if (!parent) {
+        throw new FoodValidationError(`Parent category with ID ${dto.parent_id} not found`);
+      }
+    }
+
     const existingSlug = await this.catRepo.findBySlug(dto.slug);
     if (existingSlug) {
       throw new FoodConflictError(`A category with slug "${dto.slug}" already exists`);

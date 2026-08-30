@@ -659,6 +659,232 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
     });
   });
 
+  it('proves Admin Food Edit preserves all aliases, micronutrients (>5), and multiple servings when editing name only', async () => {
+    let patchPayload: {
+      translations: Array<{ locale: string; name: string }>;
+      aliases: Array<{ locale: string; alias: string }>;
+      nutrients: Array<{ nutrient_id: string; amount_per_100g: number }>;
+      servings: Array<{ name_fa: string; name_en: string; weight_g: number }>;
+    } | null = null;
+
+    const mockRichFoodDetail = {
+      id: 'food_rich_edit_1',
+      name: 'نان سنگک سنتی',
+      description: 'نان سبوس‌دار',
+      locale: 'fa',
+      foodType: 'generic',
+      brandName: null,
+      barcode: '6261234567890',
+      status: 'active',
+      categoryId: 'cat_grains',
+      category: {
+        id: 'cat_grains',
+        slug: 'grains',
+        name: 'نان و غلات',
+        description: null,
+        locale: 'fa',
+        status: 'active',
+        parentId: null,
+      },
+      sourceId: null,
+      source: null,
+      externalId: null,
+      translations: [
+        {
+          id: 't1',
+          foodId: 'food_rich_edit_1',
+          locale: 'fa',
+          name: 'نان سنگک سنتی',
+          description: 'نان سبوس‌دار',
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: 't2',
+          foodId: 'food_rich_edit_1',
+          locale: 'en',
+          name: 'Traditional Sangak Bread',
+          description: null,
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+      aliases: [
+        { id: 'a1', foodId: 'food_rich_edit_1', locale: 'fa', alias: 'سنگک کنجدی' },
+        { id: 'a2', foodId: 'food_rich_edit_1', locale: 'en', alias: 'Sesame Sangak' },
+      ],
+      nutrients: [
+        {
+          nutrientId: 'nut_energy',
+          code: 'energy',
+          name: 'Energy',
+          unit: 'kcal',
+          amountPer100g: 259,
+        },
+        {
+          nutrientId: 'nut_protein',
+          code: 'protein',
+          name: 'Protein',
+          unit: 'g',
+          amountPer100g: 9.2,
+        },
+        {
+          nutrientId: 'nut_carbohydrate',
+          code: 'carbohydrate',
+          name: 'Carbs',
+          unit: 'g',
+          amountPer100g: 52.4,
+        },
+        {
+          nutrientId: 'nut_fat_total',
+          code: 'fat_total',
+          name: 'Fat',
+          unit: 'g',
+          amountPer100g: 1.5,
+        },
+        { nutrientId: 'nut_fiber', code: 'fiber', name: 'Fiber', unit: 'g', amountPer100g: 3.8 },
+        { nutrientId: 'nut_iron', code: 'iron', name: 'Iron', unit: 'mg', amountPer100g: 2.5 },
+        {
+          nutrientId: 'nut_calcium',
+          code: 'calcium',
+          name: 'Calcium',
+          unit: 'mg',
+          amountPer100g: 50,
+        },
+      ],
+      servings: [
+        {
+          id: 's1',
+          foodId: 'food_rich_edit_1',
+          nameFa: 'یک کف دست',
+          nameEn: '1 Palm',
+          weightG: 30,
+          householdUnit: 'کف دست',
+        },
+        {
+          id: 's2',
+          foodId: 'food_rich_edit_1',
+          nameFa: 'یک قرص کامل',
+          nameEn: '1 Loaf',
+          weightG: 400,
+          householdUnit: 'قرص',
+        },
+      ],
+      createdAt: '2026-08-29T10:00:00Z',
+      updatedAt: '2026-08-29T10:00:00Z',
+    };
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/api/v1/admin/foods/food_rich_edit_1') && init?.method === 'PATCH') {
+        patchPayload = JSON.parse(String(init.body));
+        return new Response(JSON.stringify({ success: true, data: { food: mockRichFoodDetail } }), {
+          status: 200,
+        });
+      }
+      if (urlStr.includes('/api/v1/admin/foods/food_rich_edit_1')) {
+        return new Response(JSON.stringify({ success: true, data: { food: mockRichFoodDetail } }), {
+          status: 200,
+        });
+      }
+      if (urlStr.includes('/api/v1/admin/foods/categories')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { categories: [{ id: 'cat_grains', name: 'نان و غلات' }] },
+          }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/nutrients')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              nutrients: [
+                { id: 'nut_energy', code: 'energy', name: 'Energy', unit: 'kcal' },
+                { id: 'nut_protein', code: 'protein', name: 'Protein', unit: 'g' },
+                { id: 'nut_carbohydrate', code: 'carbohydrate', name: 'Carbs', unit: 'g' },
+                { id: 'nut_fat_total', code: 'fat_total', name: 'Fat', unit: 'g' },
+                { id: 'nut_fiber', code: 'fiber', name: 'Fiber', unit: 'g' },
+                { id: 'nut_iron', code: 'iron', name: 'Iron', unit: 'mg' },
+                { id: 'nut_calcium', code: 'calcium', name: 'Calcium', unit: 'mg' },
+              ],
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      if (urlStr.includes('/api/v1/admin/foods')) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { items: [mockRichFoodDetail], nextCursor: null, hasMore: false },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
+        status: 200,
+      });
+    });
+
+    renderAdminApp(mockAdminUser);
+
+    const foodTab = await screen.findByRole('button', { name: /Food Catalog/i });
+    fireEvent.click(foodTab);
+
+    const editBtn = await screen.findByLabelText('Edit نان سنگک سنتی');
+    fireEvent.click(editBtn);
+
+    expect(await screen.findByText('Edit Food')).toBeInTheDocument();
+
+    // Verify existing aliases are visible
+    expect(screen.getByText('سنگک کنجدی')).toBeInTheDocument();
+    expect(screen.getByText('Sesame Sangak')).toBeInTheDocument();
+
+    // Verify existing servings are visible
+    expect(screen.getByText('یک کف دست')).toBeInTheDocument();
+    expect(screen.getByText('یک قرص کامل')).toBeInTheDocument();
+
+    // Edit ONLY Persian Name
+    const faNameInput = screen.getByDisplayValue('نان سنگک سنتی');
+    fireEvent.change(faNameInput, { target: { value: 'نان سنگک اعلا دو رو کنجد' } });
+
+    // Submit edit
+    const updateBtn = screen.getByRole('button', { name: 'Update Food' });
+    fireEvent.click(updateBtn);
+
+    await waitFor(() => {
+      expect(patchPayload).not.toBeNull();
+    });
+
+    // Assert ALL data is preserved in PATCH payload
+    expect(patchPayload!.translations.some((t) => t.name === 'نان سنگک اعلا دو رو کنجد')).toBe(
+      true,
+    );
+    expect(patchPayload!.aliases.length).toBe(2);
+    expect(patchPayload!.aliases.some((a) => a.alias === 'سنگک کنجدی')).toBe(true);
+    expect(patchPayload!.aliases.some((a) => a.alias === 'Sesame Sangak')).toBe(true);
+
+    // Assert micronutrients (iron, calcium) are preserved alongside macros
+    expect(patchPayload!.nutrients.length).toBe(7);
+    expect(
+      patchPayload!.nutrients.some(
+        (n) => n.nutrient_id === 'nut_iron' && n.amount_per_100g === 2.5,
+      ),
+    ).toBe(true);
+    expect(
+      patchPayload!.nutrients.some(
+        (n) => n.nutrient_id === 'nut_calcium' && n.amount_per_100g === 50,
+      ),
+    ).toBe(true);
+
+    // Assert all 2 servings are preserved
+    expect(patchPayload!.servings.length).toBe(2);
+    expect(patchPayload!.servings.some((s) => s.weight_g === 400)).toBe(true);
+  });
+
   it('archives food item when confirmed by admin', async () => {
     let archiveCalled = false;
     vi.spyOn(window, 'confirm').mockReturnValue(true);

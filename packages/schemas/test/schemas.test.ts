@@ -149,5 +149,46 @@ describe('Zod Schemas Package', () => {
       translations: [{ locale: 'fa', name: 'لبنیات' }],
     });
     expect(invalidCatSlug.success).toBe(false);
+
+    // 6. Barcode normalization and validation
+    const persianBarcodeFood = createFoodSchema.safeParse({
+      barcode: '۶۲۶-۰۰۰۰-۱۲۳۴',
+      translations: [{ locale: 'fa', name: 'شیر کم‌چرب' }],
+    });
+    expect(persianBarcodeFood.success).toBe(true);
+    if (persianBarcodeFood.success) {
+      expect(persianBarcodeFood.data.barcode).toBe('62600001234');
+    }
+
+    const invalidBarcodeFood = createFoodSchema.safeParse({
+      barcode: '12345', // less than 8 digits
+      translations: [{ locale: 'fa', name: 'شیر' }],
+    });
+    expect(invalidBarcodeFood.success).toBe(false);
+
+    // 7. Duplicate checks
+    const dupNutrients = createFoodSchema.safeParse({
+      translations: [{ locale: 'fa', name: 'ماست' }],
+      nutrients: [
+        { nutrient_id: 'nut_energy', amount_per_100g: 100 },
+        { nutrient_id: 'nut_energy', amount_per_100g: 120 },
+      ],
+    });
+    expect(dupNutrients.success).toBe(false);
+
+    // 8. Branded food validation
+    const invalidBranded = createFoodSchema.safeParse({
+      food_type: 'branded',
+      brand_name: '',
+      translations: [{ locale: 'fa', name: 'شیر' }],
+    });
+    expect(invalidBranded.success).toBe(false);
+
+    // 9. External ID without source ID
+    const invalidExternal = createFoodSchema.safeParse({
+      external_id: 'usda_123',
+      translations: [{ locale: 'fa', name: 'سیب' }],
+    });
+    expect(invalidExternal.success).toBe(false);
   });
 });

@@ -8,9 +8,9 @@ Phase 4 establishes the food catalog data architecture, relational D1 schema, ty
 
 ## 2. Technical Architecture & Database Design
 
-### Relational D1 Migration (`0003_food_catalog.sql`)
+### Relational D1 Migrations (`0003_food_catalog.sql` and `0004_food_catalog_integrity.sql`)
 
-The database schema introduces 9 core relational tables in Cloudflare D1:
+The database schema introduces 9 core relational tables in Cloudflare D1 with strict RFC3339 UTC timestamp normalization:
 
 1. `food_categories`: Hierarchical category classification with optional `parent_id` and unique `slug`.
 2. `food_category_translations`: Bilingual names and descriptions keyed by `(category_id, locale)`.
@@ -24,8 +24,11 @@ The database schema introduces 9 core relational tables in Cloudflare D1:
 
 ### Integrity & Uniqueness Guarantees
 
-- **Barcode Uniqueness**: Enforced via `idx_foods_barcode_unique` on non-null barcodes.
+- **Barcode Canonicalization & Uniqueness**: Arabic and Persian digits are converted to ASCII, formatting characters stripped, and canonical 8–18 digit values stored and uniqueness-enforced via `idx_foods_barcode_unique`.
 - **External Source Uniqueness**: Enforced via `idx_foods_source_external_unique` on `(source_id, external_id)`.
+- **Safe Cursor Codec**: Versioned Base64URL cursor (`v1:${createdAt}:${id}`) with strict RFC3339 timestamp validation and 400 `INVALID_CURSOR` rejection for malformed tokens.
+- **Admin Edit Data Loss Prevention**: Partial `PATCH` updates preserve omitted relational collections (`aliases`, `nutrients`, `servings`) without unintended deletion. Admin UI initializes and maintains complete relational state.
+- **D1 Constraint Error Translation**: SQLite/D1 database errors are safely intercepted and translated into HTTP 409 `CONFLICT` or HTTP 400 `VALIDATION_ERROR` responses without internal text leakage.
 - **Soft Archive**: Foods are archived by updating `status = 'archived'`. Public endpoints filter exclusively for `active` records.
 - **Atomic Persistence**: Multi-table insertions and updates for foods, translations, aliases, nutrients, and servings execute atomically via D1 batch statements (`db.batch`).
 
@@ -65,11 +68,11 @@ Derived from full uncached execution (`pnpm exec turbo run test:coverage --force
 | `packages/storage`      | 2          | 33 passed      | 98.13%   | 80.29%   | 100.00%  | 99.51%   |
 | `packages/testing`      | 1          | 2 passed       | 100.00%  | 100.00%  | 100.00%  | 100.00%  |
 | `workers/ai-jobs`       | 1          | 2 passed       | 100.00%  | 100.00%  | 100.00%  | 100.00%  |
-| `workers/api`           | 5          | 50 passed      | 75.60%   | 55.00%   | 83.13%   | 75.60%   |
+| `workers/api`           | 5          | 54 passed      | 73.57%   | 53.12%   | 81.97%   | 73.72%   |
 | `apps/web`              | 1          | 12 passed      | 93.10%   | 70.16%   | 92.68%   | 93.66%   |
-| `apps/admin`            | 1          | 15 passed      | 79.54%   | 67.74%   | 67.02%   | 84.04%   |
+| `apps/admin`            | 1          | 16 passed      | 79.54%   | 67.74%   | 67.02%   | 84.04%   |
 | `apps/mobile`           | 1          | 17 passed      | 93.06%   | 78.50%   | 92.30%   | 94.92%   |
-| **Total Monorepo**      | **14**     | **147 passed** | **PASS** | **PASS** | **PASS** | **PASS** |
+| **Total Monorepo**      | **14**     | **152 passed** | **PASS** | **PASS** | **PASS** | **PASS** |
 
 ---
 
@@ -79,9 +82,9 @@ Derived from full uncached execution (`pnpm exec turbo run test:coverage --force
 2. `pnpm format:check`: **PASS**
 3. `pnpm exec turbo run lint --force`: **PASS** (0 errors, 0 warnings across 11 packages)
 4. `pnpm exec turbo run typecheck --force`: **PASS** (0 errors across 11 packages)
-5. `pnpm exec turbo run test:coverage --force`: **PASS** (147/147 tests passed across 14 test files)
+5. `pnpm exec turbo run test:coverage --force`: **PASS** (152/152 tests passed across 14 test files)
 6. `pnpm exec turbo run build --force`: **PASS** (All 11 packages and client bundles built)
-7. Fresh D1 Migrations (`0001`, `0002`, `0003`): **PASS**
+7. Fresh D1 Migrations (`0001`, `0002`, `0003`, `0004`): **PASS**
 8. `pnpm audit --prod --audit-level=critical`: **PASS** (0 critical vulnerabilities, 2 high build-time dependencies)
 9. `npx expo-doctor@latest`: **PASS** (18/18 checks passed)
 10. `git diff --check`: **PASS** (Clean)

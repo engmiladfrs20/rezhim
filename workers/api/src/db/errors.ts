@@ -35,3 +35,10 @@ export class FoodValidationError extends Error {
     this.name = 'FoodValidationError';
   }
 }
+
+export class InvalidCursorError extends Error {
+  constructor(message: string = 'Invalid or malformed pagination cursor') {
+    super(message);
+    this.name = 'InvalidCursorError';
+  }
+}

@@ -25,19 +25,25 @@ Phase 4 establishes the food catalog data architecture for NutriAI Persia. The s
    - `food_servings` associates positive weight in grams (`CHECK (weight_g > 0 AND weight_g = weight_g)`) with bilingual labels (`name_fa`, `name_en`) and optional household units (e.g., "لیوان", "قاشق غذاخوری", "کف دست", "قرص", "slice", "cup").
    - This separates user portion estimation from mathematical nutrient calculations.
 
-4. **Provenance and Source Tracking**:
+4. **Provenance, Source Tracking and Barcode Normalization**:
    - `food_sources` records authoritative data origins (e.g., USDA FoodData Central, Iranian national food composition tables, admin entries) with licensing and acquisition timestamps.
    - `(source_id, external_id)` pairs are constrained by unique conditional indexes, preventing duplicate imports from external registries.
-   - `barcode` values are normalized and uniqueness-enforced across all branded and packaged foods.
+   - Barcodes are canonicalized: Arabic (`٠-٩`) and Persian (`۰-۹`) digits are converted to ASCII (`0-9`), separators (`\s\-_.]`) stripped, and validated as 8–18 digit numeric strings. Barcode uniqueness is enforced across active and draft foods.
 
-5. **Soft Archive Lifecycle**:
+5. **Soft Archive Lifecycle & Non-Destructive Admin Edit**:
    - Physical deletion is not permitted for foods in production.
    - A three-state status lifecycle (`draft`, `active`, `archived`) is enforced.
    - Public consumer endpoints (`/api/v1/foods`) filter strictly on `status = 'active'`, while administrative endpoints allow viewing and filtering across all lifecycle states.
+   - Partial updates via `PATCH /api/v1/admin/foods/:id` preserve omitted relational arrays (`aliases`, `nutrients`, `servings`, `translations`) without deleting them.
 
-6. **Stable Cursor-Based Pagination**:
-   - Pagination uses base64-encoded `(created_at, id)` composite cursors.
-   - This guarantees stable deterministic traversal across pages under active catalog modifications without dropped or duplicated items.
+6. **Secure Versioned Cursor Codec**:
+   - Pagination uses versioned Base64URL encoded `v1:${created_at}:${id}` composite cursors capped at 512 characters.
+   - The cursor decoder strictly validates RFC3339 timestamp formats. Malformed, invalid-version, or tampered cursors are rejected with HTTP 400 `INVALID_CURSOR`.
+
+7. **Schema-Level Duplicate Pre-Checks & D1 Error Translation**:
+   - Zod schemas reject duplicate locales in `translations`, duplicate `nutrient_id`s in `nutrients`, duplicate `(locale, alias)` in `aliases`, and duplicate serving names in `servings` before hitting D1.
+   - Database constraint violations are safely translated into HTTP 409 `CONFLICT` or HTTP 400 `VALIDATION_ERROR` responses without leaking internal SQLite error traces.
+   - Seed timestamps in migration `0004_food_catalog_integrity.sql` are normalized to strict RFC3339 UTC strings.
 
 ## Consequences
 

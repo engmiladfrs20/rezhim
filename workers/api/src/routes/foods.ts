@@ -3,7 +3,7 @@ import type { AppEnv } from '../types';
 import { authMiddleware } from '../middleware/auth';
 import { FoodService } from '../services/food.service';
 import { foodListQuerySchema } from '@nutriai/schemas';
-import { FoodNotFoundError } from '../db/errors';
+import { FoodNotFoundError, InvalidCursorError } from '../db/errors';
 import type {
   ApiResponse,
   ApiErrorResponse,
@@ -38,15 +38,27 @@ foodsRouter.get('/', async (c) => {
   }
 
   const foodService = new FoodService(c.env.DB!);
-  const result = await foodService.getPublicFoodList(queryResult.data);
+  try {
+    const result = await foodService.getPublicFoodList(queryResult.data);
 
-  const response: ApiResponse<PaginatedResult<FoodSummary>> = {
-    success: true,
-    data: result,
-    requestId: c.get('requestId'),
-  };
+    const response: ApiResponse<PaginatedResult<FoodSummary>> = {
+      success: true,
+      data: result,
+      requestId: c.get('requestId'),
+    };
 
-  return c.json(response, 200);
+    return c.json(response, 200);
+  } catch (err) {
+    if (err instanceof InvalidCursorError) {
+      const errResp: ApiErrorResponse = {
+        success: false,
+        error: { code: 'INVALID_CURSOR', message: err.message },
+        requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',
+      };
+      return c.json(errResp, 400);
+    }
+    throw err;
+  }
 });
 
 foodsRouter.get('/:id', async (c) => {

@@ -10,7 +10,12 @@ import {
   createFoodCategorySchema,
   adminFoodListQuerySchema,
 } from '@nutriai/schemas';
-import { FoodNotFoundError, FoodConflictError, FoodValidationError } from '../db/errors';
+import {
+  FoodNotFoundError,
+  FoodConflictError,
+  FoodValidationError,
+  InvalidCursorError,
+} from '../db/errors';
 import type {
   ApiResponse,
   ApiErrorResponse,
@@ -48,15 +53,27 @@ adminFoodsRouter.get('/', async (c) => {
   }
 
   const foodService = new FoodService(c.env.DB!);
-  const result = await foodService.getAdminFoodList(queryResult.data);
+  try {
+    const result = await foodService.getAdminFoodList(queryResult.data);
 
-  const response: ApiResponse<PaginatedResult<FoodSummary>> = {
-    success: true,
-    data: result,
-    requestId: c.get('requestId'),
-  };
+    const response: ApiResponse<PaginatedResult<FoodSummary>> = {
+      success: true,
+      data: result,
+      requestId: c.get('requestId'),
+    };
 
-  return c.json(response, 200);
+    return c.json(response, 200);
+  } catch (err) {
+    if (err instanceof InvalidCursorError) {
+      const errResp: ApiErrorResponse = {
+        success: false,
+        error: { code: 'INVALID_CURSOR', message: err.message },
+        requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',
+      };
+      return c.json(errResp, 400);
+    }
+    throw err;
+  }
 });
 
 adminFoodsRouter.post('/', async (c) => {
@@ -131,6 +148,14 @@ adminFoodsRouter.post('/categories', async (c) => {
         requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',
       };
       return c.json(errResp, 409);
+    }
+    if (err instanceof FoodValidationError) {
+      const errResp: ApiErrorResponse = {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: err.message },
+        requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',
+      };
+      return c.json(errResp, 400);
     }
     throw err;
   }

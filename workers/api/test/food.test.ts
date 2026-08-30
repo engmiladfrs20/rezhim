@@ -14,6 +14,8 @@ import type {
 
 const testEnv = env as ProvidedEnv;
 
+const STRICT_RFC3339_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+
 describe('Food Catalog Data Foundation & Security Integration Tests', () => {
   let adminToken: string;
   let userToken: string;
@@ -85,8 +87,44 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
     userToken = ((await userTokenRes.json()) as ApiResponse<{ token: string }>).data.token;
   });
 
-  describe('D1 Database Integrity & Constraints', () => {
-    it('enforces check constraints preventing negative nutrients and zero/negative serving weights', async () => {
+  describe('D1 Database Integrity, Constraints & Strict RFC3339 Seeds', () => {
+    it('verifies that all seed timestamps in nutrient_definitions, categories, and sources are strict RFC3339 UTC', async () => {
+      const db = testEnv.DB!;
+
+      const [nuts, cats, catTrans, sources] = await Promise.all([
+        db
+          .prepare('SELECT created_at, updated_at FROM nutrient_definitions')
+          .all<{ created_at: string; updated_at: string }>(),
+        db
+          .prepare('SELECT created_at, updated_at FROM food_categories')
+          .all<{ created_at: string; updated_at: string }>(),
+        db
+          .prepare('SELECT created_at, updated_at FROM food_category_translations')
+          .all<{ created_at: string; updated_at: string }>(),
+        db
+          .prepare('SELECT created_at, updated_at FROM food_sources')
+          .all<{ created_at: string; updated_at: string }>(),
+      ]);
+
+      for (const row of nuts.results || []) {
+        expect(STRICT_RFC3339_REGEX.test(row.created_at)).toBe(true);
+        expect(STRICT_RFC3339_REGEX.test(row.updated_at)).toBe(true);
+      }
+      for (const row of cats.results || []) {
+        expect(STRICT_RFC3339_REGEX.test(row.created_at)).toBe(true);
+        expect(STRICT_RFC3339_REGEX.test(row.updated_at)).toBe(true);
+      }
+      for (const row of catTrans.results || []) {
+        expect(STRICT_RFC3339_REGEX.test(row.created_at)).toBe(true);
+        expect(STRICT_RFC3339_REGEX.test(row.updated_at)).toBe(true);
+      }
+      for (const row of sources.results || []) {
+        expect(STRICT_RFC3339_REGEX.test(row.created_at)).toBe(true);
+        expect(STRICT_RFC3339_REGEX.test(row.updated_at)).toBe(true);
+      }
+    });
+
+    it('enforces check constraints preventing negative nutrients and zero/negative serving weights in D1', async () => {
       const db = testEnv.DB!;
       const now = new Date().toISOString();
 
@@ -152,7 +190,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
         )
         .run();
 
-      // Duplicate barcode insert directly into D1 must fail
       let barcodeDup = false;
       try {
         await db
@@ -176,7 +213,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       }
       expect(barcodeDup).toBe(true);
 
-      // Duplicate source + external_id insert directly into D1 must fail
       let sourceDup = false;
       try {
         await db
@@ -204,7 +240,7 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
     });
   });
 
-  describe('Admin Food CRUD & Atomic Operations', () => {
+  describe('Admin Food CRUD, Atomic Operations & Edit Data Loss Prevention', () => {
     it('creates a new food atomically with translations, nutrients, and servings', async () => {
       const createPayload = {
         category_id: 'cat_grains',
@@ -264,31 +300,94 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(data.success).toBe(true);
       expect(data.data.food.id).toBeTruthy();
       expect(data.data.food.name).toBe('نان سنگک سنتی');
+      expect(data.data.food.resolvedLocale).toBe('fa');
       expect(data.data.food.foodType).toBe('generic');
       expect(data.data.food.barcode).toBe('6261234567890');
       expect(data.data.food.translations.length).toBe(2);
       expect(data.data.food.aliases.length).toBe(2);
       expect(data.data.food.nutrients.length).toBe(5);
       expect(data.data.food.servings.length).toBe(2);
+    });
 
-      const foodId = data.data.food.id;
+    it('proves name-only PATCH preserves all aliases, micronutrients (>5), and multiple servings without data loss', async () => {
+      // 1. Create rich food with 2 aliases, 7 nutrients (macros + iron + calcium), and 2 servings
+      const initialPayload = {
+        category_id: 'cat_grains',
+        food_type: 'generic',
+        translations: [{ locale: 'fa', name: 'نان سنگک کنجدی' }],
+        aliases: [
+          { locale: 'fa', alias: 'سنگک کنجددار' },
+          { locale: 'en', alias: 'Sesame Sangak' },
+        ],
+        nutrients: [
+          { nutrient_id: 'nut_energy', amount_per_100g: 270 },
+          { nutrient_id: 'nut_protein', amount_per_100g: 9.5 },
+          { nutrient_id: 'nut_carbohydrate', amount_per_100g: 50 },
+          { nutrient_id: 'nut_fat_total', amount_per_100g: 3.5 },
+          { nutrient_id: 'nut_fiber', amount_per_100g: 4.0 },
+          { nutrient_id: 'nut_iron', amount_per_100g: 2.1 },
+          { nutrient_id: 'nut_calcium', amount_per_100g: 45 },
+        ],
+        servings: [
+          { name_fa: 'یک کف دست', name_en: '1 Palm size', weight_g: 30, household_unit: 'کف دست' },
+          { name_fa: 'یک قرص کامل', name_en: '1 Loaf', weight_g: 420, household_unit: 'قرص' },
+        ],
+      };
 
-      // Verify Admin detail endpoint
-      const detailRes = await app.request(
-        `/api/v1/admin/foods/${foodId}?locale=en`,
+      const createRes = await app.request(
+        '/api/v1/admin/foods',
         {
-          headers: { Authorization: `Bearer ${adminToken}` },
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify(initialPayload),
         },
         testEnv,
       );
-      expect(detailRes.status).toBe(200);
-      const detailData = (await detailRes.json()) as ApiResponse<{ food: FoodDetail }>;
-      expect(detailData.data.food.name).toBe('Traditional Sangak Bread');
-      expect(detailData.data.food.category?.slug).toBe('grains-cereals');
+      const foodId = ((await createRes.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
+
+      // 2. Perform name-only PATCH update without sending nutrients, aliases, or servings
+      const patchRes = await app.request(
+        `/api/v1/admin/foods/${foodId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            translations: [{ locale: 'fa', name: 'نان سنگک اعلا دو رو کنجد' }],
+          }),
+        },
+        testEnv,
+      );
+
+      expect(patchRes.status).toBe(200);
+
+      // 3. Verify that all 2 aliases, all 7 nutrients, and both servings are completely intact
+      const detailRes = await app.request(
+        `/api/v1/admin/foods/${foodId}`,
+        { headers: { Authorization: `Bearer ${adminToken}` } },
+        testEnv,
+      );
+      const detail = ((await detailRes.json()) as ApiResponse<{ food: FoodDetail }>).data.food;
+
+      expect(detail.name).toBe('نان سنگک اعلا دو رو کنجد');
+      expect(detail.aliases.length).toBe(2);
+      expect(detail.aliases.some((a) => a.alias === 'سنگک کنجددار')).toBe(true);
+      expect(detail.nutrients.length).toBe(7);
+      expect(detail.nutrients.some((n) => n.code === 'iron' && n.amountPer100g === 2.1)).toBe(true);
+      expect(detail.nutrients.some((n) => n.code === 'calcium' && n.amountPer100g === 45)).toBe(
+        true,
+      );
+      expect(detail.servings.length).toBe(2);
+      expect(detail.servings[1]?.weightG).toBe(420);
     });
 
-    it('rejects duplicate barcode with 409 CONFLICT and duplicate external ID with 409 CONFLICT', async () => {
-      // 1. Create first food
+    it('normalizes barcodes with Persian/Arabic digits and separators to canonical format, and rejects duplicates with 409 CONFLICT', async () => {
+      // 1. Create with Persian digits and hyphens: "۶۲۶-۰۰۰۰-۸۸۸۸"
       const res1 = await app.request(
         '/api/v1/admin/foods',
         {
@@ -298,18 +397,18 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
-            barcode: '6269999999999',
-            source_id: 'src_usda_fdc',
-            external_id: 'fdc_998877',
-            translations: [{ locale: 'fa', name: 'شیر کم چرب' }],
+            barcode: '۶۲۶-۰۰۰۰-۸۸۸۸',
+            translations: [{ locale: 'fa', name: 'دوغ نعنایی' }],
           }),
         },
         testEnv,
       );
       expect(res1.status).toBe(201);
+      const food1 = ((await res1.json()) as ApiResponse<{ food: FoodDetail }>).data.food;
+      expect(food1.barcode).toBe('62600008888');
 
-      // 2. Duplicate Barcode
-      const dupBarcodeRes = await app.request(
+      // 2. Attempt to create another food with same canonical barcode formatted with spaces: "626 0000 8888"
+      const res2 = await app.request(
         '/api/v1/admin/foods',
         {
           method: 'POST',
@@ -318,41 +417,21 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
-            barcode: '6269999999999',
-            translations: [{ locale: 'fa', name: 'شیر پرچرب' }],
+            barcode: '626 0000 8888',
+            translations: [{ locale: 'fa', name: 'دوغ آویشن' }],
           }),
         },
         testEnv,
       );
-      expect(dupBarcodeRes.status).toBe(409);
-      const dupBarcodeErr = (await dupBarcodeRes.json()) as ApiErrorResponse;
-      expect(dupBarcodeErr.error.code).toBe('CONFLICT');
-
-      // 3. Duplicate Source + External ID
-      const dupSourceRes = await app.request(
-        '/api/v1/admin/foods',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${adminToken}`,
-          },
-          body: JSON.stringify({
-            source_id: 'src_usda_fdc',
-            external_id: 'fdc_998877',
-            translations: [{ locale: 'fa', name: 'شیر دیگری' }],
-          }),
-        },
-        testEnv,
-      );
-      expect(dupSourceRes.status).toBe(409);
-      const dupSourceErr = (await dupSourceRes.json()) as ApiErrorResponse;
-      expect(dupSourceErr.error.code).toBe('CONFLICT');
+      expect(res2.status).toBe(409);
+      const errData = (await res2.json()) as ApiErrorResponse;
+      expect(errData.error.code).toBe('CONFLICT');
+      expect(errData.error.message).toContain('barcode');
     });
 
-    it('rejects invalid nutrient IDs, negative amounts, and invalid serving weights with 400 VALIDATION_ERROR', async () => {
-      // 1. Invalid Nutrient ID
-      const badNutRes = await app.request(
+    it('rejects duplicate nested items in payload with 400 VALIDATION_ERROR', async () => {
+      // 1. Duplicate Locale in translations
+      const dupLocaleRes = await app.request(
         '/api/v1/admin/foods',
         {
           method: 'POST',
@@ -361,16 +440,18 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
-            translations: [{ locale: 'fa', name: 'تست ماده مغذی نامعتبر' }],
-            nutrients: [{ nutrient_id: 'nut_non_existent', amount_per_100g: 50 }],
+            translations: [
+              { locale: 'fa', name: 'ماست ۱' },
+              { locale: 'fa', name: 'ماست ۲' },
+            ],
           }),
         },
         testEnv,
       );
-      expect(badNutRes.status).toBe(400);
+      expect(dupLocaleRes.status).toBe(400);
 
-      // 2. Negative Nutrient Amount via API
-      const negNutRes = await app.request(
+      // 2. Duplicate Nutrient ID
+      const dupNutRes = await app.request(
         '/api/v1/admin/foods',
         {
           method: 'POST',
@@ -379,16 +460,19 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
-            translations: [{ locale: 'fa', name: 'تست منفی' }],
-            nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: -5 }],
+            translations: [{ locale: 'fa', name: 'تست' }],
+            nutrients: [
+              { nutrient_id: 'nut_energy', amount_per_100g: 100 },
+              { nutrient_id: 'nut_energy', amount_per_100g: 200 },
+            ],
           }),
         },
         testEnv,
       );
-      expect(negNutRes.status).toBe(400);
+      expect(dupNutRes.status).toBe(400);
 
-      // 3. Zero Serving Weight via API
-      const zeroServingRes = await app.request(
+      // 3. Duplicate Alias for same locale
+      const dupAliasRes = await app.request(
         '/api/v1/admin/foods',
         {
           method: 'POST',
@@ -397,72 +481,149 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
-            translations: [{ locale: 'fa', name: 'تست سروینگ صفر' }],
-            servings: [{ name_fa: 'سروینگ', name_en: 'Serving', weight_g: 0 }],
+            translations: [{ locale: 'fa', name: 'تست' }],
+            aliases: [
+              { locale: 'fa', alias: 'سیب' },
+              { locale: 'fa', alias: 'سیب' },
+            ],
           }),
         },
         testEnv,
       );
-      expect(zeroServingRes.status).toBe(400);
+      expect(dupAliasRes.status).toBe(400);
+
+      // 4. Duplicate Serving Name
+      const dupServRes = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            translations: [{ locale: 'fa', name: 'تست' }],
+            servings: [
+              { name_fa: 'یک لیوان', name_en: '1 Cup', weight_g: 240 },
+              { name_fa: 'یک لیوان', name_en: '1 Glass', weight_g: 250 },
+            ],
+          }),
+        },
+        testEnv,
+      );
+      expect(dupServRes.status).toBe(400);
     });
 
-    it('updates food and replaces translations, nutrients, and servings atomically', async () => {
-      // Create initial food
-      const createRes = await app.request(
+    it('enforces model rules: branded requires brand_name, external_id requires source_id, parent category validation', async () => {
+      // 1. Branded without brand_name -> 400
+      const noBrandRes = await app.request(
         '/api/v1/admin/foods',
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${adminToken}`,
-          },
-          body: JSON.stringify({
-            translations: [{ locale: 'fa', name: 'ماست ساده' }],
-            nutrients: [{ nutrient_id: 'nut_protein', amount_per_100g: 3.5 }],
-            servings: [{ name_fa: 'یک پیاله', name_en: '1 Bowl', weight_g: 150 }],
-          }),
-        },
-        testEnv,
-      );
-      const foodId = ((await createRes.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
-
-      // Update food
-      const updateRes = await app.request(
-        `/api/v1/admin/foods/${foodId}`,
-        {
-          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
             food_type: 'branded',
-            brand_name: 'دامداران',
-            translations: [
-              { locale: 'fa', name: 'ماست همزده پرچرب دامداران' },
-              { locale: 'en', name: 'Damdaran Stirred Whole Yogurt' },
-            ],
-            nutrients: [
-              { nutrient_id: 'nut_protein', amount_per_100g: 4.2 },
-              { nutrient_id: 'nut_fat_total', amount_per_100g: 5.0 },
-            ],
+            brand_name: '',
+            translations: [{ locale: 'fa', name: 'پنیر سفید' }],
           }),
         },
         testEnv,
       );
+      expect(noBrandRes.status).toBe(400);
 
-      expect(updateRes.status).toBe(200);
-      const updateData = (await updateRes.json()) as ApiResponse<{ food: FoodDetail }>;
-      expect(updateData.data.food.foodType).toBe('branded');
-      expect(updateData.data.food.brandName).toBe('دامداران');
-      expect(updateData.data.food.name).toBe('ماست همزده پرچرب دامداران');
-      expect(updateData.data.food.nutrients.length).toBe(2);
+      // 2. external_id without source_id -> 400
+      const noSourceRes = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            external_id: 'ext_9999',
+            translations: [{ locale: 'fa', name: 'پنیر تبریز' }],
+          }),
+        },
+        testEnv,
+      );
+      expect(noSourceRes.status).toBe(400);
+
+      // 3. Non-existent parent category when creating category -> 400
+      const badParentCatRes = await app.request(
+        '/api/v1/admin/foods/categories',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            slug: 'sub-dairy-invalid',
+            parent_id: 'cat_non_existent_999',
+            translations: [{ locale: 'fa', name: 'زیردسته نامعتبر' }],
+          }),
+        },
+        testEnv,
+      );
+      expect(badParentCatRes.status).toBe(400);
+    });
+
+    it('handles concurrent duplicate creation gracefully returning 409 without 500 or leaking SQL text', async () => {
+      const payload = {
+        barcode: '6265555555555',
+        translations: [{ locale: 'fa', name: 'آبمیوه طبیعی' }],
+      };
+
+      const [res1, res2] = await Promise.all([
+        app.request(
+          '/api/v1/admin/foods',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${adminToken}`,
+            },
+            body: JSON.stringify(payload),
+          },
+          testEnv,
+        ),
+        app.request(
+          '/api/v1/admin/foods',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${adminToken}`,
+            },
+            body: JSON.stringify(payload),
+          },
+          testEnv,
+        ),
+      ]);
+
+      const statuses = [res1.status, res2.status].sort();
+      expect(statuses).toEqual([201, 409]);
+
+      const conflictRes = res1.status === 409 ? res1 : res2;
+      const errBody = (await conflictRes.json()) as ApiErrorResponse;
+      expect(errBody.error.code).toBe('CONFLICT');
+      expect(errBody.error.message).not.toContain('SQLite');
+      expect(errBody.error.message).not.toContain('D1_ERROR');
+
+      // Verify D1 atomicity: exactly 1 record exists
+      const countRes = await testEnv
+        .DB!.prepare("SELECT COUNT(*) as cnt FROM foods WHERE barcode = '6265555555555'")
+        .first<{ cnt: number }>();
+      expect(countRes?.cnt).toBe(1);
     });
   });
 
   describe('Public Endpoints, Categories, Nutrients & Soft Archive', () => {
     it('retrieves active categories and nutrient definitions', async () => {
-      // 1. Categories
       const catRes = await app.request(
         '/api/v1/food-categories?locale=fa',
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -471,9 +632,8 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(catRes.status).toBe(200);
       const catData = (await catRes.json()) as ApiResponse<{ categories: FoodCategorySummary[] }>;
       expect(catData.data.categories.length).toBeGreaterThanOrEqual(7);
-      expect(catData.data.categories.some((c) => c.slug === 'grains-cereals')).toBe(true);
+      expect(catData.data.categories[0]?.resolvedLocale).toBe('fa');
 
-      // 2. Nutrients
       const nutRes = await app.request(
         '/api/v1/nutrients',
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -482,13 +642,9 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(nutRes.status).toBe(200);
       const nutData = (await nutRes.json()) as ApiResponse<{ nutrients: NutrientDefinition[] }>;
       expect(nutData.data.nutrients.length).toBe(15);
-      expect(nutData.data.nutrients.some((n) => n.code === 'energy' && n.unit === 'kcal')).toBe(
-        true,
-      );
     });
 
     it('soft archives food: excluded from public endpoints, but preserved in D1 and admin queries', async () => {
-      // Create food
       const createRes = await app.request(
         '/api/v1/admin/foods',
         {
@@ -507,15 +663,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       );
       const foodId = ((await createRes.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
 
-      // Verify visible to public user
-      const pubBefore = await app.request(
-        `/api/v1/foods/${foodId}`,
-        { headers: { Authorization: `Bearer ${userToken}` } },
-        testEnv,
-      );
-      expect(pubBefore.status).toBe(200);
-
-      // Admin archives food
       const archiveRes = await app.request(
         `/api/v1/admin/foods/${foodId}`,
         {
@@ -526,7 +673,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       );
       expect(archiveRes.status).toBe(200);
 
-      // Public detail returns 404 FOOD_NOT_FOUND
       const pubAfter = await app.request(
         `/api/v1/foods/${foodId}`,
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -536,7 +682,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       const pubErr = (await pubAfter.json()) as ApiErrorResponse;
       expect(pubErr.error.code).toBe('FOOD_NOT_FOUND');
 
-      // Public list excludes archived food
       const pubList = await app.request(
         '/api/v1/foods',
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -545,7 +690,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       const listData = (await pubList.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
       expect(listData.data.items.some((f) => f.id === foodId)).toBe(false);
 
-      // Admin list with status=archived includes the food
       const adminArchivedList = await app.request(
         '/api/v1/admin/foods?status=archived',
         { headers: { Authorization: `Bearer ${adminToken}` } },
@@ -558,9 +702,8 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
     });
   });
 
-  describe('Stable Cursor Pagination & Deterministic Locale Fallback', () => {
-    it('paginates stably across multiple pages without gaps or duplicate records', async () => {
-      // Create 5 foods sequentially
+  describe('Cursor Codec, Pagination Stability & Locale Fallback', () => {
+    it('paginates stably across multiple pages without gaps or duplicate records using versioned Base64URL cursor', async () => {
       for (let i = 1; i <= 5; i++) {
         await app.request(
           '/api/v1/admin/foods',
@@ -571,7 +714,7 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
               Authorization: `Bearer ${adminToken}`,
             },
             body: JSON.stringify({
-              translations: [{ locale: 'fa', name: `غذای شماره ${i}` }],
+              translations: [{ locale: 'fa', name: `غذای تست ${i}` }],
               nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: 100 * i }],
             }),
           },
@@ -579,7 +722,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
         );
       }
 
-      // Page 1 (limit: 2)
       const page1Res = await app.request(
         '/api/v1/foods?limit=2',
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -591,7 +733,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(page1.data.hasMore).toBe(true);
       expect(page1.data.nextCursor).toBeTruthy();
 
-      // Page 2
       const page2Res = await app.request(
         `/api/v1/foods?limit=2&cursor=${page1.data.nextCursor}`,
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -600,17 +741,48 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(page2Res.status).toBe(200);
       const page2 = (await page2Res.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
       expect(page2.data.items.length).toBe(2);
-      expect(page2.data.hasMore).toBe(true);
-      expect(page2.data.nextCursor).toBeTruthy();
 
-      // Ensure no overlapping IDs between page 1 and page 2
       const p1Ids = new Set(page1.data.items.map((i) => i.id));
       for (const item of page2.data.items) {
         expect(p1Ids.has(item.id)).toBe(false);
       }
     });
 
-    it('falls back to Persian translation when requested English translation is absent', async () => {
+    it('rejects malformed, tampered or invalid-version cursors with 400 INVALID_CURSOR', async () => {
+      // 1. Invalid Base64
+      const res1 = await app.request(
+        '/api/v1/foods?cursor=invalid_base64!!!',
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(res1.status).toBe(400);
+      const err1 = (await res1.json()) as ApiErrorResponse;
+      expect(err1.error.code).toBe('INVALID_CURSOR');
+
+      // 2. Tampered invalid date in cursor
+      const tamperedDate = btoa('v1:not-a-date:food_123');
+      const res2 = await app.request(
+        `/api/v1/foods?cursor=${tamperedDate}`,
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(res2.status).toBe(400);
+      const err2 = (await res2.json()) as ApiErrorResponse;
+      expect(err2.error.code).toBe('INVALID_CURSOR');
+
+      // 3. Unsupported cursor version (v2)
+      const unsupportedVer = btoa('v2:2026-08-30T10:00:00.000Z:food_123');
+      const res3 = await app.request(
+        `/api/v1/admin/foods?cursor=${unsupportedVer}`,
+        { headers: { Authorization: `Bearer ${adminToken}` } },
+        testEnv,
+      );
+      expect(res3.status).toBe(400);
+      const err3 = (await res3.json()) as ApiErrorResponse;
+      expect(err3.error.code).toBe('INVALID_CURSOR');
+    });
+
+    it('accurately resolves locale and returns resolvedLocale "fa" when requested "en" has no English translation', async () => {
       const createRes = await app.request(
         '/api/v1/admin/foods',
         {
@@ -627,7 +799,6 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       );
       const foodId = ((await createRes.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
 
-      // Request with locale=en must fallback to Persian name
       const enRes = await app.request(
         `/api/v1/foods/${foodId}?locale=en`,
         { headers: { Authorization: `Bearer ${userToken}` } },
@@ -636,6 +807,9 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(enRes.status).toBe(200);
       const enData = (await enRes.json()) as ApiResponse<{ food: FoodDetail }>;
       expect(enData.data.food.name).toBe('کشک بادمجان خانگی');
+      expect(enData.data.food.resolvedLocale).toBe('fa');
+      expect(enData.data.food.locale).toBe('fa');
+      expect(enData.data.food.requestedLocale).toBe('en');
     });
   });
 

@@ -29,6 +29,7 @@ export class FoodMapper {
     const fallbackTrans = translations[0];
 
     const chosen = reqTrans || faTrans || fallbackTrans;
+    const resolvedLocale = (chosen?.locale || 'fa') as SupportedLocale;
 
     return {
       id: record.id,
@@ -37,7 +38,9 @@ export class FoodMapper {
       status: record.status,
       name: chosen ? chosen.name : record.slug,
       description: chosen ? chosen.description : null,
-      locale,
+      locale: resolvedLocale,
+      resolvedLocale,
+      requestedLocale: locale,
     };
   }
 
@@ -89,6 +92,7 @@ export class FoodMapper {
     const fallbackTrans = full.translations[0];
 
     const chosen = reqTrans || faTrans || fallbackTrans;
+    const resolvedLocale = (chosen?.locale || 'fa') as SupportedLocale;
     const name = chosen ? chosen.name : 'Unnamed';
     const description = chosen ? chosen.description : null;
 
@@ -140,7 +144,9 @@ export class FoodMapper {
       id: full.food.id,
       name,
       description,
-      locale,
+      locale: resolvedLocale,
+      resolvedLocale,
+      requestedLocale: locale,
       foodType: full.food.food_type,
       brandName: full.food.brand_name,
       barcode: full.food.barcode,

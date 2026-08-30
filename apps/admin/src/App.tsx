@@ -144,12 +144,14 @@ const AdminUserList: FC<{ currentUser: PublicUser }> = ({ currentUser }) => {
   >({
     queryKey: ['admin-users', cursor, filterRole, filterStatus],
     queryFn: async () => {
-      let url = `${API_URL}/api/v1/admin/users?limit=10`;
-      if (cursor) url += `&cursor=${cursor}`;
-      if (filterRole) url += `&role=${filterRole}`;
-      if (filterStatus) url += `&status=${filterStatus}`;
+      const params = new URLSearchParams({ limit: '10' });
+      if (cursor) params.set('cursor', cursor);
+      if (filterRole) params.set('role', filterRole);
+      if (filterStatus) params.set('status', filterStatus);
 
-      const res = await fetch(url, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/v1/admin/users?${params.toString()}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json() as Promise<
         ApiResponse<{ users: PublicUser[]; nextCursor?: string | null }>

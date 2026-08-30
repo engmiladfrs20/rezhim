@@ -9,8 +9,14 @@ import type {
   FoodCategoryTranslationRecord,
   FoodSourceRecord,
 } from './models';
-import { DatabaseError } from './errors';
-import type { FoodSummary, PaginatedResult } from '@nutriai/types';
+import {
+  DatabaseError,
+  FoodConflictError,
+  FoodValidationError,
+  InvalidCursorError,
+} from './errors';
+import type { FoodSummary, PaginatedResult, SupportedLocale } from '@nutriai/types';
+import { decodeCursor, encodeCursor } from '../lib/cursor';
 
 export interface FullFoodDetailRecord {
   food: FoodRecord;
@@ -160,13 +166,22 @@ export class FoodRepository {
   }
 
   async listPublic(options: {
-    locale: 'fa' | 'en';
+    locale: SupportedLocale;
     categoryId?: string | undefined;
     cursor?: string | undefined;
     limit: number;
   }): Promise<PaginatedResult<FoodSummary>> {
+    const { locale, categoryId, cursor, limit } = options;
+
+    let cursorCreatedAt: string | null = null;
+    let cursorId: string | null = null;
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      cursorCreatedAt = decoded.createdAt;
+      cursorId = decoded.id;
+    }
+
     try {
-      const { locale, categoryId, cursor, limit } = options;
       let query = `
         SELECT 
           f.id,
@@ -177,6 +192,7 @@ export class FoodRepository {
           f.category_id,
           f.created_at,
           f.updated_at,
+          COALESCE(ft_req.locale, ft_fa.locale, ft_any.locale, ?) AS resolved_locale,
           COALESCE(ft_req.name, ft_fa.name, ft_any.name, 'Unnamed') AS name,
           COALESCE(ft_req.description, ft_fa.description, ft_any.description) AS description,
           COALESCE(ct_req.name, ct_fa.name, ct_any.name) AS category_name,
@@ -188,15 +204,15 @@ export class FoodRepository {
         LEFT JOIN food_translations ft_req ON f.id = ft_req.food_id AND ft_req.locale = ?
         LEFT JOIN food_translations ft_fa ON f.id = ft_fa.food_id AND ft_fa.locale = 'fa'
         LEFT JOIN (
-          SELECT food_id, name, description 
-          FROM food_translations 
+          SELECT food_id, locale, name, description
+          FROM food_translations
           GROUP BY food_id
         ) ft_any ON f.id = ft_any.food_id
         LEFT JOIN food_category_translations ct_req ON f.category_id = ct_req.category_id AND ct_req.locale = ?
         LEFT JOIN food_category_translations ct_fa ON f.category_id = ct_fa.category_id AND ct_fa.locale = 'fa'
         LEFT JOIN (
-          SELECT category_id, name 
-          FROM food_category_translations 
+          SELECT category_id, name
+          FROM food_category_translations
           GROUP BY category_id
         ) ct_any ON f.category_id = ct_any.category_id
         LEFT JOIN food_nutrients fn_energy ON f.id = fn_energy.food_id AND fn_energy.nutrient_id = 'nut_energy'
@@ -206,21 +222,16 @@ export class FoodRepository {
         WHERE f.status = 'active'
       `;
 
-      const params: (string | number)[] = [locale, locale];
+      const params: (string | number)[] = [locale, locale, locale];
 
       if (categoryId) {
         query += ' AND f.category_id = ?';
         params.push(categoryId);
       }
 
-      if (cursor) {
-        // Cursor encodes "created_at|id"
-        const decoded = atob(cursor);
-        const [cursorCreatedAt, cursorId] = decoded.split('|');
-        if (cursorCreatedAt && cursorId) {
-          query += ' AND (f.created_at < ? OR (f.created_at = ? AND f.id < ?))';
-          params.push(cursorCreatedAt, cursorCreatedAt, cursorId);
-        }
+      if (cursorCreatedAt && cursorId) {
+        query += ' AND (f.created_at < ? OR (f.created_at = ? AND f.id < ?))';
+        params.push(cursorCreatedAt, cursorCreatedAt, cursorId);
       }
 
       query += ' ORDER BY f.created_at DESC, f.id DESC LIMIT ?';
@@ -236,6 +247,7 @@ export class FoodRepository {
         category_id: string | null;
         created_at: string;
         updated_at: string;
+        resolved_locale: string;
         name: string;
         description: string | null;
         category_name: string | null;
@@ -252,27 +264,32 @@ export class FoodRepository {
       let nextCursor: string | null = null;
       if (hasMore && sliced.length > 0) {
         const last = sliced[sliced.length - 1]!;
-        nextCursor = btoa(`${last.created_at}|${last.id}`);
+        nextCursor = encodeCursor(last.created_at, last.id);
       }
 
-      const items: FoodSummary[] = sliced.map((r) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description,
-        locale,
-        foodType: r.food_type,
-        brandName: r.brand_name,
-        barcode: r.barcode,
-        status: r.status,
-        categoryId: r.category_id,
-        categoryName: r.category_name,
-        energyKcal: r.energy_kcal !== null ? Number(r.energy_kcal) : null,
-        proteinG: r.protein_g !== null ? Number(r.protein_g) : null,
-        carbsG: r.carbs_g !== null ? Number(r.carbs_g) : null,
-        fatG: r.fat_g !== null ? Number(r.fat_g) : null,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at,
-      }));
+      const items: FoodSummary[] = sliced.map((r) => {
+        const resolvedLocale = (r.resolved_locale || locale) as SupportedLocale;
+        return {
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          locale: resolvedLocale,
+          resolvedLocale,
+          requestedLocale: locale,
+          foodType: r.food_type,
+          brandName: r.brand_name,
+          barcode: r.barcode,
+          status: r.status,
+          categoryId: r.category_id,
+          categoryName: r.category_name,
+          energyKcal: r.energy_kcal !== null ? Number(r.energy_kcal) : null,
+          proteinG: r.protein_g !== null ? Number(r.protein_g) : null,
+          carbsG: r.carbs_g !== null ? Number(r.carbs_g) : null,
+          fatG: r.fat_g !== null ? Number(r.fat_g) : null,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+        };
+      });
 
       return {
         items,
@@ -280,6 +297,9 @@ export class FoodRepository {
         hasMore,
       };
     } catch (err) {
+      if (err instanceof InvalidCursorError) {
+        throw err;
+      }
       throw new DatabaseError(
         `Failed to list public foods: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -289,12 +309,21 @@ export class FoodRepository {
   async listAdmin(options: {
     status?: 'draft' | 'active' | 'archived' | 'all' | undefined;
     categoryId?: string | undefined;
-    locale: 'fa' | 'en';
+    locale: SupportedLocale;
     cursor?: string | undefined;
     limit: number;
   }): Promise<PaginatedResult<FoodSummary>> {
+    const { status, categoryId, locale, cursor, limit } = options;
+
+    let cursorCreatedAt: string | null = null;
+    let cursorId: string | null = null;
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      cursorCreatedAt = decoded.createdAt;
+      cursorId = decoded.id;
+    }
+
     try {
-      const { status, categoryId, locale, cursor, limit } = options;
       let query = `
         SELECT 
           f.id,
@@ -305,6 +334,7 @@ export class FoodRepository {
           f.category_id,
           f.created_at,
           f.updated_at,
+          COALESCE(ft_req.locale, ft_fa.locale, ft_any.locale, ?) AS resolved_locale,
           COALESCE(ft_req.name, ft_fa.name, ft_any.name, 'Unnamed') AS name,
           COALESCE(ft_req.description, ft_fa.description, ft_any.description) AS description,
           COALESCE(ct_req.name, ct_fa.name, ct_any.name) AS category_name,
@@ -316,15 +346,15 @@ export class FoodRepository {
         LEFT JOIN food_translations ft_req ON f.id = ft_req.food_id AND ft_req.locale = ?
         LEFT JOIN food_translations ft_fa ON f.id = ft_fa.food_id AND ft_fa.locale = 'fa'
         LEFT JOIN (
-          SELECT food_id, name, description 
-          FROM food_translations 
+          SELECT food_id, locale, name, description
+          FROM food_translations
           GROUP BY food_id
         ) ft_any ON f.id = ft_any.food_id
         LEFT JOIN food_category_translations ct_req ON f.category_id = ct_req.category_id AND ct_req.locale = ?
         LEFT JOIN food_category_translations ct_fa ON f.category_id = ct_fa.category_id AND ct_fa.locale = 'fa'
         LEFT JOIN (
-          SELECT category_id, name 
-          FROM food_category_translations 
+          SELECT category_id, name
+          FROM food_category_translations
           GROUP BY category_id
         ) ct_any ON f.category_id = ct_any.category_id
         LEFT JOIN food_nutrients fn_energy ON f.id = fn_energy.food_id AND fn_energy.nutrient_id = 'nut_energy'
@@ -334,7 +364,7 @@ export class FoodRepository {
         WHERE 1=1
       `;
 
-      const params: (string | number)[] = [locale, locale];
+      const params: (string | number)[] = [locale, locale, locale];
 
       if (status && status !== 'all') {
         query += ' AND f.status = ?';
@@ -346,13 +376,9 @@ export class FoodRepository {
         params.push(categoryId);
       }
 
-      if (cursor) {
-        const decoded = atob(cursor);
-        const [cursorCreatedAt, cursorId] = decoded.split('|');
-        if (cursorCreatedAt && cursorId) {
-          query += ' AND (f.created_at < ? OR (f.created_at = ? AND f.id < ?))';
-          params.push(cursorCreatedAt, cursorCreatedAt, cursorId);
-        }
+      if (cursorCreatedAt && cursorId) {
+        query += ' AND (f.created_at < ? OR (f.created_at = ? AND f.id < ?))';
+        params.push(cursorCreatedAt, cursorCreatedAt, cursorId);
       }
 
       query += ' ORDER BY f.created_at DESC, f.id DESC LIMIT ?';
@@ -368,6 +394,7 @@ export class FoodRepository {
         category_id: string | null;
         created_at: string;
         updated_at: string;
+        resolved_locale: string;
         name: string;
         description: string | null;
         category_name: string | null;
@@ -384,27 +411,32 @@ export class FoodRepository {
       let nextCursor: string | null = null;
       if (hasMore && sliced.length > 0) {
         const last = sliced[sliced.length - 1]!;
-        nextCursor = btoa(`${last.created_at}|${last.id}`);
+        nextCursor = encodeCursor(last.created_at, last.id);
       }
 
-      const items: FoodSummary[] = sliced.map((r) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description,
-        locale,
-        foodType: r.food_type,
-        brandName: r.brand_name,
-        barcode: r.barcode,
-        status: r.status,
-        categoryId: r.category_id,
-        categoryName: r.category_name,
-        energyKcal: r.energy_kcal !== null ? Number(r.energy_kcal) : null,
-        proteinG: r.protein_g !== null ? Number(r.protein_g) : null,
-        carbsG: r.carbs_g !== null ? Number(r.carbs_g) : null,
-        fatG: r.fat_g !== null ? Number(r.fat_g) : null,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at,
-      }));
+      const items: FoodSummary[] = sliced.map((r) => {
+        const resolvedLocale = (r.resolved_locale || locale) as SupportedLocale;
+        return {
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          locale: resolvedLocale,
+          resolvedLocale,
+          requestedLocale: locale,
+          foodType: r.food_type,
+          brandName: r.brand_name,
+          barcode: r.barcode,
+          status: r.status,
+          categoryId: r.category_id,
+          categoryName: r.category_name,
+          energyKcal: r.energy_kcal !== null ? Number(r.energy_kcal) : null,
+          proteinG: r.protein_g !== null ? Number(r.protein_g) : null,
+          carbsG: r.carbs_g !== null ? Number(r.carbs_g) : null,
+          fatG: r.fat_g !== null ? Number(r.fat_g) : null,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+        };
+      });
 
       return {
         items,
@@ -412,10 +444,45 @@ export class FoodRepository {
         hasMore,
       };
     } catch (err) {
+      if (err instanceof InvalidCursorError) {
+        throw err;
+      }
       throw new DatabaseError(
         `Failed to list admin foods: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
+  }
+
+  private handleD1ConstraintError(err: unknown, action: string): never {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('UNIQUE constraint failed: foods.barcode')) {
+      throw new FoodConflictError('A food with this barcode already exists');
+    }
+    if (msg.includes('UNIQUE constraint failed: foods.source_id, foods.external_id')) {
+      throw new FoodConflictError('A food from this source with this external ID already exists');
+    }
+    if (
+      msg.includes('UNIQUE constraint failed: food_translations.food_id, food_translations.locale')
+    ) {
+      throw new FoodValidationError('Duplicate translation locale for food item');
+    }
+    if (
+      msg.includes('UNIQUE constraint failed: food_nutrients.food_id, food_nutrients.nutrient_id')
+    ) {
+      throw new FoodValidationError('Duplicate nutrient for food item');
+    }
+    if (msg.includes('UNIQUE constraint failed: food_servings')) {
+      throw new FoodValidationError('Duplicate serving name for food item');
+    }
+    if (msg.includes('FOREIGN KEY constraint failed')) {
+      throw new FoodValidationError(
+        'Referenced category, source, or nutrient definition does not exist',
+      );
+    }
+    if (msg.includes('CHECK constraint failed')) {
+      throw new FoodValidationError('Invalid food data violating integrity constraints');
+    }
+    throw new DatabaseError(`Failed to ${action}`);
   }
 
   async createAtomic(
@@ -501,9 +568,7 @@ export class FoodRepository {
 
       await this.db.batch(statements);
     } catch (err) {
-      throw new DatabaseError(
-        `Failed to atomically create food: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      this.handleD1ConstraintError(err, 'atomically create food');
     }
   }
 
@@ -610,9 +675,7 @@ export class FoodRepository {
 
       await this.db.batch(statements);
     } catch (err) {
-      throw new DatabaseError(
-        `Failed to atomically update food: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      this.handleD1ConstraintError(err, 'atomically update food');
     }
   }
 

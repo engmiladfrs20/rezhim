@@ -1,6 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { FoodCategoryRecord, FoodCategoryTranslationRecord } from './models';
-import { DatabaseError } from './errors';
+import { DatabaseError, FoodConflictError, FoodValidationError } from './errors';
 
 export interface CategoryWithTranslations {
   category: FoodCategoryRecord;
@@ -122,6 +122,13 @@ export class FoodCategoryRepository {
 
       await this.db.batch(statements);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('UNIQUE constraint failed: food_categories.slug')) {
+        throw new FoodConflictError('A category with this slug already exists');
+      }
+      if (msg.includes('FOREIGN KEY constraint failed')) {
+        throw new FoodValidationError('Parent category does not exist');
+      }
       throw new DatabaseError(
         `Failed to atomically create category: ${err instanceof Error ? err.message : String(err)}`,
       );
