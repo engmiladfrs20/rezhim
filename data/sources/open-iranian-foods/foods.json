@@ -1,39 +1,1235 @@
 [
   {
-    "external_id": "item_sangak",
-    "slug": "sangak-bread",
-    "category_id": "cat_grains",
-    "category_slug": "grains-cereals",
+    "external_id": "item_lentils_cooked",
+    "slug": "cooked-brown-lentils",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
     "food_type": "generic",
     "status": "active",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
+        "name": "عدس پخته سنتی ایرانی (آب‌پز ساده)",
+        "description": "عدس قهوه‌ای آب‌پز غنی از فیبر و آهن مناسب عدس‌پلو"
+      },
+      {
+        "locale": "en",
+        "name": "Cooked Brown Lentils (Boiled Plain)",
+        "description": "Nutritious cooked brown lentils, dietary fiber and iron rich"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "عدس پخته" },
+      { "locale": "fa", "alias": "عدسی ساده" },
+      { "locale": "en", "alias": "Cooked Lentils" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 116,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420, Lentils, mature seeds, cooked, boiled, without salt)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 9.02,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 20.13,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 0.38,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fiber",
+        "amount_per_100g": 7.9,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_iron",
+        "amount_per_100g": 3.33,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_sodium",
+        "amount_per_100g": 2,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 172420)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ لیوان پخته",
+        "name_en": "1 Cup Cooked",
+        "weight_g": 198,
+        "household_unit": "لیوان",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "USDA Standard Portion Size (1 cup cooked lentils = 198g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "name_fa": "۱ قاشق غذاخوری سرپر",
+        "name_en": "1 Tablespoon",
+        "weight_g": 25,
+        "household_unit": "قاشق غذاخوری",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_172420_portion_2",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/172420/nutrients",
+        "citation": "Standard Culinar Portion (1 tbsp cooked lentils = 25g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_chickpeas_cooked",
+    "slug": "cooked-chickpeas",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نخود آب‌پز سنتی (پخته ساده)",
+        "description": "نخود گرد ایرانی آب‌پز مناسب آبگوشت و آش"
+      },
+      {
+        "locale": "en",
+        "name": "Cooked Chickpeas (Garbanzo Beans)",
+        "description": "Tender boiled chickpeas for traditional stews and soups"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "نخود پخته" },
+      { "locale": "fa", "alias": "نخود آبگوشتی" },
+      { "locale": "en", "alias": "Cooked Chickpeas" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 164,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757, Chickpeas, mature seeds, cooked, boiled, without salt)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 8.86,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 27.42,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 2.59,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fiber",
+        "amount_per_100g": 7.6,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_calcium",
+        "amount_per_100g": 49,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_iron",
+        "amount_per_100g": 2.89,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 173757)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ لیوان پخته",
+        "name_en": "1 Cup Cooked",
+        "weight_g": 164,
+        "household_unit": "لیوان",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_173757_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173757/nutrients",
+        "citation": "USDA Standard Portion Size (1 cup cooked chickpeas = 164g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_walnuts_persian",
+    "slug": "persian-walnuts-raw",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "مغز گردوی خام ایرانی (تویسرکان / دماوند)",
+        "description": "مغز گردوی روغنی تازه و خام سرشار از اسیدهای چرب امگا-۳"
+      },
+      {
+        "locale": "en",
+        "name": "Raw Persian Walnuts Halves",
+        "description": "Premium raw walnut kernels high in ALA omega-3 fatty acids"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "گردو" },
+      { "locale": "fa", "alias": "مغز گردو" },
+      { "locale": "en", "alias": "Persian Walnuts" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 654,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170187, Nuts, walnuts, english)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 15.23,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170187)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 13.71,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170187)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 65.21,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170187)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fiber",
+        "amount_per_100g": 6.7,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170187)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_calcium",
+        "amount_per_100g": 98,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170187)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۲ عدد گردوی کامل (۴ پر گردو)",
+        "name_en": "2 Whole Walnuts (4 Halves)",
+        "weight_g": 15,
+        "household_unit": "عدد",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA Portion Standard (2 whole walnuts = 15g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "name_fa": "۱ مشت کوچک (۳۰ گرم)",
+        "name_en": "1 Small Handful (30g)",
+        "weight_g": 30,
+        "household_unit": "مشت",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170187_portion_2",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170187/nutrients",
+        "citation": "USDA Standard Snack Serving (1 oz = 28.35g ~ 30g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_pomegranate_fresh",
+    "slug": "persian-fresh-pomegranate",
+    "category_id": "cat_fruits",
+    "category_slug": "fruits",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "انار تازه دانه ایرانی (ساوه / یزد)",
+        "description": "دانه‌های یاقوتی انار شیرین و ملس تازه سرشار از پلی‌فنول"
+      },
+      {
+        "locale": "en",
+        "name": "Fresh Persian Pomegranate Arils",
+        "description": "Juicy ruby pomegranate arils rich in antioxidants"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "انار" },
+      { "locale": "fa", "alias": "دانه انار" },
+      { "locale": "en", "alias": "Pomegranate" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 83,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 169134, Pomegranates, raw)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 1.67,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 169134)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 18.7,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 169134)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 1.17,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 169134)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fiber",
+        "amount_per_100g": 4.0,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 169134)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_sugar",
+        "amount_per_100g": 13.67,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 169134)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ لیوان دانه انار",
+        "name_en": "1 Cup Arils",
+        "weight_g": 174,
+        "household_unit": "لیوان",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA Standard Portion Size (1 cup arils = 174g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "name_fa": "۱ عدد انار متوسط",
+        "name_en": "1 Medium Fruit",
+        "weight_g": 150,
+        "household_unit": "عدد",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_169134_portion_2",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169134/nutrients",
+        "citation": "USDA Portion Standard (1 medium fruit edible portion ~ 150g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_tea_persian_black",
+    "slug": "persian-black-tea-lahijan",
+    "category_id": "cat_beverages",
+    "category_slug": "beverages",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "چای سیاه دم‌کشیده ایرانی (لاهیجان، بدون قند)",
+        "description": "چای دم‌کشیده سنتی گیلان بدون شیرین‌کننده"
+      },
+      {
+        "locale": "en",
+        "name": "Brewed Persian Black Tea (Lahijan, Unsweetened)",
+        "description": "Pure steeped northern Iranian black tea without added sugar"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "چای سیاه" },
+      { "locale": "fa", "alias": "چای ایرانی" },
+      { "locale": "en", "alias": "Persian Black Tea" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 1,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171917, Beverages, tea, black, brewed, prepared with tap water)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 0.0,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171917)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 0.3,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171917)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 0.0,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171917)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_sodium",
+        "amount_per_100g": 3,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171917)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ استکان / فنجان چای",
+        "name_en": "1 Persian Tea Glass (Estekan)",
+        "weight_g": 150,
+        "household_unit": "استکان",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "Standard Persian Tea Cup (1 estekan = 150g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "name_fa": "۱ ماگ بزرگ",
+        "name_en": "1 Large Mug",
+        "weight_g": 300,
+        "household_unit": "ماگ",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171917_portion_2",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171917/nutrients",
+        "citation": "Standard Mug Portion (300g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_yogurt_full_fat",
+    "slug": "persian-yogurt-full-fat",
+    "category_id": "cat_dairy",
+    "category_slug": "dairy-eggs",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "ماست سنتی پرچرب ایرانی",
+        "description": "ماست تخمیری کامل تهیه شده از شیر گاو سنتی"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Full-Fat Yogurt",
+        "description": "Creamy cultured whole milk yogurt"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "ماست پرچرب" },
+      { "locale": "fa", "alias": "ماست سنتی" },
+      { "locale": "en", "alias": "Persian Yogurt" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 61,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171284, Yogurt, plain, whole milk)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 3.47,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171284)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 4.66,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171284)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 3.25,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171284)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_calcium",
+        "amount_per_100g": 121,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171284)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ لیوان",
+        "name_en": "1 Cup",
+        "weight_g": 245,
+        "household_unit": "لیوان",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "USDA Portion Standard (1 cup yogurt = 245g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "name_fa": "۱ قاشق غذاخوری سرپر",
+        "name_en": "1 Heaping Tablespoon",
+        "weight_g": 30,
+        "household_unit": "قاشق غذاخوری",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171284_portion_2",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171284/nutrients",
+        "citation": "Standard Culinary Portion (1 tbsp yogurt = 30g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_dates_mazafati",
+    "slug": "bam-mazafati-fresh-dates",
+    "category_id": "cat_fruits",
+    "category_slug": "fruits",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "خرما مضافتی بم (رطب سیاه تازه)",
+        "description": "رطب مضافتی نرم، گوشتی و مرطوب بم سرشار از پتاسیم"
+      },
+      {
+        "locale": "en",
+        "name": "Fresh Bam Mazafati Black Dates (Rotab)",
+        "description": "Soft, succulent Iranian dark dates with natural sweetness"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "خرما مضافتی" },
+      { "locale": "fa", "alias": "رطب مضافتی" },
+      { "locale": "en", "alias": "Mazafati Dates" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 282,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 168191, Dates, deglet noor)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 2.45,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 168191)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 75.03,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 168191)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 0.39,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 168191)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fiber",
+        "amount_per_100g": 8.0,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 168191)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ عدد خرما مضافتی",
+        "name_en": "1 Date",
+        "weight_g": 12,
+        "household_unit": "عدد",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "USDA Portion Standard (1 medium date ~ 12g edible portion)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "name_fa": "۳ عدد خرما (یک واحد میوه)",
+        "name_en": "3 Dates (1 Fruit Portion)",
+        "weight_g": 36,
+        "household_unit": "عدد",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_168191_portion_2",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168191/nutrients",
+        "citation": "Standard Diabetic Exchange Portion (3 dates = 36g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_joojeh_kabab",
+    "slug": "persian-joojeh-kabab-chicken",
+    "category_id": "cat_meats",
+    "category_slug": "meat-poultry-fish",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "جوجه کباب سنتی ایرانی بدون استخوان (سینه مرغ گریل)",
+        "description": "فیله سینه مرغ گریل‌شده با زعفران و آبلیمو"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Joojeh Kabab (Grilled Chicken Breast)",
+        "description": "Grilled skinless boneless chicken breast seasoned with saffron and lemon"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "جوجه کباب" },
+      { "locale": "fa", "alias": "جوجه بی‌استخوان" },
+      { "locale": "en", "alias": "Joojeh Kabab" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 165,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171077",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171077/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171077, Chicken, broiler or fryers, breast, meat only, cooked, grilled)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 31.02,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171077",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171077/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171077)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 0.0,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171077",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171077/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171077)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 3.57,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171077",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171077/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171077)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_sodium",
+        "amount_per_100g": 74,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171077",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171077/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 171077)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ سیخ جوجه کباب (۲۰۰ گرم)",
+        "name_en": "1 Skewer (200g)",
+        "weight_g": 200,
+        "household_unit": "سیخ",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_171077_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171077/nutrients",
+        "citation": "Standard Iranian Restaurant Serving (1 boneless skewer = 200g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_kabab_koobideh",
+    "slug": "persian-kabab-koobideh-ground-meat",
+    "category_id": "cat_meats",
+    "category_slug": "meat-poultry-fish",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "کباب کوبیده سنتی ایرانی (گوشت چرخ‌کرده گریل)",
+        "description": "کباب سیخی چرخ‌کرده گوشت گاو و گوسفند"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Kabab Koobideh (Minced Meat Skewer)",
+        "description": "Grilled minced beef and lamb kebab skewer"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "کوبیده" },
+      { "locale": "fa", "alias": "کباب کوبیده" },
+      { "locale": "en", "alias": "Kabab Koobideh" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 254,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_174036",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/174036/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 174036, Beef, ground, 80% lean meat / 20% fat, patty, cooked, broiled)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 25.38,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_174036",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/174036/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 174036)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 0.0,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_174036",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/174036/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 174036)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 16.32,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_174036",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/174036/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 174036)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_iron",
+        "amount_per_100g": 2.56,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_174036",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/174036/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 174036)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ سیخ کباب کوبیده (۱۰۰ گرم)",
+        "name_en": "1 Skewer (100g)",
+        "weight_g": 100,
+        "household_unit": "سیخ",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_174036_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/174036/nutrients",
+        "citation": "Standard Iranian Restaurant Portion (1 cooked skewer = 100g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_sabzi_khordan",
+    "slug": "persian-fresh-herb-platter-sabzi-khordan",
+    "category_id": "cat_vegetables",
+    "category_slug": "vegetables",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "سبزی خوردن تازه سنتی ایرانی (جعفری، شاهی، ریحان، تره)",
+        "description": "بشقاب سبزیجات تازه سنتی سفره ایرانی کم‌کالری و غنی از ویتامین‌ها"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Fresh Herb Platter (Sabzi Khordan)",
+        "description": "Mixed fresh aromatic herbs: basil, mint, cress, and parsley"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "سبزی خوردن" },
+      { "locale": "en", "alias": "Sabzi Khordan" }
+    ],
+    "nutrients": [
+      {
+        "nutrient_id": "nut_energy",
+        "amount_per_100g": 36,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170416, Parsley, fresh)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_protein",
+        "amount_per_100g": 2.97,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170416)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_carbohydrate",
+        "amount_per_100g": 6.33,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170416)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fat_total",
+        "amount_per_100g": 0.79,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170416)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_fiber",
+        "amount_per_100g": 3.3,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170416)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      },
+      {
+        "nutrient_id": "nut_calcium",
+        "amount_per_100g": 138,
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "USDA FoodData Central SR Legacy (FDC ID 170416)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "laboratory",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ پیاله / مشت سرپر",
+        "name_en": "1 Heaping Bowl",
+        "weight_g": 60,
+        "household_unit": "پیاله",
+        "source_id": "src_open_iranian_foods",
+        "external_id": "fdc_170416_portion_1",
+        "source_url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/170416/nutrients",
+        "citation": "Standard Mixed Greens Bowl (60g)",
+        "dataset_version": "SR-Legacy-2019",
+        "method": "database",
+        "retrieved_at": "2026-08-30T00:00:00.000Z",
+        "license": "Public Domain / U.S. Government Work"
+      }
+    ]
+  },
+  {
+    "external_id": "item_sangak",
+    "slug": "sangak-bread",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "draft",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
         "name": "نان سنگک سنتی",
-        "description": "نان سبوس‌دار سنتی ایرانی پخته‌شده روی ریگ داغ در تنور"
+        "description": "نان سبوس‌دار سنتی ایرانی پخته‌شده روی ریگ داغ در تنور (وضعیت پیش‌نویس تا زمان تکمیل آنالیز آزمایشگاهی رسمی)"
       },
       {
         "locale": "en",
         "name": "Traditional Persian Sangak Flatbread",
-        "description": "Whole wheat sourdough flatbread traditionally baked on small river pebbles"
+        "description": "Whole wheat sourdough flatbread traditionally baked on small river pebbles (Draft pending laboratory assay)"
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "سنگک" },
       { "locale": "fa", "alias": "نان سنگک کنجدی" },
       { "locale": "en", "alias": "Sangak Bread" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 259 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 9.2 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 50.1 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.8 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 4.8 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.8 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 480 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 2.1 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 35 }
     ],
     "servings": [
       {
@@ -56,18 +1252,18 @@
     "category_id": "cat_grains",
     "category_slug": "grains-cereals",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
         "name": "نان بربری سنتی",
-        "description": "نان حجیم و طلایی سنتی ایرانی با رومال کنجد و سیاه دانه"
+        "description": "نان حجیم سنتی با رومال آرد و آب و تزئین کنجد (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Barbari Bread",
-        "description": "Thick yeast leavened Iranian flatbread with glazed golden crust and sesame seeds"
+        "name": "Traditional Persian Barbari Flatbread",
+        "description": "Thick yeast-leavened flatbread with a glazed golden crust (Draft)"
       }
     ],
     "aliases": [
@@ -75,29 +1271,12 @@
       { "locale": "fa", "alias": "نان بربری کنجدی" },
       { "locale": "en", "alias": "Barbari Bread" }
     ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 265 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 8.8 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 53.4 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.5 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.7 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.2 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 510 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 1.8 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 28 }
-    ],
     "servings": [
       {
         "name_fa": "۱ کف دست",
         "name_en": "1 Handful (Palm size)",
         "weight_g": 30,
         "household_unit": "کف دست"
-      },
-      {
-        "name_fa": "۱ قرص کامل",
-        "name_en": "1 Full Loaf",
-        "weight_g": 400,
-        "household_unit": "قرص"
       }
     ]
   },
@@ -107,35 +1286,23 @@
     "category_id": "cat_grains",
     "category_slug": "grains-cereals",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
         "name": "نان تافتون سنتی",
-        "description": "نان گرد و نازک تنوری سنتی با بافت نرم و طرحدار"
+        "description": "نان تنوری نازک و گرد سنتی ایرانی (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Taftoon Bread",
-        "description": "Round leavened Iranian flatbread baked on tandoor oven walls"
+        "name": "Traditional Persian Taftoon Flatbread",
+        "description": "Round clay-oven baked flatbread (Draft)"
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "تافتون" },
-      { "locale": "fa", "alias": "نان تافتون تنوری" },
       { "locale": "en", "alias": "Taftoon Bread" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 270 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 8.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 54.0 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 2.0 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.4 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.0 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 490 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 1.6 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 24 }
     ],
     "servings": [
       {
@@ -143,12 +1310,6 @@
         "name_en": "1 Handful (Palm size)",
         "weight_g": 25,
         "household_unit": "کف دست"
-      },
-      {
-        "name_fa": "۱ قرص کامل",
-        "name_en": "1 Whole Loaf",
-        "weight_g": 200,
-        "household_unit": "قرص"
       }
     ]
   },
@@ -158,69 +1319,84 @@
     "category_id": "cat_grains",
     "category_slug": "grains-cereals",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
         "name": "نان لواش سنتی",
-        "description": "نان بسیار نازک و ترد سنتی ایرانی"
+        "description": "نان بسیار نازک تنوری سنتی ایرانی (پیش‌نویس)"
       },
       {
         "locale": "en",
         "name": "Traditional Persian Lavash Flatbread",
-        "description": "Thin unleavened Iranian flatbread baked rapidly on tandoor or saj"
+        "description": "Very thin unleavened clay oven flatbread (Draft)"
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "لواش" },
-      { "locale": "fa", "alias": "نان لواش تنوری" },
       { "locale": "en", "alias": "Lavash Bread" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 285 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 8.1 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 58.6 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.6 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.2 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.5 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 530 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 1.4 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 20 }
     ],
     "servings": [
       {
         "name_fa": "۱ کف دست",
         "name_en": "1 Handful (Palm size)",
-        "weight_g": 15,
+        "weight_g": 20,
         "household_unit": "کف دست"
+      }
+    ]
+  },
+  {
+    "external_id": "item_barley_bread",
+    "slug": "barley-bread-persian",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "draft",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نان جو سنتی ایرانی",
+        "description": "نان غلات کامل پخته‌شده با آرد جو و سبوس (پیش‌نویس)"
       },
       {
-        "name_fa": "۱ ورق کامل",
-        "name_en": "1 Full Sheet",
-        "weight_g": 90,
-        "household_unit": "ورق"
+        "locale": "en",
+        "name": "Traditional Persian Barley Bread",
+        "description": "High-fiber whole barley flatbread (Draft)"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "نان جو" },
+      { "locale": "en", "alias": "Barley Bread" }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کف دست",
+        "name_en": "1 Handful (Palm size)",
+        "weight_g": 30,
+        "household_unit": "کف دست"
       }
     ]
   },
   {
     "external_id": "item_kateh_rice",
-    "slug": "kateh-rice",
+    "slug": "kateh-cooked-rice",
     "category_id": "cat_grains",
     "category_slug": "grains-cereals",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "برنج کته ایرانی پخته",
-        "description": "برنج دانه بلند ایرانی پخته شده به روش کته بدون آبکشی"
+        "name": "برنج کته سنتی ایرانی",
+        "description": "برنج ایرانی دم‌کشیده به روش کته سنتی شمالی (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Persian Cooked Kateh Rice",
-        "description": "Long-grain Persian rice cooked absorption-style preserving starch and aroma"
+        "name": "Traditional Persian Kateh Rice",
+        "description": "Traditional northern Iranian absorbed rice preparation (Draft)"
       }
     ],
     "aliases": [
@@ -228,295 +1404,135 @@
       { "locale": "fa", "alias": "برنج کته" },
       { "locale": "en", "alias": "Kateh Rice" }
     ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 135 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 2.7 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 29.3 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.6 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.4 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.1 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 180 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 35 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.2 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 10 }
-    ],
     "servings": [
       {
-        "name_fa": "۱ کفگیر پلوخوری",
-        "name_en": "1 Rice Skimmer (Scoop)",
-        "weight_g": 160,
+        "name_fa": "۱ کفگیر برنج",
+        "name_en": "1 Persian Rice Spatula (Kafgir)",
+        "weight_g": 80,
         "household_unit": "کفگیر"
-      },
-      {
-        "name_fa": "۱ بشقاب پلوخوری",
-        "name_en": "1 Dinner Plate",
-        "weight_g": 250,
-        "household_unit": "بشقاب"
       }
     ]
   },
   {
     "external_id": "item_chelow_rice",
-    "slug": "chelow-rice",
+    "slug": "chelow-cooked-rice",
     "category_id": "cat_grains",
     "category_slug": "grains-cereals",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "چلو آبکش ایرانی پخته",
-        "description": "برنج دانه بلند اعلای ایرانی پخته شده به روش آبکشی و دم‌کشیده با زعفران"
+        "name": "چلو ایرانی آبکش دم‌کشیده",
+        "description": "برنج سفید دانه بلند آبکش و دم‌کشیده سنتی مجلسی ایرانی (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Persian Cooked Chelow Rice",
-        "description": "Steamed and drained Persian long-grain saffron rice"
+        "name": "Traditional Persian Chelow Rice",
+        "description": "Long-grain fragrant Persian steamed rice (Draft)"
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "چلو" },
-      { "locale": "fa", "alias": "برنج آبکش" },
+      { "locale": "fa", "alias": "برنج سفید آبکش" },
       { "locale": "en", "alias": "Chelow Rice" }
     ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 130 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 2.4 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 28.5 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.5 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.3 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.1 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 150 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 30 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.2 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 8 }
-    ],
     "servings": [
       {
-        "name_fa": "۱ کفگیر",
-        "name_en": "1 Rice Scoop",
-        "weight_g": 160,
+        "name_fa": "۱ کفگیر برنج",
+        "name_en": "1 Persian Rice Spatula (Kafgir)",
+        "weight_g": 85,
         "household_unit": "کفگیر"
-      },
-      {
-        "name_fa": "۱ دیس تک نفره",
-        "name_en": "1 Single Platter",
-        "weight_g": 250,
-        "household_unit": "دیس"
       }
     ]
   },
   {
-    "external_id": "item_barley_bread",
-    "slug": "barley-bread",
-    "category_id": "cat_grains",
-    "category_slug": "grains-cereals",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "نان جو سنتی",
-        "description": "نان جو کامل و سبوس‌دار سنتی سرشار از فیبر رژیمی"
-      },
-      {
-        "locale": "en",
-        "name": "Traditional Persian Barley Bread",
-        "description": "Whole barley flour flatbread with high dietary fiber"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "نان جو" },
-      { "locale": "fa", "alias": "نان جو سبوس دار" },
-      { "locale": "en", "alias": "Barley Bread" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 245 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 9.8 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 47.5 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.9 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 7.2 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.6 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 420 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 2.5 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 42 }
-    ],
-    "servings": [
-      { "name_fa": "۱ کف دست", "name_en": "1 Handful", "weight_g": 30, "household_unit": "کف دست" },
-      {
-        "name_fa": "۱ قرص کامل",
-        "name_en": "1 Whole Loaf",
-        "weight_g": 150,
-        "household_unit": "قرص"
-      }
-    ]
-  },
-  {
-    "external_id": "item_persian_yogurt",
-    "slug": "persian-yogurt-full-fat",
+    "external_id": "item_yogurt_strained_labneh",
+    "slug": "persian-strained-yogurt-labneh",
     "category_id": "cat_dairy",
     "category_slug": "dairy-eggs",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "ماست سنتی پرچرب ایرانی",
-        "description": "ماست پرچرب سنتی تهیه‌شده از شیر تازه گاو با بافت خامه‌ای"
+        "name": "ماست چکیده سنتی ایرانی",
+        "description": "ماست آب‌گیری شده غلیظ سنتی (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Full-Fat Yogurt",
-        "description": "Traditional whole cow milk Persian plain yogurt"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "ماست سنتی" },
-      { "locale": "fa", "alias": "ماست پرچرب" },
-      { "locale": "en", "alias": "Persian Yogurt" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 65 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 3.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 4.7 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 3.6 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 4.7 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 50 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 155 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 120 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.1 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ کاسه ماست‌خوری",
-        "name_en": "1 Small Bowl",
-        "weight_g": 150,
-        "household_unit": "کاسه"
-      },
-      { "name_fa": "۱ لیوان", "name_en": "1 Cup", "weight_g": 240, "household_unit": "لیوان" }
-    ]
-  },
-  {
-    "external_id": "item_strained_yogurt",
-    "slug": "strained-yogurt-labneh",
-    "category_id": "cat_dairy",
-    "category_slug": "dairy-eggs",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "ماست چکیده ایرانی",
-        "description": "ماست چکیده سنتی غلیظ با حذف آب پنیر و طعم ملس"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Strained Yogurt (Labneh)",
-        "description": "Thick strained Persian yogurt with rich velvety texture"
+        "name": "Traditional Persian Strained Yogurt (Labneh / Maste Chekideh)",
+        "description": "Thick creamy strained yogurt (Draft)"
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "ماست چکیده" },
-      { "locale": "fa", "alias": "ماست کیسه ای" },
+      { "locale": "fa", "alias": "ماست کیسه‌ای" },
       { "locale": "en", "alias": "Strained Yogurt" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 125 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 7.8 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 5.2 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 8.5 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 4.0 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 75 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 180 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 210 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.2 }
     ],
     "servings": [
       {
-        "name_fa": "۲ قاشق غذاخوری",
-        "name_en": "2 Tablespoons",
-        "weight_g": 50,
-        "household_unit": "قاشق"
-      },
-      {
-        "name_fa": "۱ پیاله متوسط",
-        "name_en": "1 Medium Dish",
-        "weight_g": 100,
-        "household_unit": "پیاله"
+        "name_fa": "۱ قاشق غذاخوری سرپر",
+        "name_en": "1 Heaping Tablespoon",
+        "weight_g": 35,
+        "household_unit": "قاشق غذاخوری"
       }
     ]
   },
   {
-    "external_id": "item_persian_kashk",
-    "slug": "persian-liquid-kashk",
+    "external_id": "item_kashk_liquid",
+    "slug": "liquid-kashk-whey",
     "category_id": "cat_dairy",
     "category_slug": "dairy-eggs",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "کشک سنتی پاستوریزه",
-        "description": "کشک غلیظ سنتی تخمیری ایرانی با پروتئین و کلسیم بسیار بالا"
+        "name": "کشک مایع پاستوریزه سنتی",
+        "description": "فراورده تخمیری سنتی شیر غنی از پروتئین و کلسیم (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Liquid Kashk (Whey)",
-        "description": "Concentrated fermented Persian dairy whey product"
+        "name": "Traditional Liquid Kashk (Persian Fermented Whey)",
+        "description": "Cultured salted liquid whey paste used in Iranian cooking (Draft)"
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "کشک" },
       { "locale": "fa", "alias": "کشک مایع" },
-      { "locale": "en", "alias": "Persian Kashk" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 110 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 14.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 6.0 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 3.2 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 3.5 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 680 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 220 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 430 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.4 }
+      { "locale": "en", "alias": "Liquid Kashk" }
     ],
     "servings": [
       {
         "name_fa": "۱ قاشق غذاخوری",
         "name_en": "1 Tablespoon",
         "weight_g": 20,
-        "household_unit": "قاشق"
-      },
-      { "name_fa": "نصف فنجان", "name_en": "1/2 Cup", "weight_g": 60, "household_unit": "فنجان" }
+        "household_unit": "قاشق غذاخوری"
+      }
     ]
   },
   {
-    "external_id": "item_persian_doogh",
-    "slug": "persian-doogh",
+    "external_id": "item_doogh_traditional",
+    "slug": "persian-doogh-yogurt-drink",
     "category_id": "cat_dairy",
     "category_slug": "dairy-eggs",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "دوغ سنتی ایرانی",
-        "description": "نوشیدنی سنتی ماست رقیق‌شده با سبزیجات معطر مانند نعناع و پونه"
+        "name": "دوغ سنتی ایرانی بدون گاز (با نعناع و نمک کم)",
+        "description": "نوشیدنی خنک تخمیری ماست با سبزی‌های معطر خشک (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Mint Doogh",
-        "description": "Cold savory yogurt beverage seasoned with mint"
+        "name": "Traditional Persian Doogh (Mint Yogurt Drink, Non-Carbonated)",
+        "description": "Savory yogurt beverage seasoned with dried mint (Draft)"
       }
     ],
     "aliases": [
@@ -524,46 +1540,33 @@
       { "locale": "fa", "alias": "دوغ نعنایی" },
       { "locale": "en", "alias": "Doogh" }
     ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 28 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 1.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 2.1 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.5 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 2.0 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 290 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 75 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 65 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.05 }
-    ],
     "servings": [
-      { "name_fa": "۱ لیوان", "name_en": "1 Glass", "weight_g": 240, "household_unit": "لیوان" },
       {
-        "name_fa": "۱ بطری تک نفره",
-        "name_en": "1 Single Bottle",
-        "weight_g": 330,
-        "household_unit": "بطری"
+        "name_fa": "۱ لیوان",
+        "name_en": "1 Glass",
+        "weight_g": 250,
+        "household_unit": "لیوان"
       }
     ]
   },
   {
-    "external_id": "item_tabriz_cheese",
-    "slug": "tabriz-lighvan-cheese",
+    "external_id": "item_cheese_tabriz",
+    "slug": "tabriz-liwan-white-cheese",
     "category_id": "cat_dairy",
     "category_slug": "dairy-eggs",
     "food_type": "generic",
-    "status": "active",
+    "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "پنیر تبریز / لیقوان گوسفندی",
-        "description": "پنیر سنتی شور رسانده‌شده در آب‌نمک با بافت متخلخل و طعم غنی شیر گوسفند"
+        "name": "پنیر سنتی تبریز (لیقوان / گوسفندی در آب‌نمک)",
+        "description": "پنیر سفید سنتی شور عمل‌آمده در غارهای طبیعی لیقوان (پیش‌نویس)"
       },
       {
         "locale": "en",
-        "name": "Tabriz / Lighvan Sheep Milk Cheese",
-        "description": "Traditional Iranian brined feta-style cheese made from raw sheep milk"
+        "name": "Traditional Tabriz/Lighvan Persian Sheep Cheese in Brine",
+        "description": "Aged brined sheep milk cheese from the Lighvan region (Draft)"
       }
     ],
     "aliases": [
@@ -571,616 +1574,141 @@
       { "locale": "fa", "alias": "پنیر لیقوان" },
       { "locale": "en", "alias": "Tabriz Cheese" }
     ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 275 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 17.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 1.5 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 22.0 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.2 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 850 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 95 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 490 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.3 }
-    ],
     "servings": [
       {
-        "name_fa": "۱ قوطی کبریت",
-        "name_en": "1 Matchbox Size",
+        "name_fa": "۱ قوطی کبریت (۳۰ گرم)",
+        "name_en": "1 Matchbox size portion (30g)",
         "weight_g": 30,
         "household_unit": "قوطی کبریت"
-      },
-      {
-        "name_fa": "۱ برش متوسط",
-        "name_en": "1 Medium Slice",
-        "weight_g": 50,
-        "household_unit": "برش"
       }
     ]
   },
   {
-    "external_id": "item_cooked_lentils",
-    "slug": "cooked-persian-lentils",
-    "category_id": "cat_legumes",
-    "category_slug": "legumes-nuts-seeds",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "عدس پخته ایرانی",
-        "description": "عدس ریز ایرانی آب‌پز شده با پروتئین و آهن گیاهی بالا"
-      },
-      {
-        "locale": "en",
-        "name": "Cooked Persian Brown Lentils",
-        "description": "Boiled whole brown lentils rich in plant protein and dietary iron"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "عدس" },
-      { "locale": "fa", "alias": "عدس پخته" },
-      { "locale": "en", "alias": "Cooked Lentils" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 116 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 9.0 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 20.1 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.4 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 7.9 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.8 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 2 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 369 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 3.3 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 19 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ لیوان پخته",
-        "name_en": "1 Cooked Cup",
-        "weight_g": 200,
-        "household_unit": "لیوان"
-      },
-      {
-        "name_fa": "نصف لیوان پخته",
-        "name_en": "1/2 Cooked Cup",
-        "weight_g": 100,
-        "household_unit": "لیوان"
-      }
-    ]
-  },
-  {
-    "external_id": "item_cooked_chickpeas",
-    "slug": "cooked-persian-chickpeas",
-    "category_id": "cat_legumes",
-    "category_slug": "legumes-nuts-seeds",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "نخود آبگوشتی پخته",
-        "description": "نخود درشت ایرانی آب‌پز شده مناسب انواع آش و آبگوشت"
-      },
-      {
-        "locale": "en",
-        "name": "Cooked Persian Chickpeas",
-        "description": "Boiled garbanzo beans / chickpeas rich in fiber and minerals"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "نخود" },
-      { "locale": "fa", "alias": "نخود پخته" },
-      { "locale": "en", "alias": "Cooked Chickpeas" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 164 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 8.9 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 27.4 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 2.6 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 7.6 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 4.8 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 7 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 291 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 2.9 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 49 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ لیوان پخته",
-        "name_en": "1 Cooked Cup",
-        "weight_g": 200,
-        "household_unit": "لیوان"
-      },
-      {
-        "name_fa": "نصف لیوان پخته",
-        "name_en": "1/2 Cooked Cup",
-        "weight_g": 100,
-        "household_unit": "لیوان"
-      }
-    ]
-  },
-  {
-    "external_id": "item_persian_walnuts",
-    "slug": "persian-raw-walnuts",
-    "category_id": "cat_legumes",
-    "category_slug": "legumes-nuts-seeds",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "مغز گردوی ایرانی خام",
-        "description": "مغز گردوی تازه و ارگانیک ایرانی سرشار از اسیدهای چرب امگا-۳"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Raw Walnuts",
-        "description": "Raw Persian walnut halves high in alpha-linolenic omega-3 fatty acids"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "گردو" },
-      { "locale": "fa", "alias": "مغز گردو" },
-      { "locale": "en", "alias": "Walnuts" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 654 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 15.2 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 13.7 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 65.2 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 6.7 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 2.6 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 2 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 441 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 2.9 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 98 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ عدد کامل (۲ پره)",
-        "name_en": "1 Whole Nut (2 Halves)",
-        "weight_g": 5,
-        "household_unit": "عدد"
-      },
-      {
-        "name_fa": "یک مشت دست (حدود ۶ عدد)",
-        "name_en": "1 Handful (~6 whole nuts)",
-        "weight_g": 30,
-        "household_unit": "مشت"
-      }
-    ]
-  },
-  {
-    "external_id": "item_joojeh_kebab",
-    "slug": "persian-joojeh-kebab",
-    "category_id": "cat_meats",
-    "category_slug": "meat-poultry-fish",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "جوجه کباب فیله مرغ پخته",
-        "description": "کباب فیله سینه مرغ مزه‌دار شده با زعفران اعلا، آبلیمو و پیاز"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Saffron Joojeh Kebab (Chicken Breast)",
-        "description": "Grilled saffron and lemon marinated chicken breast skewers"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "جوجه کباب" },
-      { "locale": "fa", "alias": "جوجه بی استخوان" },
-      { "locale": "en", "alias": "Joojeh Kebab" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 165 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 28.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 1.2 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 4.8 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.1 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.5 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 320 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 310 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 1.1 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 18 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ سیخ استاندارد",
-        "name_en": "1 Standard Skewer",
-        "weight_g": 200,
-        "household_unit": "سیخ"
-      },
-      { "name_fa": "نصف سیخ", "name_en": "1/2 Skewer", "weight_g": 100, "household_unit": "سیخ" }
-    ]
-  },
-  {
-    "external_id": "item_koobideh_kebab",
-    "slug": "persian-koobideh-kebab",
-    "category_id": "cat_meats",
-    "category_slug": "meat-poultry-fish",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "کباب کوبیده سنتی پخته",
-        "description": "کباب کوبیده سنتی از گوشت چرخ‌کرده گوسفندی و گوساله با پیاز و زعفران"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Koobideh Minced Meat Kebab",
-        "description": "Traditional grilled minced lamb and beef kebab with grated onions and saffron"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "کباب کوبیده" },
-      { "locale": "fa", "alias": "کوبیده" },
-      { "locale": "en", "alias": "Koobideh Kebab" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 245 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 18.2 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 2.1 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 18.5 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.3 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.8 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 410 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 270 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 2.2 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 22 }
-    ],
-    "servings": [
-      { "name_fa": "۱ سیخ", "name_en": "1 Skewer", "weight_g": 100, "household_unit": "سیخ" },
-      {
-        "name_fa": "۲ سیخ (یک پرس)",
-        "name_en": "2 Skewers (1 Full Portion)",
-        "weight_g": 200,
-        "household_unit": "سیخ"
-      }
-    ]
-  },
-  {
-    "external_id": "item_pomegranate",
-    "slug": "persian-fresh-pomegranate",
-    "category_id": "cat_fruits",
-    "category_slug": "fruits",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "انار تازه ایرانی",
-        "description": "انار سرخ ملس ایرانی سرشار از پلی‌فنول‌ها و آنتی‌اکسیدان‌های قوی"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Fresh Pomegranate",
-        "description": "Fresh whole sweet and tart Persian red pomegranate"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "انار" },
-      { "locale": "fa", "alias": "انار ساوه" },
-      { "locale": "en", "alias": "Pomegranate" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 83 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 1.7 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 18.7 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.2 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 4.0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 13.7 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 3 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 236 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.3 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 10 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ عدد متوسط",
-        "name_en": "1 Medium Fruit",
-        "weight_g": 150,
-        "household_unit": "عدد"
-      },
-      {
-        "name_fa": "۱ کاسه دانه انار",
-        "name_en": "1 Bowl Arils",
-        "weight_g": 100,
-        "household_unit": "کاسه"
-      }
-    ]
-  },
-  {
-    "external_id": "item_mazafati_dates",
-    "slug": "mazafati-dates-bam",
-    "category_id": "cat_fruits",
-    "category_slug": "fruits",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "خرمای مضافتی بم",
-        "description": "رطب مضافتی اعلای بم با پوست نازک، شهد طبیعی و بافت نرم"
-      },
-      {
-        "locale": "en",
-        "name": "Bam Mazafati Fresh Dates",
-        "description": "Soft dark fresh Persian dates from Bam region"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "خرما" },
-      { "locale": "fa", "alias": "خرمای مضافتی" },
-      { "locale": "en", "alias": "Mazafati Dates" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 277 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 1.8 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 75.0 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.2 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 6.7 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 66.5 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 1 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 696 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.9 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 64 }
-    ],
-    "servings": [
-      { "name_fa": "۱ عدد", "name_en": "1 Date", "weight_g": 10, "household_unit": "عدد" },
-      {
-        "name_fa": "۳ عدد (یک وعده)",
-        "name_en": "3 Dates (1 Serving)",
-        "weight_g": 30,
-        "household_unit": "عدد"
-      }
-    ]
-  },
-  {
-    "external_id": "item_sabzi_khordan",
-    "slug": "sabzi-khordan-fresh-herbs",
-    "category_id": "cat_vegetables",
-    "category_slug": "vegetables",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "سبزی خوردن تازه ایرانی",
-        "description": "مخلوط سبزیجات تازه شامل ریحان، تره، شاهی، مرزه، تربچه و نعناع"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Fresh Herb Platter (Sabzi Khordan)",
-        "description": "Traditional mix of fresh culinary herbs including basil, tarragon, cress, mint, and radishes"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "سبزی خوردن" },
-      { "locale": "fa", "alias": "سبزی تازه" },
-      { "locale": "en", "alias": "Sabzi Khordan" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 23 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 2.5 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 3.8 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.4 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.4 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.2 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 35 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 380 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 2.2 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 95 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ پیش‌دستی",
-        "name_en": "1 Small Side Plate",
-        "weight_g": 60,
-        "household_unit": "پیش دستی"
-      },
-      {
-        "name_fa": "۱ بشقاب سالادی",
-        "name_en": "1 Salad Plate",
-        "weight_g": 100,
-        "household_unit": "بشقاب"
-      }
-    ]
-  },
-  {
-    "external_id": "item_black_tea",
-    "slug": "persian-brewed-black-tea",
-    "category_id": "cat_beverages",
-    "category_slug": "beverages",
-    "food_type": "generic",
-    "status": "active",
-    "source_id": "src_open_iranian_foods",
-    "translations": [
-      {
-        "locale": "fa",
-        "name": "چای سیاه دمی ایرانی بدون قند",
-        "description": "چای سیاه دمی خالص ایرانی خوش‌رنگ و معطر دم‌کشیده با سماور بدون شکر"
-      },
-      {
-        "locale": "en",
-        "name": "Persian Brewed Black Tea (Unsweetened)",
-        "description": "Freshly brewed fragrant Iranian black tea served plain without sugar"
-      }
-    ],
-    "aliases": [
-      { "locale": "fa", "alias": "چای" },
-      { "locale": "fa", "alias": "چای سیاه" },
-      { "locale": "en", "alias": "Persian Black Tea" }
-    ],
-    "nutrients": [
-      { "nutrient_id": "nut_energy", "amount_per_100g": 1 },
-      { "nutrient_id": "nut_protein", "amount_per_100g": 0.1 },
-      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 0.2 },
-      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sugar", "amount_per_100g": 0 },
-      { "nutrient_id": "nut_sodium", "amount_per_100g": 3 },
-      { "nutrient_id": "nut_potassium", "amount_per_100g": 37 },
-      { "nutrient_id": "nut_iron", "amount_per_100g": 0.02 },
-      { "nutrient_id": "nut_calcium", "amount_per_100g": 1 }
-    ],
-    "servings": [
-      {
-        "name_fa": "۱ استکان سنتی",
-        "name_en": "1 Traditional Persian Glass",
-        "weight_g": 150,
-        "household_unit": "استکان"
-      },
-      { "name_fa": "۱ ماگ / لیوان", "name_en": "1 Mug", "weight_g": 250, "household_unit": "ماگ" }
-    ]
-  },
-  {
-    "external_id": "draft_ghormeh_sabzi",
-    "slug": "ghormeh-sabzi-stew-draft",
-    "category_id": "cat_vegetables",
-    "category_slug": "vegetables",
+    "external_id": "item_ghormeh_sabzi_draft",
+    "slug": "ghormeh-sabzi-traditional-stew",
+    "category_id": "cat_stews",
+    "category_slug": "traditional-stews-khoresh",
     "food_type": "generic",
     "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "خورش قورمه سبزی سنتی (پیش‌نویس)",
-        "description": "خورش اصیل ایرانی با سبزیجات معطر سرخ‌شده، لوبیا قرمز، گوشت گوسفند و لیمو عمانی. وضعیت پیش‌نویس به دلیل تنوع دستور پخت تا زمان استخراج آنالیز آزمایشگاهی مرجع."
+        "name": "خورش قورمه سبزی سنتی (پیش‌نویس دستور ترکیبی)",
+        "description": "خورش اصیل سبزیجات تفت‌خورده، لیمو عمانی، لوبیا قرمز و گوشت. نیازمند آزمایش آنالیز آزمایشگاهی قبل از فعال‌سازی."
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Ghormeh Sabzi Herb Stew (Draft)",
-        "description": "Iconic Iranian slow-cooked herb and kidney bean stew with lamb and dried limes. Retained in draft status awaiting standardized chemical assay."
+        "name": "Persian Ghormeh Sabzi Herb Stew (Draft Recipe Composite)",
+        "description": "Classic Persian herb stew with dried limes, red kidney beans and lamb. Maintained as draft pending lab assay."
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "قورمه سبزی" },
-      { "locale": "fa", "alias": "قرمه سبزی" },
       { "locale": "en", "alias": "Ghormeh Sabzi" }
     ],
-    "nutrients": [],
     "servings": [
-      { "name_fa": "۱ ملاقه", "name_en": "1 Ladle", "weight_g": 150, "household_unit": "ملاقه" },
       {
-        "name_fa": "۱ کاسه خورش‌خوری",
-        "name_en": "1 Stew Bowl",
-        "weight_g": 250,
+        "name_fa": "۱ کاسه خورش‌خوری متوسط",
+        "name_en": "1 Medium Stew Bowl",
+        "weight_g": 220,
         "household_unit": "کاسه"
       }
     ]
   },
   {
-    "external_id": "draft_gheimeh",
-    "slug": "gheimeh-stew-draft",
-    "category_id": "cat_legumes",
-    "category_slug": "legumes-nuts-seeds",
+    "external_id": "item_gheimeh_draft",
+    "slug": "gheimeh-traditional-stew",
+    "category_id": "cat_stews",
+    "category_slug": "traditional-stews-khoresh",
     "food_type": "generic",
     "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "خورش قیمه سنتی (پیش‌نویس)",
-        "description": "خورش سنتی لپه با گوشت تکه‌ای، لیمو عمانی و رب گوجه‌فرنگی. در وضعیت پیش‌نویس به جهت عدم تخمین غیرعلمی ارزش غذایی."
+        "name": "خورش قیمه سنتی سیب‌زمینی (پیش‌نویس دستور ترکیبی)",
+        "description": "خورش لپه و گوشت با لیمو عمانی و رب گوجه‌فرنگی. در وضعیت پیش‌نویس بدون تخمین ساختگی."
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Gheimeh Split-Pea Stew (Draft)",
-        "description": "Yellow split-pea and diced lamb stew with dried limes. Retained in draft status."
+        "name": "Persian Gheimeh Split Pea Stew (Draft Composite)",
+        "description": "Yellow split pea and beef stew with dried lime. Kept in draft without guessed nutrient values."
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "قیمه" },
-      { "locale": "fa", "alias": "خورش قیمه" },
-      { "locale": "en", "alias": "Gheimeh Stew" }
+      { "locale": "en", "alias": "Gheimeh" }
     ],
-    "nutrients": [],
     "servings": [
       {
-        "name_fa": "۱ کاسه خورش‌خوری",
-        "name_en": "1 Stew Bowl",
-        "weight_g": 250,
+        "name_fa": "۱ کاسه متوسط",
+        "name_en": "1 Medium Bowl",
+        "weight_g": 220,
         "household_unit": "کاسه"
       }
     ]
   },
   {
-    "external_id": "draft_fesenjan",
-    "slug": "fesenjan-stew-draft",
-    "category_id": "cat_legumes",
-    "category_slug": "legumes-nuts-seeds",
+    "external_id": "item_fesenjan_draft",
+    "slug": "fesenjan-walnut-pomegranate-stew",
+    "category_id": "cat_stews",
+    "category_slug": "traditional-stews-khoresh",
     "food_type": "generic",
     "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "خورش فسنجان گردو و رب انار (پیش‌نویس)",
-        "description": "خورش اصیل گردوی سابیده‌شده با رب انار ترش و شیرین. وضعیت پیش‌نویس تا استعلام مقادیر رسمی ترکیبات غذایی."
+        "name": "خورش فسنجان گردو و انار (پیش‌نویس دستور ترکیبی)",
+        "description": "خورش سنتی گردوی سابیده و رب انار با مرغ/اردک. وضعیت پیش‌نویس به دلیل تنوع غلظت گردو."
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Fesenjan Walnut Pomegranate Stew (Draft)",
-        "description": "Rich stew made with ground walnuts, sweet-sour pomegranate molasses and poultry. Retained in draft."
+        "name": "Persian Fesenjan Stew (Walnut & Pomegranate Sauce, Draft)",
+        "description": "Ground walnut and pomegranate molasses stew. Maintained as draft due to ingredient variability."
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "فسنجان" },
-      { "locale": "fa", "alias": "فسنجون" },
       { "locale": "en", "alias": "Fesenjan" }
     ],
-    "nutrients": [],
     "servings": [
       {
         "name_fa": "۱ کاسه خورش‌خوری",
         "name_en": "1 Stew Bowl",
-        "weight_g": 250,
+        "weight_g": 200,
         "household_unit": "کاسه"
       }
     ]
   },
   {
-    "external_id": "draft_ash_reshteh",
-    "slug": "ash-reshteh-draft",
-    "category_id": "cat_grains",
-    "category_slug": "grains-cereals",
+    "external_id": "item_ash_reshteh_draft",
+    "slug": "ash-reshteh-noodle-soup",
+    "category_id": "cat_soups",
+    "category_slug": "traditional-soups-ash",
     "food_type": "generic",
     "status": "draft",
     "source_id": "src_open_iranian_foods",
     "translations": [
       {
         "locale": "fa",
-        "name": "آش رشته سنتی ایرانی (پیش‌نویس)",
-        "description": "آش غلیظ سنتی با رشته آشی، حبوبات، سبزی آش و تزیین نعناع داغ و کشک. وضعیت پیش‌نویس به دلیل عدم تخمین ارزش غذایی متغیر."
+        "name": "آش رشته سنتی ایرانی (پیش‌نویس غذای ترکیبی)",
+        "description": "آش سنتی حبوبات، سبزیجات معطر، رشته و کشک. وضعیت پیش‌نویس بدون جعل مقادیر مغذی."
       },
       {
         "locale": "en",
-        "name": "Traditional Persian Ash Reshteh Noodle Soup (Draft)",
-        "description": "Thick Persian herb, bean, and noodle soup topped with fried mint and kashk. Retained in draft status."
+        "name": "Persian Ash Reshteh (Noodle, Herb & Bean Soup, Draft)",
+        "description": "Traditional thick noodle and legume soup. Maintained as draft without fabricated nutrient data."
       }
     ],
     "aliases": [
       { "locale": "fa", "alias": "آش رشته" },
-      { "locale": "fa", "alias": "اش رشته" },
       { "locale": "en", "alias": "Ash Reshteh" }
     ],
-    "nutrients": [],
     "servings": [
       {
-        "name_fa": "۱ کاسه بزرگ",
+        "name_fa": "۱ کاسه بزرگ آش",
         "name_en": "1 Large Bowl",
         "weight_g": 350,
         "household_unit": "کاسه"

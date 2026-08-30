@@ -77,10 +77,13 @@ pnpm data:validate
 # 7. Dataset dry-run simulation
 pnpm data:dry-run
 
-# 8. Build all workspaces
+# 8. Local D1 database ingestion
+pnpm data:import:local
+
+# 9. Build all workspaces
 pnpm build
 
-# 9. Dependency audit
+# 10. Dependency audit
 pnpm audit --prod --audit-level=critical
 ```
 

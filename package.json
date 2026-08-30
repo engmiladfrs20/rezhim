@@ -18,6 +18,7 @@
     "test:coverage": "turbo run test:coverage",
     "data:validate": "node scripts/data-pipeline.mjs",
     "data:dry-run": "node scripts/data-pipeline.mjs --dry-run",
+    "data:import:local": "node scripts/data-pipeline.mjs --import-local",
     "clean": "turbo run clean"
   },
   "devDependencies": {

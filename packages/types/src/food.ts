@@ -56,12 +56,22 @@ export interface NutrientDefinition {
   updatedAt: string;
 }
 
+export type ProvenanceMethod = 'laboratory' | 'database' | 'calculated';
+
 export interface FoodNutrientValue {
   nutrientId: string;
   code: string;
   name: string;
   unit: NutrientUnit;
   amountPer100g: number;
+  sourceId?: string | null | undefined;
+  externalId?: string | null | undefined;
+  sourceUrl?: string | null | undefined;
+  citation?: string | null | undefined;
+  datasetVersion?: string | null | undefined;
+  method?: ProvenanceMethod | null | undefined;
+  retrievedAt?: string | null | undefined;
+  license?: string | null | undefined;
 }
 
 export interface FoodServing {
@@ -71,6 +81,14 @@ export interface FoodServing {
   nameEn: string;
   weightG: number;
   householdUnit: string | null;
+  sourceId?: string | null | undefined;
+  externalId?: string | null | undefined;
+  sourceUrl?: string | null | undefined;
+  citation?: string | null | undefined;
+  datasetVersion?: string | null | undefined;
+  method?: ProvenanceMethod | null | undefined;
+  retrievedAt?: string | null | undefined;
+  license?: string | null | undefined;
 }
 
 export interface FoodTranslation {
@@ -172,6 +190,14 @@ export interface FoodDatasetAliasInput {
 export interface FoodDatasetNutrientInput {
   nutrient_id: string;
   amount_per_100g: number;
+  source_id?: string | null | undefined;
+  external_id?: string | null | undefined;
+  source_url?: string | null | undefined;
+  citation?: string | null | undefined;
+  dataset_version?: string | null | undefined;
+  method?: ProvenanceMethod | null | undefined;
+  retrieved_at?: string | null | undefined;
+  license?: string | null | undefined;
 }
 
 export interface FoodDatasetServingInput {
@@ -179,6 +205,14 @@ export interface FoodDatasetServingInput {
   name_en: string;
   weight_g: number;
   household_unit?: string | null | undefined;
+  source_id?: string | null | undefined;
+  external_id?: string | null | undefined;
+  source_url?: string | null | undefined;
+  citation?: string | null | undefined;
+  dataset_version?: string | null | undefined;
+  method?: ProvenanceMethod | null | undefined;
+  retrieved_at?: string | null | undefined;
+  license?: string | null | undefined;
 }
 
 export interface FoodDatasetItem {

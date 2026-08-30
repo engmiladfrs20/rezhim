@@ -112,6 +112,14 @@ export interface FoodNutrientRecord {
   food_id: string;
   nutrient_id: string;
   amount_per_100g: number;
+  source_id?: string | null;
+  external_id?: string | null;
+  source_url?: string | null;
+  citation?: string | null;
+  dataset_version?: string | null;
+  method?: string | null;
+  retrieved_at?: string | null;
+  license?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -123,6 +131,14 @@ export interface FoodServingRecord {
   name_en: string;
   weight_g: number;
   household_unit: string | null;
+  source_id?: string | null;
+  external_id?: string | null;
+  source_url?: string | null;
+  citation?: string | null;
+  dataset_version?: string | null;
+  method?: string | null;
+  retrieved_at?: string | null;
+  license?: string | null;
   created_at: string;
   updated_at: string;
 }

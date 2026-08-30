@@ -9,6 +9,7 @@ import type {
   FoodAlias,
   FoodSource,
   SupportedLocale,
+  ProvenanceMethod,
 } from '@nutriai/types';
 import type {
   FoodCategoryRecord,
@@ -129,6 +130,14 @@ export class FoodMapper {
       name: locale === 'en' ? n.name_en : n.name_fa,
       unit: n.unit,
       amountPer100g: Number(n.amount_per_100g),
+      sourceId: n.source_id || undefined,
+      externalId: n.external_id || undefined,
+      sourceUrl: n.source_url || undefined,
+      citation: n.citation || undefined,
+      datasetVersion: n.dataset_version || undefined,
+      method: (n.method as ProvenanceMethod | undefined) || undefined,
+      retrievedAt: n.retrieved_at || undefined,
+      license: n.license || undefined,
     }));
 
     const servings: FoodServing[] = full.servings.map((s) => ({
@@ -138,6 +147,14 @@ export class FoodMapper {
       nameEn: s.name_en,
       weightG: Number(s.weight_g),
       householdUnit: s.household_unit,
+      sourceId: s.source_id || undefined,
+      externalId: s.external_id || undefined,
+      sourceUrl: s.source_url || undefined,
+      citation: s.citation || undefined,
+      datasetVersion: s.dataset_version || undefined,
+      method: (s.method as ProvenanceMethod | undefined) || undefined,
+      retrievedAt: s.retrieved_at || undefined,
+      license: s.license || undefined,
     }));
 
     return {

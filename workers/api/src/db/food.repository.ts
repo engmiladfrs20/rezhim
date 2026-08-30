@@ -29,6 +29,14 @@ export interface FullFoodDetailRecord {
     name_en: string;
     unit: 'kcal' | 'g' | 'mg' | 'mcg' | 'IU';
     amount_per_100g: number;
+    source_id?: string | null;
+    external_id?: string | null;
+    source_url?: string | null;
+    citation?: string | null;
+    dataset_version?: string | null;
+    method?: string | null;
+    retrieved_at?: string | null;
+    license?: string | null;
   }>;
   servings: FoodServingRecord[];
   category: {
@@ -99,7 +107,8 @@ export class FoodRepository {
             .all<FoodAliasRecord>(),
           this.db
             .prepare(
-              `SELECT fn.nutrient_id, nd.code, nd.name_fa, nd.name_en, nd.unit, fn.amount_per_100g
+              `SELECT fn.nutrient_id, nd.code, nd.name_fa, nd.name_en, nd.unit, fn.amount_per_100g,
+                      fn.source_id, fn.external_id, fn.source_url, fn.citation, fn.dataset_version, fn.method, fn.retrieved_at, fn.license
              FROM food_nutrients fn
              JOIN nutrient_definitions nd ON fn.nutrient_id = nd.id
              WHERE fn.food_id = ?
@@ -113,6 +122,14 @@ export class FoodRepository {
               name_en: string;
               unit: 'kcal' | 'g' | 'mg' | 'mcg' | 'IU';
               amount_per_100g: number;
+              source_id?: string | null;
+              external_id?: string | null;
+              source_url?: string | null;
+              citation?: string | null;
+              dataset_version?: string | null;
+              method?: string | null;
+              retrieved_at?: string | null;
+              license?: string | null;
             }>(),
           this.db
             .prepare('SELECT * FROM food_servings WHERE food_id = ? ORDER BY weight_g ASC')

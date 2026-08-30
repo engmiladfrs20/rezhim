@@ -233,19 +233,57 @@ describe('Zod Schemas Package', () => {
     });
     expect(badChecksumManifest.success).toBe(false);
 
-    // 2. Valid Dataset Item
+    // 2. Valid Dataset Item (Active with required macros and provenance)
     const validItem = foodDatasetItemSchema.safeParse({
       source_id: 'src_open_iranian_foods',
-      external_id: 'item_sangak',
+      external_id: 'item_lentils',
       food_type: 'generic',
       status: 'active',
       translations: [
-        { locale: 'fa', name: 'نان سنگک' },
-        { locale: 'en', name: 'Sangak Bread' },
+        { locale: 'fa', name: 'عدس پخته' },
+        { locale: 'en', name: 'Cooked Lentils' },
       ],
-      aliases: [{ locale: 'fa', alias: 'سنگک سنتی' }],
-      nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: 259 }],
-      servings: [{ name_fa: '۱ کف دست', name_en: '1 Handful', weight_g: 30 }],
+      aliases: [{ locale: 'fa', alias: 'عدس' }],
+      nutrients: [
+        {
+          nutrient_id: 'nut_energy',
+          amount_per_100g: 116,
+          source_id: 'src_open_iranian_foods',
+          method: 'laboratory',
+          retrieved_at: '2026-08-30T00:00:00.000Z',
+        },
+        {
+          nutrient_id: 'nut_protein',
+          amount_per_100g: 9.02,
+          source_id: 'src_open_iranian_foods',
+          method: 'laboratory',
+          retrieved_at: '2026-08-30T00:00:00.000Z',
+        },
+        {
+          nutrient_id: 'nut_carbohydrate',
+          amount_per_100g: 20.13,
+          source_id: 'src_open_iranian_foods',
+          method: 'laboratory',
+          retrieved_at: '2026-08-30T00:00:00.000Z',
+        },
+        {
+          nutrient_id: 'nut_fat_total',
+          amount_per_100g: 0.38,
+          source_id: 'src_open_iranian_foods',
+          method: 'laboratory',
+          retrieved_at: '2026-08-30T00:00:00.000Z',
+        },
+      ],
+      servings: [
+        {
+          name_fa: '۱ لیوان',
+          name_en: '1 Cup',
+          weight_g: 198,
+          source_id: 'src_open_iranian_foods',
+          method: 'database',
+          retrieved_at: '2026-08-30T00:00:00.000Z',
+        },
+      ],
     });
     expect(validItem.success).toBe(true);
 

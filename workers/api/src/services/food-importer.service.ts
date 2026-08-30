@@ -1,35 +1,36 @@
-import type { D1Database } from '@cloudflare/workers-types';
+import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
 import { FoodRepository } from '../db/food.repository';
 import { FoodCategoryRepository } from '../db/food-category.repository';
 import { NutrientRepository } from '../db/nutrient.repository';
-import { FoodSourceRepository } from '../db/food-source.repository';
 import { FoodImportLogRepository } from '../db/food-import-log.repository';
-import { foodSourceManifestSchema, foodDatasetItemSchema } from '@nutriai/schemas';
+import { foodSourceManifestSchema, foodDatasetFileSchema } from '@nutriai/schemas';
 import { normalizePersianForComparison } from '@nutriai/localization';
 import type { FoodDatasetFile, FoodDatasetItem, ImportMode, ImportResult } from '@nutriai/types';
 import type {
   FoodRecord,
   FoodTranslationRecord,
   FoodAliasRecord,
-  FoodNutrientRecord,
   FoodServingRecord,
-  FoodSourceRecord,
-  FoodImportLogRecord,
 } from '../db/models';
 import { validateFoodInvariants } from './food.service';
 
+export interface PipelineOptions {
+  allowLicensedLocal?: boolean;
+  executedBy?: string;
+}
+
 export class FoodImporterService {
+  private readonly db: D1Database;
   private readonly foodRepo: FoodRepository;
   private readonly catRepo: FoodCategoryRepository;
   private readonly nutrientRepo: NutrientRepository;
-  private readonly sourceRepo: FoodSourceRepository;
   private readonly importLogRepo: FoodImportLogRepository;
 
   constructor(db: D1Database) {
+    this.db = db;
     this.foodRepo = new FoodRepository(db);
     this.catRepo = new FoodCategoryRepository(db);
     this.nutrientRepo = new NutrientRepository(db);
-    this.sourceRepo = new FoodSourceRepository(db);
     this.importLogRepo = new FoodImportLogRepository(db);
   }
 
@@ -45,15 +46,24 @@ export class FoodImporterService {
   }
 
   /**
-   * Validates dataset manifest, schema integrity, referenced entities, and license restrictions.
+   * Validates dataset manifest, schema integrity, referenced entities, granular provenance, and license restrictions.
    */
   async validateDataset(
     dataset: FoodDatasetFile,
     rawContent?: string,
+    options?: PipelineOptions,
   ): Promise<{ valid: boolean; errors: string[]; checksum: string }> {
     const errors: string[] = [];
 
-    // 1. Validate Manifest Schema
+    // 1. Validate File Schema via Zod
+    const fileParsed = foodDatasetFileSchema.safeParse(dataset);
+    if (!fileParsed.success) {
+      errors.push(
+        `Dataset schema validation failed: ${fileParsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
+      );
+    }
+
+    // 2. Validate Manifest Schema
     const manifestParsed = foodSourceManifestSchema.safeParse(dataset.manifest);
     if (!manifestParsed.success) {
       errors.push(
@@ -61,9 +71,9 @@ export class FoodImporterService {
       );
     }
 
-    // 2. Validate Checksum if raw content is provided
+    // 3. Validate Checksum if raw content is provided
     let computedChecksum = dataset.manifest?.sha256Checksum || '';
-    if (rawContent) {
+    if (rawContent !== undefined) {
       computedChecksum = await this.computeChecksum(rawContent);
       if (
         dataset.manifest?.sha256Checksum &&
@@ -75,20 +85,22 @@ export class FoodImporterService {
       }
     }
 
-    // 3. License redistribution check
+    // 4. License redistribution check
     if (dataset.manifest && dataset.manifest.redistributionAllowed === false) {
-      errors.push(
-        `Dataset license "${dataset.manifest.license}" disallows redistribution. Ingestion is restricted to licensed local environments.`,
-      );
+      if (!options?.allowLicensedLocal) {
+        errors.push(
+          `Dataset license "${dataset.manifest.license}" disallows redistribution. Direct ingestion is restricted to licensed local environments with explicit --licensed-local flag.`,
+        );
+      }
     }
 
-    // 4. Validate Dataset Items Array
+    // 5. Validate Dataset Items Array
     if (!Array.isArray(dataset.foods) || dataset.foods.length === 0) {
       errors.push('Dataset must contain at least one food item array in "foods" property.');
       return { valid: false, errors, checksum: computedChecksum };
     }
 
-    // 5. Pre-load valid Categories and Nutrients for fast lookup
+    // 6. Pre-load valid Categories and Nutrients for fast lookup
     const [allCategories, allNutrients] = await Promise.all([
       this.catRepo.listAll('active'),
       this.nutrientRepo.listAll(),
@@ -106,20 +118,18 @@ export class FoodImporterService {
       if (!item) continue;
       const itemContext = `Item [${i}] (external_id: "${item.external_id || 'unknown'}")`;
 
-      // Validate Item Schema
-      const itemParsed = foodDatasetItemSchema.safeParse(item);
-      if (!itemParsed.success) {
-        errors.push(
-          `${itemContext} schema validation error: ${itemParsed.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
-        );
-        continue;
-      }
-
       // Check external_id uniqueness in this batch
       if (seenExternalIds.has(item.external_id)) {
         errors.push(`${itemContext} duplicate external_id in dataset: "${item.external_id}"`);
       }
       seenExternalIds.add(item.external_id);
+
+      // Check source_id matching manifest ID
+      if (dataset.manifest && item.source_id !== dataset.manifest.id) {
+        errors.push(
+          `${itemContext} source_id "${item.source_id}" does not match manifest ID "${dataset.manifest.id}"`,
+        );
+      }
 
       // Check Category existence (either by category_id or category_slug)
       let resolvedCatId = item.category_id;
@@ -144,7 +154,7 @@ export class FoodImporterService {
         );
       }
 
-      // Check Nutrients existence
+      // Check Nutrients existence & validation
       if (item.nutrients && item.nutrients.length > 0) {
         for (const n of item.nutrients) {
           if (!validNutrientIds.has(n.nutrient_id)) {
@@ -193,20 +203,21 @@ export class FoodImporterService {
   }
 
   /**
-   * Executes the import pipeline in validate, dry-run, or import mode with full atomicity and logging.
+   * Executes the import pipeline in validate, dry-run, or import mode with true single-batch atomicity.
    */
   async runPipeline(
     dataset: FoodDatasetFile,
     rawContent?: string,
     mode: ImportMode = 'import',
-    executedBy = 'system',
+    options?: PipelineOptions,
   ): Promise<ImportResult> {
     const startTime = Date.now();
+    const executedBy = options?.executedBy || 'system';
     const datasetName = dataset.manifest?.name || 'unknown_dataset';
     const sourceId = dataset.manifest?.id || 'unknown_source';
 
     // 1. Validation Phase
-    const valResult = await this.validateDataset(dataset, rawContent);
+    const valResult = await this.validateDataset(dataset, rawContent, options);
     if (!valResult.valid) {
       const failedResult: ImportResult = {
         sourceId,
@@ -226,27 +237,31 @@ export class FoodImporterService {
 
       if (mode === 'import') {
         // Record failed import log
-        await this.importLogRepo.create({
-          id: `imp_${crypto.randomUUID()}`,
-          source_id: sourceId,
-          dataset_name: datasetName,
-          file_checksum: valResult.checksum || 'unknown',
-          total_records: dataset.foods?.length || 0,
-          inserted_count: 0,
-          updated_count: 0,
-          unchanged_count: 0,
-          skipped_count: 0,
-          status: 'failed',
-          error_summary: valResult.errors.slice(0, 3).join('; '),
-          executed_by: executedBy,
-          created_at: new Date().toISOString(),
-        });
+        try {
+          await this.importLogRepo.create({
+            id: `imp_${crypto.randomUUID()}`,
+            source_id: sourceId,
+            dataset_name: datasetName,
+            file_checksum: valResult.checksum || 'unknown',
+            total_records: dataset.foods?.length || 0,
+            inserted_count: 0,
+            updated_count: 0,
+            unchanged_count: 0,
+            skipped_count: 0,
+            status: 'failed',
+            error_summary: valResult.errors.slice(0, 3).join('; '),
+            executed_by: executedBy,
+            created_at: new Date().toISOString(),
+          });
+        } catch {
+          // ignore logging failure
+        }
       }
 
       return failedResult;
     }
 
-    // 2. Validate / Dry-Run Mode
+    // 2. Dry-Run / Validate Mode
     if (mode === 'validate' || mode === 'dry-run') {
       let insertedCount = 0;
       let updatedCount = 0;
@@ -287,23 +302,38 @@ export class FoodImporterService {
       };
     }
 
-    // 3. Import Mode (Execute upsert atomically)
+    // 3. Import Mode (Execute ALL operations in a single atomic D1 batch)
     const now = new Date().toISOString();
-
-    // Ensure Food Source exists in database
     const manifest = dataset.manifest;
-    const sourceRecord: FoodSourceRecord = {
-      id: manifest.id,
-      name: manifest.name,
-      code: manifest.code,
-      description: manifest.description ?? null,
-      url: manifest.url ?? null,
-      license: manifest.license ?? null,
-      acquisition_date: manifest.acquisitionDate,
-      created_at: now,
-      updated_at: now,
-    };
-    await this.sourceRepo.upsert(sourceRecord);
+    const statements: D1PreparedStatement[] = [];
+
+    // Statement 1: Upsert Food Source
+    statements.push(
+      this.db
+        .prepare(
+          `INSERT INTO food_sources (id, name, code, description, url, license, acquisition_date, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             name = excluded.name,
+             code = excluded.code,
+             description = excluded.description,
+             url = excluded.url,
+             license = excluded.license,
+             acquisition_date = excluded.acquisition_date,
+             updated_at = excluded.updated_at`,
+        )
+        .bind(
+          manifest.id,
+          manifest.name,
+          manifest.code,
+          manifest.description ?? null,
+          manifest.url ?? null,
+          manifest.license ?? null,
+          manifest.acquisitionDate,
+          now,
+          now,
+        ),
+    );
 
     let insertedCount = 0;
     let updatedCount = 0;
@@ -324,171 +354,237 @@ export class FoodImporterService {
         item.external_id,
       );
 
+      const foodId = existing ? existing.id : item.id || `food_${crypto.randomUUID()}`;
+
       if (!existing) {
-        // Create new item atomically
-        const foodId = item.id || `food_${crypto.randomUUID()}`;
-        const foodRecord: FoodRecord = {
-          id: foodId,
-          category_id: categoryId ?? null,
-          food_type: item.food_type,
-          brand_name: item.brand_name ?? null,
-          barcode: item.barcode ?? null,
-          status: item.status,
-          source_id: item.source_id,
-          external_id: item.external_id,
-          created_at: now,
-          updated_at: now,
-        };
-
-        const translationRecords: FoodTranslationRecord[] = item.translations.map((t) => ({
-          id: `ft_${crypto.randomUUID()}`,
-          food_id: foodId,
-          locale: t.locale,
-          name: t.name,
-          description: t.description ?? null,
-          created_at: now,
-          updated_at: now,
-        }));
-
-        const aliasRecords: FoodAliasRecord[] = (item.aliases || []).map((a) => ({
-          id: `fa_${crypto.randomUUID()}`,
-          food_id: foodId,
-          locale: a.locale,
-          alias: a.alias,
-          created_at: now,
-        }));
-
-        const nutrientRecords: FoodNutrientRecord[] = (item.nutrients || []).map((n) => ({
-          id: `fn_${crypto.randomUUID()}`,
-          food_id: foodId,
-          nutrient_id: n.nutrient_id,
-          amount_per_100g: n.amount_per_100g,
-          created_at: now,
-          updated_at: now,
-        }));
-
-        const servingRecords: FoodServingRecord[] = (item.servings || []).map((s) => ({
-          id: `fs_${crypto.randomUUID()}`,
-          food_id: foodId,
-          name_fa: s.name_fa,
-          name_en: s.name_en,
-          weight_g: s.weight_g,
-          household_unit: s.household_unit ?? null,
-          created_at: now,
-          updated_at: now,
-        }));
-
-        await this.foodRepo.createAtomic(
-          foodRecord,
-          translationRecords,
-          aliasRecords,
-          nutrientRecords,
-          servingRecords,
-        );
         insertedCount++;
       } else {
-        // Existing food: check if modified
         const fullExisting = await this.foodRepo.findFullDetailById(existing.id);
         if (this.isItemIdentical(item, fullExisting)) {
           unchangedCount++;
         } else {
-          // Perform atomic update
-          const updatedRecord: FoodRecord = {
-            id: existing.id,
-            category_id: categoryId ?? null,
-            food_type: item.food_type,
-            brand_name: item.brand_name ?? null,
-            barcode: item.barcode ?? null,
-            status: item.status,
-            source_id: item.source_id,
-            external_id: item.external_id,
-            created_at: existing.created_at,
-            updated_at: now,
-          };
-
-          const translationRecords: FoodTranslationRecord[] = item.translations.map((t) => ({
-            id: `ft_${crypto.randomUUID()}`,
-            food_id: existing.id,
-            locale: t.locale,
-            name: t.name,
-            description: t.description ?? null,
-            created_at: now,
-            updated_at: now,
-          }));
-
-          const aliasRecords: FoodAliasRecord[] = (item.aliases || []).map((a) => ({
-            id: `fa_${crypto.randomUUID()}`,
-            food_id: existing.id,
-            locale: a.locale,
-            alias: a.alias,
-            created_at: now,
-          }));
-
-          const nutrientRecords: FoodNutrientRecord[] = (item.nutrients || []).map((n) => ({
-            id: `fn_${crypto.randomUUID()}`,
-            food_id: existing.id,
-            nutrient_id: n.nutrient_id,
-            amount_per_100g: n.amount_per_100g,
-            created_at: now,
-            updated_at: now,
-          }));
-
-          const servingRecords: FoodServingRecord[] = (item.servings || []).map((s) => ({
-            id: `fs_${crypto.randomUUID()}`,
-            food_id: existing.id,
-            name_fa: s.name_fa,
-            name_en: s.name_en,
-            weight_g: s.weight_g,
-            household_unit: s.household_unit ?? null,
-            created_at: now,
-            updated_at: now,
-          }));
-
-          await this.foodRepo.updateAtomic(
-            updatedRecord,
-            translationRecords,
-            aliasRecords,
-            nutrientRecords,
-            servingRecords,
-          );
           updatedCount++;
         }
       }
+
+      // Upsert Food Record
+      statements.push(
+        this.db
+          .prepare(
+            `INSERT INTO foods (id, category_id, food_type, brand_name, barcode, status, source_id, external_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(id) DO UPDATE SET
+               category_id = excluded.category_id,
+               food_type = excluded.food_type,
+               brand_name = excluded.brand_name,
+               barcode = excluded.barcode,
+               status = excluded.status,
+               source_id = excluded.source_id,
+               external_id = excluded.external_id,
+               updated_at = excluded.updated_at`,
+          )
+          .bind(
+            foodId,
+            categoryId ?? null,
+            item.food_type,
+            item.brand_name ?? null,
+            item.barcode ?? null,
+            item.status,
+            item.source_id,
+            item.external_id,
+            existing ? existing.created_at : now,
+            now,
+          ),
+      );
+
+      // Clean existing child relations
+      statements.push(
+        this.db.prepare('DELETE FROM food_translations WHERE food_id = ?').bind(foodId),
+      );
+      statements.push(this.db.prepare('DELETE FROM food_aliases WHERE food_id = ?').bind(foodId));
+      statements.push(this.db.prepare('DELETE FROM food_nutrients WHERE food_id = ?').bind(foodId));
+      statements.push(this.db.prepare('DELETE FROM food_servings WHERE food_id = ?').bind(foodId));
+
+      // Insert Translations
+      for (const t of item.translations) {
+        statements.push(
+          this.db
+            .prepare(
+              `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            )
+            .bind(
+              `ft_${crypto.randomUUID()}`,
+              foodId,
+              t.locale,
+              t.name,
+              t.description ?? null,
+              now,
+              now,
+            ),
+        );
+      }
+
+      // Insert Aliases
+      for (const a of item.aliases || []) {
+        statements.push(
+          this.db
+            .prepare(
+              `INSERT INTO food_aliases (id, food_id, locale, alias, created_at)
+               VALUES (?, ?, ?, ?, ?)`,
+            )
+            .bind(`fa_${crypto.randomUUID()}`, foodId, a.locale, a.alias, now),
+        );
+      }
+
+      // Insert Nutrients with Granular Provenance
+      for (const n of item.nutrients || []) {
+        statements.push(
+          this.db
+            .prepare(
+              `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            )
+            .bind(
+              `fn_${crypto.randomUUID()}`,
+              foodId,
+              n.nutrient_id,
+              n.amount_per_100g,
+              n.source_id ?? item.source_id,
+              n.external_id ?? item.external_id,
+              n.source_url ?? manifest.url,
+              n.citation ?? manifest.name,
+              n.dataset_version ?? manifest.version,
+              n.method ?? 'database',
+              n.retrieved_at ?? manifest.acquisitionDate,
+              n.license ?? manifest.license,
+              now,
+              now,
+            ),
+        );
+      }
+
+      // Insert Servings with Granular Provenance
+      for (const s of item.servings || []) {
+        statements.push(
+          this.db
+            .prepare(
+              `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            )
+            .bind(
+              `fs_${crypto.randomUUID()}`,
+              foodId,
+              s.name_fa,
+              s.name_en,
+              s.weight_g,
+              s.household_unit ?? null,
+              s.source_id ?? item.source_id,
+              s.external_id ?? null,
+              s.source_url ?? manifest.url,
+              s.citation ?? manifest.name,
+              s.dataset_version ?? manifest.version,
+              s.method ?? 'database',
+              s.retrieved_at ?? manifest.acquisitionDate,
+              s.license ?? manifest.license,
+              now,
+              now,
+            ),
+        );
+      }
     }
 
-    // 4. Log Successful Import
-    const importLog: FoodImportLogRecord = {
-      id: `imp_${crypto.randomUUID()}`,
-      source_id: sourceId,
-      dataset_name: datasetName,
-      file_checksum: valResult.checksum,
-      total_records: dataset.foods.length,
-      inserted_count: insertedCount,
-      updated_count: updatedCount,
-      unchanged_count: unchangedCount,
-      skipped_count: 0,
-      status: 'success',
-      error_summary: null,
-      executed_by: executedBy,
-      created_at: now,
-    };
-    await this.importLogRepo.create(importLog);
+    // Success import log statement included inside atomic batch
+    const importLogId = `imp_${crypto.randomUUID()}`;
+    statements.push(
+      this.db
+        .prepare(
+          `INSERT INTO food_import_logs (id, source_id, dataset_name, file_checksum, total_records, inserted_count, updated_count, unchanged_count, skipped_count, status, error_summary, executed_by, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'success', NULL, ?, ?)`,
+        )
+        .bind(
+          importLogId,
+          sourceId,
+          datasetName,
+          valResult.checksum,
+          dataset.foods.length,
+          insertedCount,
+          updatedCount,
+          unchangedCount,
+          0,
+          executedBy,
+          now,
+        ),
+    );
 
-    return {
-      sourceId,
-      datasetName,
-      mode: 'import',
-      fileChecksum: valResult.checksum,
-      totalRecords: dataset.foods.length,
-      insertedCount,
-      updatedCount,
-      unchangedCount,
-      skippedCount: 0,
-      failedCount: 0,
-      status: 'success',
-      errors: [],
-      executionTimeMs: Date.now() - startTime,
-    };
+    // 4. Atomic Execution of entire batch
+    try {
+      await this.db.batch(statements);
+
+      return {
+        sourceId,
+        datasetName,
+        mode: 'import',
+        fileChecksum: valResult.checksum,
+        totalRecords: dataset.foods.length,
+        insertedCount,
+        updatedCount,
+        unchangedCount,
+        skippedCount: 0,
+        failedCount: 0,
+        status: 'success',
+        errors: [],
+        executionTimeMs: Date.now() - startTime,
+      };
+    } catch (batchErr) {
+      const rawMsg = batchErr instanceof Error ? batchErr.message : String(batchErr);
+      let safeSummary = 'Database batch transaction failed';
+      if (rawMsg.includes('UNIQUE constraint failed')) {
+        safeSummary =
+          'Database constraint violation: duplicate unique value encountered during ingestion';
+      } else if (rawMsg.includes('CHECK constraint failed')) {
+        safeSummary = 'Database constraint violation: invalid value failed check constraint';
+      } else if (rawMsg.includes('FOREIGN KEY constraint failed')) {
+        safeSummary = 'Database constraint violation: referenced foreign key not found';
+      }
+
+      // Record failed import log safely outside the failed transaction
+      try {
+        await this.importLogRepo.create({
+          id: `imp_${crypto.randomUUID()}`,
+          source_id: sourceId,
+          dataset_name: datasetName,
+          file_checksum: valResult.checksum || 'unknown',
+          total_records: dataset.foods.length,
+          inserted_count: 0,
+          updated_count: 0,
+          unchanged_count: 0,
+          skipped_count: 0,
+          status: 'failed',
+          error_summary: safeSummary,
+          executed_by: executedBy,
+          created_at: now,
+        });
+      } catch {
+        // ignore logging error
+      }
+
+      return {
+        sourceId,
+        datasetName,
+        mode: 'import',
+        fileChecksum: valResult.checksum,
+        totalRecords: dataset.foods.length,
+        insertedCount: 0,
+        updatedCount: 0,
+        unchangedCount: 0,
+        skippedCount: 0,
+        failedCount: dataset.foods.length,
+        status: 'failed',
+        errors: [safeSummary],
+        executionTimeMs: Date.now() - startTime,
+      };
+    }
   }
 
   /**
