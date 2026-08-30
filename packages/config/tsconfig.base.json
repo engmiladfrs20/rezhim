@@ -23,6 +23,7 @@
     "useUnknownInCatchVariables": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,

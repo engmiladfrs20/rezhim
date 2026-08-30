@@ -126,3 +126,19 @@ export interface FoodServingRecord {
   created_at: string;
   updated_at: string;
 }
+
+export interface FoodImportLogRecord {
+  id: string;
+  source_id: string;
+  dataset_name: string;
+  file_checksum: string;
+  total_records: number;
+  inserted_count: number;
+  updated_count: number;
+  unchanged_count: number;
+  skipped_count: number;
+  status: 'success' | 'failed' | 'dry_run';
+  error_summary: string | null;
+  executed_by: string;
+  created_at: string;
+}

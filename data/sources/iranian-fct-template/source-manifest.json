@@ -1,0 +1,14 @@
+{
+  "id": "src_iranian_fct_adapter",
+  "name": "Iranian Food Composition Tables (Adapter / Local Import Template)",
+  "code": "iranian_fct_adapter",
+  "publisher": "National Nutrition and Food Technology Research Institute (NNFTRI)",
+  "url": "https://github.com/engmiladfrs20/rezhim/tree/main/data/sources/iranian-fct-template",
+  "version": "1.0.0",
+  "acquisitionDate": "2026-08-30T00:00:00.000Z",
+  "license": "Proprietary - Official Publication (No Redistribution)",
+  "redistributionAllowed": false,
+  "sha256Checksum": "2e28f6dfba2052714d84aea3f8fafe63c9f5d70b6f8e3ca9fa1bfe86c297504d",
+  "language": "fa, en",
+  "description": "National Nutrition and Food Technology Research Institute (NNFTRI) Food Composition Tables adapter schema. Note: Proprietary raw database is NOT committed to git repository; template format is provided for licensed local ingestion."
+}

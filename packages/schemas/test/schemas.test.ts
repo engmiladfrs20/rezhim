@@ -191,4 +191,89 @@ describe('Zod Schemas Package', () => {
     });
     expect(invalidExternal.success).toBe(false);
   });
+
+  it('validates foodSourceManifestSchema, foodDatasetFileSchema and import schemas', async () => {
+    const {
+      foodSourceManifestSchema,
+      foodDatasetItemSchema,
+      foodDatasetFileSchema,
+      importResultSchema,
+    } = await import('../src');
+
+    // 1. Valid Manifest
+    const validManifest = foodSourceManifestSchema.safeParse({
+      id: 'src_open_iranian_foods',
+      name: 'NutriAI Open Iranian Food Catalog Baseline',
+      code: 'open_iranian_foods',
+      publisher: 'NutriAI Persia Project',
+      url: 'https://github.com/engmiladfrs20/rezhim',
+      version: '1.0.0',
+      acquisitionDate: '2026-08-30T00:00:00Z',
+      license: 'CC0-1.0',
+      redistributionAllowed: true,
+      sha256Checksum: 'a'.repeat(64),
+      language: 'fa, en',
+      description: 'Open baseline dataset for Iranian traditional food catalog',
+    });
+    expect(validManifest.success).toBe(true);
+
+    // Invalid Manifest - bad sha256
+    const badChecksumManifest = foodSourceManifestSchema.safeParse({
+      id: 'src_open_iranian_foods',
+      name: 'Test',
+      code: 'test',
+      publisher: 'Test',
+      url: 'https://example.com',
+      version: '1.0.0',
+      acquisitionDate: '2026-08-30T00:00:00Z',
+      license: 'CC0',
+      redistributionAllowed: true,
+      sha256Checksum: 'short_checksum',
+      language: 'fa',
+    });
+    expect(badChecksumManifest.success).toBe(false);
+
+    // 2. Valid Dataset Item
+    const validItem = foodDatasetItemSchema.safeParse({
+      source_id: 'src_open_iranian_foods',
+      external_id: 'item_sangak',
+      food_type: 'generic',
+      status: 'active',
+      translations: [
+        { locale: 'fa', name: 'نان سنگک' },
+        { locale: 'en', name: 'Sangak Bread' },
+      ],
+      aliases: [{ locale: 'fa', alias: 'سنگک سنتی' }],
+      nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: 259 }],
+      servings: [{ name_fa: '۱ کف دست', name_en: '1 Handful', weight_g: 30 }],
+    });
+    expect(validItem.success).toBe(true);
+
+    // 3. Valid Full Dataset File
+    if (validManifest.success && validItem.success) {
+      const fullFile = foodDatasetFileSchema.safeParse({
+        manifest: validManifest.data,
+        foods: [validItem.data],
+      });
+      expect(fullFile.success).toBe(true);
+    }
+
+    // 4. Valid Import Result
+    const validImportRes = importResultSchema.safeParse({
+      sourceId: 'src_open_iranian_foods',
+      datasetName: 'foods.json',
+      mode: 'import',
+      fileChecksum: 'a'.repeat(64),
+      totalRecords: 10,
+      insertedCount: 10,
+      updatedCount: 0,
+      unchangedCount: 0,
+      skippedCount: 0,
+      failedCount: 0,
+      status: 'success',
+      errors: [],
+      executionTimeMs: 120,
+    });
+    expect(validImportRes.success).toBe(true);
+  });
 });

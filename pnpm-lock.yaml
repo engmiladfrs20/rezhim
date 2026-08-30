@@ -413,6 +413,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.9.0
         version: 0.9.0(hono@4.13.5)(zod@4.4.3)
+      '@nutriai/localization':
+        specifier: workspace:*
+        version: link:../../packages/localization
       '@nutriai/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

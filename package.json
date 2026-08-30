@@ -16,6 +16,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,jsonc}\"",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
+    "data:validate": "node scripts/data-pipeline.mjs",
+    "data:dry-run": "node scripts/data-pipeline.mjs --dry-run",
     "clean": "turbo run clean"
   },
   "devDependencies": {

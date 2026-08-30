@@ -38,4 +38,38 @@ export class FoodSourceRepository {
       );
     }
   }
+
+  async upsert(record: FoodSourceRecord): Promise<void> {
+    try {
+      const stmt = this.db
+        .prepare(
+          `INSERT INTO food_sources (id, name, code, description, url, license, acquisition_date, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             name = excluded.name,
+             code = excluded.code,
+             description = excluded.description,
+             url = excluded.url,
+             license = excluded.license,
+             acquisition_date = excluded.acquisition_date,
+             updated_at = excluded.updated_at`,
+        )
+        .bind(
+          record.id,
+          record.name,
+          record.code,
+          record.description,
+          record.url,
+          record.license,
+          record.acquisition_date,
+          record.created_at,
+          record.updated_at,
+        );
+      await stmt.run();
+    } catch (err) {
+      throw new DatabaseError(
+        `Failed to upsert food source: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
 }

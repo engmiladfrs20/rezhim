@@ -6,6 +6,7 @@
 - **[x] Phase 2**: Cloudflare Workers API Foundation & Data Layer Setup
 - **[x] Phase 3**: Authentication and Roles Foundation
 - **[x] Phase 4**: Comprehensive Food Catalog Data Foundation
+- **[x] Phase 5**: Iranian Food Database and Provenance Pipeline
 
 ---
 
@@ -16,9 +17,12 @@
 │   ├── web/           # سامانه وب React 18 + Vite + Tailwind (پوسته اصلی کاربر)
 │   ├── admin/         # پنل مدیریت React 18 + Vite (پوسته ایزوله ادمین)
 │   └── mobile/        # اپلیکیشن موبایل React Native + Expo (پشتیبانی کامل از اندروید و RTL)
+├── data/
+│   └── sources/       # مخزن داده‌های پایه غذاهای ایرانی و الگوهای Ingestion
 ├── workers/
 │   ├── api/           # وب‌سرویس REST مبتنی بر Cloudflare Workers و فریم‌ورک Hono
 │   └── ai-jobs/       # پردازشگر پس‌زمینه صف‌های هوش مصنوعی (Placeholder فاز ۱)
+
 ├── packages/
 │   ├── config/        # تنظیمات اشتراکی TSConfig، ESLint و Prettier
 │   ├── types/         # تایپ‌های اشتراکی دامنه، API، Storage و Cloudflare
@@ -67,10 +71,16 @@ pnpm typecheck
 # 5. Tests with coverage
 pnpm test:coverage
 
-# 6. Build all workspaces
+# 6. Dataset validation & integrity
+pnpm data:validate
+
+# 7. Dataset dry-run simulation
+pnpm data:dry-run
+
+# 8. Build all workspaces
 pnpm build
 
-# 7. Dependency audit
+# 9. Dependency audit
 pnpm audit --prod --audit-level=critical
 ```
 

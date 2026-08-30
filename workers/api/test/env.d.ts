@@ -6,3 +6,8 @@ declare module 'cloudflare:workers' {
     TEST_MIGRATIONS: import('cloudflare:test').D1Migration[];
   }
 }
+
+declare module '*.json' {
+  const value: any;
+  export default value;
+}

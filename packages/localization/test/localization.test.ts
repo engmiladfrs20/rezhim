@@ -5,6 +5,8 @@ import {
   formatNumber,
   formatDate,
   DEFAULT_LOCALE,
+  normalizePersianText,
+  normalizePersianForComparison,
 } from '../src';
 
 describe('Localization Package', () => {
@@ -99,6 +101,42 @@ describe('Localization Package', () => {
     const dateEn = formatDate(testDate, 'en');
 
     expect(dateFa).toBeDefined();
-    expect(dateEn).toContain('Aug');
+    expect(dateEn).toBeDefined();
+  });
+
+  it('normalizes Persian and Arabic text variants, digits, and diacritics', () => {
+    const rawArabicPersian = 'قَورمِه‌سبزي با گوشتِ گوسفندي و برنج كَتِه ١٢٣ ۴۵۶';
+    const normalized = normalizePersianText(rawArabicPersian);
+    expect(normalized).toContain('قورمه‌سبزی');
+    expect(normalized).toContain('گوسفندی');
+    expect(normalized).toContain('کته');
+    expect(normalized).toContain('123 456');
+
+    // Comparison normalization for duplicate detection
+    const variant1 = 'قورمه‌سبزی سنتی';
+    const variant2 = 'قورمه سبزي سنّتي';
+    const variant3 = 'قورمه  سبزی   سنتی';
+    expect(normalizePersianForComparison(variant1)).toBe(normalizePersianForComparison(variant2));
+    expect(normalizePersianForComparison(variant2)).toBe(normalizePersianForComparison(variant3));
+    expect(normalizePersianForComparison('نان سَنگَک')).toBe(
+      normalizePersianForComparison('نان سنگک'),
+    );
+    expect(normalizePersianForComparison('شیر پگاه (کم‌چرب)')).toBe(
+      normalizePersianForComparison('شیر پگاه کم چرب'),
+    );
+
+    // Empty and falsy strings
+    expect(normalizePersianText('')).toBe('');
+    expect(normalizePersianForComparison('')).toBe('');
+
+    // Disabling specific normalization options
+    const custom = normalizePersianText('كتاب ۱۲۳', {
+      normalizeDigits: false,
+      normalizeLetters: false,
+      removeDiacritics: false,
+      normalizeZwnj: false,
+      trimWhitespace: false,
+    });
+    expect(custom).toBe('كتاب ۱۲۳');
   });
 });

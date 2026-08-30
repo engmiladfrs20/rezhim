@@ -314,3 +314,113 @@ export const adminFoodListQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
 });
 export type AdminFoodListQueryDto = z.infer<typeof adminFoodListQuerySchema>;
+
+// ==========================================
+// Phase 5: Dataset Manifest & Import Schemas
+// ==========================================
+
+export const rfc3339TimestampSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/,
+    'Must be a valid RFC3339 UTC timestamp',
+  )
+  .refine((ts) => !isNaN(Date.parse(ts)), 'Must be a parseable timestamp');
+
+export const foodSourceManifestSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .min(1)
+    .max(50)
+    .regex(/^src_[a-z0-9_]+$/, 'Source ID must follow "src_<name>" format'),
+  name: z.string().trim().min(1).max(150),
+  code: z
+    .string()
+    .trim()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9_]+$/, 'Source code must be snake_case'),
+  publisher: z.string().trim().min(1).max(150),
+  url: z.string().trim().url('Must be a valid URL'),
+  version: z.string().trim().min(1).max(50),
+  acquisitionDate: rfc3339TimestampSchema,
+  license: z.string().trim().min(1).max(100),
+  redistributionAllowed: z.boolean(),
+  sha256Checksum: z
+    .string()
+    .trim()
+    .length(64, 'SHA-256 checksum must be exactly 64 hexadecimal characters')
+    .regex(/^[a-f0-9]{64}$/i, 'SHA-256 must be a valid hexadecimal string'),
+  language: z.string().trim().min(1).max(50),
+  description: z.string().trim().max(1000).nullable().optional(),
+});
+export type FoodSourceManifestDto = z.infer<typeof foodSourceManifestSchema>;
+
+export const foodDatasetItemSchema = z
+  .object({
+    id: z.string().trim().min(1).optional(),
+    slug: z.string().trim().min(1).max(100).optional(),
+    category_id: z.string().trim().min(1).nullable().optional(),
+    category_slug: z.string().trim().min(1).max(100).nullable().optional(),
+    food_type: foodTypeEnum.default('generic'),
+    brand_name: z.string().trim().max(100).nullable().optional(),
+    barcode: canonicalBarcodeSchema,
+    status: foodStatusEnum.default('active'),
+    source_id: z.string().trim().min(1),
+    external_id: z.string().trim().min(1).max(100),
+    translations: z
+      .array(foodTranslationInputSchema)
+      .min(1, 'At least one translation is required'),
+    aliases: z.array(foodAliasInputSchema).optional(),
+    nutrients: z.array(foodNutrientInputSchema).optional(),
+    servings: z.array(foodServingInputSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    validateUniqueLocales(data.translations, ctx, 'translations');
+    if (data.nutrients) {
+      validateUniqueNutrients(data.nutrients, ctx);
+    }
+    if (data.aliases) {
+      validateUniqueAliases(data.aliases, ctx);
+    }
+    if (data.servings) {
+      validateUniqueServings(data.servings, ctx);
+    }
+
+    if (data.food_type === 'branded' && (!data.brand_name || data.brand_name.trim().length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Branded food requires a valid brand_name',
+        path: ['brand_name'],
+      });
+    }
+  });
+export type FoodDatasetItemDto = z.infer<typeof foodDatasetItemSchema>;
+
+export const foodDatasetFileSchema = z.object({
+  manifest: foodSourceManifestSchema,
+  foods: z.array(foodDatasetItemSchema).min(1, 'Dataset must contain at least one food item'),
+});
+export type FoodDatasetFileDto = z.infer<typeof foodDatasetFileSchema>;
+
+export const importModeEnum = z.enum(['validate', 'dry-run', 'import']);
+export type ImportModeDto = z.infer<typeof importModeEnum>;
+
+export const importResultSchema = z.object({
+  sourceId: z.string(),
+  datasetName: z.string(),
+  mode: importModeEnum,
+  fileChecksum: z.string(),
+  totalRecords: z.number().int().nonnegative(),
+  insertedCount: z.number().int().nonnegative(),
+  updatedCount: z.number().int().nonnegative(),
+  unchangedCount: z.number().int().nonnegative(),
+  skippedCount: z.number().int().nonnegative(),
+  failedCount: z.number().int().nonnegative(),
+  status: z.enum(['success', 'failed', 'dry_run']),
+  errors: z.array(z.string()),
+  executionTimeMs: z.number().nonnegative(),
+});
+export type ImportResultDto = z.infer<typeof importResultSchema>;

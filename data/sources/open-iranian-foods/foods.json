@@ -1,0 +1,1190 @@
+[
+  {
+    "external_id": "item_sangak",
+    "slug": "sangak-bread",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نان سنگک سنتی",
+        "description": "نان سبوس‌دار سنتی ایرانی پخته‌شده روی ریگ داغ در تنور"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Sangak Flatbread",
+        "description": "Whole wheat sourdough flatbread traditionally baked on small river pebbles"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "سنگک" },
+      { "locale": "fa", "alias": "نان سنگک کنجدی" },
+      { "locale": "en", "alias": "Sangak Bread" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 259 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 9.2 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 50.1 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.8 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 4.8 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.8 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 480 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 2.1 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 35 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کف دست بدون انگشتان",
+        "name_en": "1 Handful (Palm size)",
+        "weight_g": 30,
+        "household_unit": "کف دست"
+      },
+      {
+        "name_fa": "۱ قرص نان کامل",
+        "name_en": "1 Whole Loaf",
+        "weight_g": 430,
+        "household_unit": "قرص"
+      }
+    ]
+  },
+  {
+    "external_id": "item_barbari",
+    "slug": "barbari-bread",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نان بربری سنتی",
+        "description": "نان حجیم و طلایی سنتی ایرانی با رومال کنجد و سیاه دانه"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Barbari Bread",
+        "description": "Thick yeast leavened Iranian flatbread with glazed golden crust and sesame seeds"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "بربری" },
+      { "locale": "fa", "alias": "نان بربری کنجدی" },
+      { "locale": "en", "alias": "Barbari Bread" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 265 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 8.8 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 53.4 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.5 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.7 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.2 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 510 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 1.8 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 28 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کف دست",
+        "name_en": "1 Handful (Palm size)",
+        "weight_g": 30,
+        "household_unit": "کف دست"
+      },
+      {
+        "name_fa": "۱ قرص کامل",
+        "name_en": "1 Full Loaf",
+        "weight_g": 400,
+        "household_unit": "قرص"
+      }
+    ]
+  },
+  {
+    "external_id": "item_taftoon",
+    "slug": "taftoon-bread",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نان تافتون سنتی",
+        "description": "نان گرد و نازک تنوری سنتی با بافت نرم و طرحدار"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Taftoon Bread",
+        "description": "Round leavened Iranian flatbread baked on tandoor oven walls"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "تافتون" },
+      { "locale": "fa", "alias": "نان تافتون تنوری" },
+      { "locale": "en", "alias": "Taftoon Bread" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 270 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 8.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 54.0 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 2.0 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.4 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.0 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 490 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 1.6 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 24 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کف دست",
+        "name_en": "1 Handful (Palm size)",
+        "weight_g": 25,
+        "household_unit": "کف دست"
+      },
+      {
+        "name_fa": "۱ قرص کامل",
+        "name_en": "1 Whole Loaf",
+        "weight_g": 200,
+        "household_unit": "قرص"
+      }
+    ]
+  },
+  {
+    "external_id": "item_lavash",
+    "slug": "lavash-bread",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نان لواش سنتی",
+        "description": "نان بسیار نازک و ترد سنتی ایرانی"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Lavash Flatbread",
+        "description": "Thin unleavened Iranian flatbread baked rapidly on tandoor or saj"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "لواش" },
+      { "locale": "fa", "alias": "نان لواش تنوری" },
+      { "locale": "en", "alias": "Lavash Bread" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 285 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 8.1 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 58.6 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.6 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.2 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.5 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 530 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 1.4 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 20 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کف دست",
+        "name_en": "1 Handful (Palm size)",
+        "weight_g": 15,
+        "household_unit": "کف دست"
+      },
+      {
+        "name_fa": "۱ ورق کامل",
+        "name_en": "1 Full Sheet",
+        "weight_g": 90,
+        "household_unit": "ورق"
+      }
+    ]
+  },
+  {
+    "external_id": "item_kateh_rice",
+    "slug": "kateh-rice",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "برنج کته ایرانی پخته",
+        "description": "برنج دانه بلند ایرانی پخته شده به روش کته بدون آبکشی"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Cooked Kateh Rice",
+        "description": "Long-grain Persian rice cooked absorption-style preserving starch and aroma"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "کته" },
+      { "locale": "fa", "alias": "برنج کته" },
+      { "locale": "en", "alias": "Kateh Rice" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 135 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 2.7 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 29.3 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.6 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.4 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.1 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 180 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 35 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.2 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 10 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کفگیر پلوخوری",
+        "name_en": "1 Rice Skimmer (Scoop)",
+        "weight_g": 160,
+        "household_unit": "کفگیر"
+      },
+      {
+        "name_fa": "۱ بشقاب پلوخوری",
+        "name_en": "1 Dinner Plate",
+        "weight_g": 250,
+        "household_unit": "بشقاب"
+      }
+    ]
+  },
+  {
+    "external_id": "item_chelow_rice",
+    "slug": "chelow-rice",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "چلو آبکش ایرانی پخته",
+        "description": "برنج دانه بلند اعلای ایرانی پخته شده به روش آبکشی و دم‌کشیده با زعفران"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Cooked Chelow Rice",
+        "description": "Steamed and drained Persian long-grain saffron rice"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "چلو" },
+      { "locale": "fa", "alias": "برنج آبکش" },
+      { "locale": "en", "alias": "Chelow Rice" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 130 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 2.4 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 28.5 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.5 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.3 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.1 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 150 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 30 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.2 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 8 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کفگیر",
+        "name_en": "1 Rice Scoop",
+        "weight_g": 160,
+        "household_unit": "کفگیر"
+      },
+      {
+        "name_fa": "۱ دیس تک نفره",
+        "name_en": "1 Single Platter",
+        "weight_g": 250,
+        "household_unit": "دیس"
+      }
+    ]
+  },
+  {
+    "external_id": "item_barley_bread",
+    "slug": "barley-bread",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نان جو سنتی",
+        "description": "نان جو کامل و سبوس‌دار سنتی سرشار از فیبر رژیمی"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Barley Bread",
+        "description": "Whole barley flour flatbread with high dietary fiber"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "نان جو" },
+      { "locale": "fa", "alias": "نان جو سبوس دار" },
+      { "locale": "en", "alias": "Barley Bread" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 245 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 9.8 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 47.5 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.9 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 7.2 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.6 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 420 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 2.5 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 42 }
+    ],
+    "servings": [
+      { "name_fa": "۱ کف دست", "name_en": "1 Handful", "weight_g": 30, "household_unit": "کف دست" },
+      {
+        "name_fa": "۱ قرص کامل",
+        "name_en": "1 Whole Loaf",
+        "weight_g": 150,
+        "household_unit": "قرص"
+      }
+    ]
+  },
+  {
+    "external_id": "item_persian_yogurt",
+    "slug": "persian-yogurt-full-fat",
+    "category_id": "cat_dairy",
+    "category_slug": "dairy-eggs",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "ماست سنتی پرچرب ایرانی",
+        "description": "ماست پرچرب سنتی تهیه‌شده از شیر تازه گاو با بافت خامه‌ای"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Full-Fat Yogurt",
+        "description": "Traditional whole cow milk Persian plain yogurt"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "ماست سنتی" },
+      { "locale": "fa", "alias": "ماست پرچرب" },
+      { "locale": "en", "alias": "Persian Yogurt" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 65 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 3.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 4.7 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 3.6 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 4.7 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 50 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 155 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 120 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.1 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ کاسه ماست‌خوری",
+        "name_en": "1 Small Bowl",
+        "weight_g": 150,
+        "household_unit": "کاسه"
+      },
+      { "name_fa": "۱ لیوان", "name_en": "1 Cup", "weight_g": 240, "household_unit": "لیوان" }
+    ]
+  },
+  {
+    "external_id": "item_strained_yogurt",
+    "slug": "strained-yogurt-labneh",
+    "category_id": "cat_dairy",
+    "category_slug": "dairy-eggs",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "ماست چکیده ایرانی",
+        "description": "ماست چکیده سنتی غلیظ با حذف آب پنیر و طعم ملس"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Strained Yogurt (Labneh)",
+        "description": "Thick strained Persian yogurt with rich velvety texture"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "ماست چکیده" },
+      { "locale": "fa", "alias": "ماست کیسه ای" },
+      { "locale": "en", "alias": "Strained Yogurt" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 125 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 7.8 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 5.2 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 8.5 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 4.0 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 75 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 180 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 210 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.2 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۲ قاشق غذاخوری",
+        "name_en": "2 Tablespoons",
+        "weight_g": 50,
+        "household_unit": "قاشق"
+      },
+      {
+        "name_fa": "۱ پیاله متوسط",
+        "name_en": "1 Medium Dish",
+        "weight_g": 100,
+        "household_unit": "پیاله"
+      }
+    ]
+  },
+  {
+    "external_id": "item_persian_kashk",
+    "slug": "persian-liquid-kashk",
+    "category_id": "cat_dairy",
+    "category_slug": "dairy-eggs",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "کشک سنتی پاستوریزه",
+        "description": "کشک غلیظ سنتی تخمیری ایرانی با پروتئین و کلسیم بسیار بالا"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Liquid Kashk (Whey)",
+        "description": "Concentrated fermented Persian dairy whey product"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "کشک" },
+      { "locale": "fa", "alias": "کشک مایع" },
+      { "locale": "en", "alias": "Persian Kashk" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 110 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 14.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 6.0 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 3.2 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 3.5 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 680 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 220 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 430 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.4 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ قاشق غذاخوری",
+        "name_en": "1 Tablespoon",
+        "weight_g": 20,
+        "household_unit": "قاشق"
+      },
+      { "name_fa": "نصف فنجان", "name_en": "1/2 Cup", "weight_g": 60, "household_unit": "فنجان" }
+    ]
+  },
+  {
+    "external_id": "item_persian_doogh",
+    "slug": "persian-doogh",
+    "category_id": "cat_dairy",
+    "category_slug": "dairy-eggs",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "دوغ سنتی ایرانی",
+        "description": "نوشیدنی سنتی ماست رقیق‌شده با سبزیجات معطر مانند نعناع و پونه"
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Mint Doogh",
+        "description": "Cold savory yogurt beverage seasoned with mint"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "دوغ" },
+      { "locale": "fa", "alias": "دوغ نعنایی" },
+      { "locale": "en", "alias": "Doogh" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 28 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 1.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 2.1 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.5 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 2.0 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 290 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 75 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 65 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.05 }
+    ],
+    "servings": [
+      { "name_fa": "۱ لیوان", "name_en": "1 Glass", "weight_g": 240, "household_unit": "لیوان" },
+      {
+        "name_fa": "۱ بطری تک نفره",
+        "name_en": "1 Single Bottle",
+        "weight_g": 330,
+        "household_unit": "بطری"
+      }
+    ]
+  },
+  {
+    "external_id": "item_tabriz_cheese",
+    "slug": "tabriz-lighvan-cheese",
+    "category_id": "cat_dairy",
+    "category_slug": "dairy-eggs",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "پنیر تبریز / لیقوان گوسفندی",
+        "description": "پنیر سنتی شور رسانده‌شده در آب‌نمک با بافت متخلخل و طعم غنی شیر گوسفند"
+      },
+      {
+        "locale": "en",
+        "name": "Tabriz / Lighvan Sheep Milk Cheese",
+        "description": "Traditional Iranian brined feta-style cheese made from raw sheep milk"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "پنیر تبریز" },
+      { "locale": "fa", "alias": "پنیر لیقوان" },
+      { "locale": "en", "alias": "Tabriz Cheese" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 275 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 17.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 1.5 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 22.0 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.2 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 850 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 95 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 490 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.3 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ قوطی کبریت",
+        "name_en": "1 Matchbox Size",
+        "weight_g": 30,
+        "household_unit": "قوطی کبریت"
+      },
+      {
+        "name_fa": "۱ برش متوسط",
+        "name_en": "1 Medium Slice",
+        "weight_g": 50,
+        "household_unit": "برش"
+      }
+    ]
+  },
+  {
+    "external_id": "item_cooked_lentils",
+    "slug": "cooked-persian-lentils",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "عدس پخته ایرانی",
+        "description": "عدس ریز ایرانی آب‌پز شده با پروتئین و آهن گیاهی بالا"
+      },
+      {
+        "locale": "en",
+        "name": "Cooked Persian Brown Lentils",
+        "description": "Boiled whole brown lentils rich in plant protein and dietary iron"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "عدس" },
+      { "locale": "fa", "alias": "عدس پخته" },
+      { "locale": "en", "alias": "Cooked Lentils" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 116 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 9.0 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 20.1 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.4 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 7.9 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.8 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 2 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 369 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 3.3 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 19 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ لیوان پخته",
+        "name_en": "1 Cooked Cup",
+        "weight_g": 200,
+        "household_unit": "لیوان"
+      },
+      {
+        "name_fa": "نصف لیوان پخته",
+        "name_en": "1/2 Cooked Cup",
+        "weight_g": 100,
+        "household_unit": "لیوان"
+      }
+    ]
+  },
+  {
+    "external_id": "item_cooked_chickpeas",
+    "slug": "cooked-persian-chickpeas",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "نخود آبگوشتی پخته",
+        "description": "نخود درشت ایرانی آب‌پز شده مناسب انواع آش و آبگوشت"
+      },
+      {
+        "locale": "en",
+        "name": "Cooked Persian Chickpeas",
+        "description": "Boiled garbanzo beans / chickpeas rich in fiber and minerals"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "نخود" },
+      { "locale": "fa", "alias": "نخود پخته" },
+      { "locale": "en", "alias": "Cooked Chickpeas" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 164 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 8.9 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 27.4 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 2.6 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 7.6 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 4.8 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 7 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 291 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 2.9 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 49 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ لیوان پخته",
+        "name_en": "1 Cooked Cup",
+        "weight_g": 200,
+        "household_unit": "لیوان"
+      },
+      {
+        "name_fa": "نصف لیوان پخته",
+        "name_en": "1/2 Cooked Cup",
+        "weight_g": 100,
+        "household_unit": "لیوان"
+      }
+    ]
+  },
+  {
+    "external_id": "item_persian_walnuts",
+    "slug": "persian-raw-walnuts",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "مغز گردوی ایرانی خام",
+        "description": "مغز گردوی تازه و ارگانیک ایرانی سرشار از اسیدهای چرب امگا-۳"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Raw Walnuts",
+        "description": "Raw Persian walnut halves high in alpha-linolenic omega-3 fatty acids"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "گردو" },
+      { "locale": "fa", "alias": "مغز گردو" },
+      { "locale": "en", "alias": "Walnuts" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 654 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 15.2 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 13.7 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 65.2 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 6.7 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 2.6 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 2 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 441 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 2.9 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 98 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ عدد کامل (۲ پره)",
+        "name_en": "1 Whole Nut (2 Halves)",
+        "weight_g": 5,
+        "household_unit": "عدد"
+      },
+      {
+        "name_fa": "یک مشت دست (حدود ۶ عدد)",
+        "name_en": "1 Handful (~6 whole nuts)",
+        "weight_g": 30,
+        "household_unit": "مشت"
+      }
+    ]
+  },
+  {
+    "external_id": "item_joojeh_kebab",
+    "slug": "persian-joojeh-kebab",
+    "category_id": "cat_meats",
+    "category_slug": "meat-poultry-fish",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "جوجه کباب فیله مرغ پخته",
+        "description": "کباب فیله سینه مرغ مزه‌دار شده با زعفران اعلا، آبلیمو و پیاز"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Saffron Joojeh Kebab (Chicken Breast)",
+        "description": "Grilled saffron and lemon marinated chicken breast skewers"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "جوجه کباب" },
+      { "locale": "fa", "alias": "جوجه بی استخوان" },
+      { "locale": "en", "alias": "Joojeh Kebab" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 165 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 28.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 1.2 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 4.8 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.1 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.5 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 320 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 310 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 1.1 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 18 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ سیخ استاندارد",
+        "name_en": "1 Standard Skewer",
+        "weight_g": 200,
+        "household_unit": "سیخ"
+      },
+      { "name_fa": "نصف سیخ", "name_en": "1/2 Skewer", "weight_g": 100, "household_unit": "سیخ" }
+    ]
+  },
+  {
+    "external_id": "item_koobideh_kebab",
+    "slug": "persian-koobideh-kebab",
+    "category_id": "cat_meats",
+    "category_slug": "meat-poultry-fish",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "کباب کوبیده سنتی پخته",
+        "description": "کباب کوبیده سنتی از گوشت چرخ‌کرده گوسفندی و گوساله با پیاز و زعفران"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Koobideh Minced Meat Kebab",
+        "description": "Traditional grilled minced lamb and beef kebab with grated onions and saffron"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "کباب کوبیده" },
+      { "locale": "fa", "alias": "کوبیده" },
+      { "locale": "en", "alias": "Koobideh Kebab" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 245 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 18.2 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 2.1 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 18.5 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0.3 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0.8 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 410 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 270 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 2.2 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 22 }
+    ],
+    "servings": [
+      { "name_fa": "۱ سیخ", "name_en": "1 Skewer", "weight_g": 100, "household_unit": "سیخ" },
+      {
+        "name_fa": "۲ سیخ (یک پرس)",
+        "name_en": "2 Skewers (1 Full Portion)",
+        "weight_g": 200,
+        "household_unit": "سیخ"
+      }
+    ]
+  },
+  {
+    "external_id": "item_pomegranate",
+    "slug": "persian-fresh-pomegranate",
+    "category_id": "cat_fruits",
+    "category_slug": "fruits",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "انار تازه ایرانی",
+        "description": "انار سرخ ملس ایرانی سرشار از پلی‌فنول‌ها و آنتی‌اکسیدان‌های قوی"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Fresh Pomegranate",
+        "description": "Fresh whole sweet and tart Persian red pomegranate"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "انار" },
+      { "locale": "fa", "alias": "انار ساوه" },
+      { "locale": "en", "alias": "Pomegranate" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 83 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 1.7 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 18.7 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 1.2 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 4.0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 13.7 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 3 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 236 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.3 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 10 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ عدد متوسط",
+        "name_en": "1 Medium Fruit",
+        "weight_g": 150,
+        "household_unit": "عدد"
+      },
+      {
+        "name_fa": "۱ کاسه دانه انار",
+        "name_en": "1 Bowl Arils",
+        "weight_g": 100,
+        "household_unit": "کاسه"
+      }
+    ]
+  },
+  {
+    "external_id": "item_mazafati_dates",
+    "slug": "mazafati-dates-bam",
+    "category_id": "cat_fruits",
+    "category_slug": "fruits",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "خرمای مضافتی بم",
+        "description": "رطب مضافتی اعلای بم با پوست نازک، شهد طبیعی و بافت نرم"
+      },
+      {
+        "locale": "en",
+        "name": "Bam Mazafati Fresh Dates",
+        "description": "Soft dark fresh Persian dates from Bam region"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "خرما" },
+      { "locale": "fa", "alias": "خرمای مضافتی" },
+      { "locale": "en", "alias": "Mazafati Dates" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 277 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 1.8 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 75.0 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.2 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 6.7 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 66.5 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 1 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 696 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.9 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 64 }
+    ],
+    "servings": [
+      { "name_fa": "۱ عدد", "name_en": "1 Date", "weight_g": 10, "household_unit": "عدد" },
+      {
+        "name_fa": "۳ عدد (یک وعده)",
+        "name_en": "3 Dates (1 Serving)",
+        "weight_g": 30,
+        "household_unit": "عدد"
+      }
+    ]
+  },
+  {
+    "external_id": "item_sabzi_khordan",
+    "slug": "sabzi-khordan-fresh-herbs",
+    "category_id": "cat_vegetables",
+    "category_slug": "vegetables",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "سبزی خوردن تازه ایرانی",
+        "description": "مخلوط سبزیجات تازه شامل ریحان، تره، شاهی، مرزه، تربچه و نعناع"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Fresh Herb Platter (Sabzi Khordan)",
+        "description": "Traditional mix of fresh culinary herbs including basil, tarragon, cress, mint, and radishes"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "سبزی خوردن" },
+      { "locale": "fa", "alias": "سبزی تازه" },
+      { "locale": "en", "alias": "Sabzi Khordan" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 23 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 2.5 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 3.8 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0.4 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 2.4 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 1.2 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 35 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 380 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 2.2 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 95 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ پیش‌دستی",
+        "name_en": "1 Small Side Plate",
+        "weight_g": 60,
+        "household_unit": "پیش دستی"
+      },
+      {
+        "name_fa": "۱ بشقاب سالادی",
+        "name_en": "1 Salad Plate",
+        "weight_g": 100,
+        "household_unit": "بشقاب"
+      }
+    ]
+  },
+  {
+    "external_id": "item_black_tea",
+    "slug": "persian-brewed-black-tea",
+    "category_id": "cat_beverages",
+    "category_slug": "beverages",
+    "food_type": "generic",
+    "status": "active",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "چای سیاه دمی ایرانی بدون قند",
+        "description": "چای سیاه دمی خالص ایرانی خوش‌رنگ و معطر دم‌کشیده با سماور بدون شکر"
+      },
+      {
+        "locale": "en",
+        "name": "Persian Brewed Black Tea (Unsweetened)",
+        "description": "Freshly brewed fragrant Iranian black tea served plain without sugar"
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "چای" },
+      { "locale": "fa", "alias": "چای سیاه" },
+      { "locale": "en", "alias": "Persian Black Tea" }
+    ],
+    "nutrients": [
+      { "nutrient_id": "nut_energy", "amount_per_100g": 1 },
+      { "nutrient_id": "nut_protein", "amount_per_100g": 0.1 },
+      { "nutrient_id": "nut_carbohydrate", "amount_per_100g": 0.2 },
+      { "nutrient_id": "nut_fat_total", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_fiber", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sugar", "amount_per_100g": 0 },
+      { "nutrient_id": "nut_sodium", "amount_per_100g": 3 },
+      { "nutrient_id": "nut_potassium", "amount_per_100g": 37 },
+      { "nutrient_id": "nut_iron", "amount_per_100g": 0.02 },
+      { "nutrient_id": "nut_calcium", "amount_per_100g": 1 }
+    ],
+    "servings": [
+      {
+        "name_fa": "۱ استکان سنتی",
+        "name_en": "1 Traditional Persian Glass",
+        "weight_g": 150,
+        "household_unit": "استکان"
+      },
+      { "name_fa": "۱ ماگ / لیوان", "name_en": "1 Mug", "weight_g": 250, "household_unit": "ماگ" }
+    ]
+  },
+  {
+    "external_id": "draft_ghormeh_sabzi",
+    "slug": "ghormeh-sabzi-stew-draft",
+    "category_id": "cat_vegetables",
+    "category_slug": "vegetables",
+    "food_type": "generic",
+    "status": "draft",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "خورش قورمه سبزی سنتی (پیش‌نویس)",
+        "description": "خورش اصیل ایرانی با سبزیجات معطر سرخ‌شده، لوبیا قرمز، گوشت گوسفند و لیمو عمانی. وضعیت پیش‌نویس به دلیل تنوع دستور پخت تا زمان استخراج آنالیز آزمایشگاهی مرجع."
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Ghormeh Sabzi Herb Stew (Draft)",
+        "description": "Iconic Iranian slow-cooked herb and kidney bean stew with lamb and dried limes. Retained in draft status awaiting standardized chemical assay."
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "قورمه سبزی" },
+      { "locale": "fa", "alias": "قرمه سبزی" },
+      { "locale": "en", "alias": "Ghormeh Sabzi" }
+    ],
+    "nutrients": [],
+    "servings": [
+      { "name_fa": "۱ ملاقه", "name_en": "1 Ladle", "weight_g": 150, "household_unit": "ملاقه" },
+      {
+        "name_fa": "۱ کاسه خورش‌خوری",
+        "name_en": "1 Stew Bowl",
+        "weight_g": 250,
+        "household_unit": "کاسه"
+      }
+    ]
+  },
+  {
+    "external_id": "draft_gheimeh",
+    "slug": "gheimeh-stew-draft",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "draft",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "خورش قیمه سنتی (پیش‌نویس)",
+        "description": "خورش سنتی لپه با گوشت تکه‌ای، لیمو عمانی و رب گوجه‌فرنگی. در وضعیت پیش‌نویس به جهت عدم تخمین غیرعلمی ارزش غذایی."
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Gheimeh Split-Pea Stew (Draft)",
+        "description": "Yellow split-pea and diced lamb stew with dried limes. Retained in draft status."
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "قیمه" },
+      { "locale": "fa", "alias": "خورش قیمه" },
+      { "locale": "en", "alias": "Gheimeh Stew" }
+    ],
+    "nutrients": [],
+    "servings": [
+      {
+        "name_fa": "۱ کاسه خورش‌خوری",
+        "name_en": "1 Stew Bowl",
+        "weight_g": 250,
+        "household_unit": "کاسه"
+      }
+    ]
+  },
+  {
+    "external_id": "draft_fesenjan",
+    "slug": "fesenjan-stew-draft",
+    "category_id": "cat_legumes",
+    "category_slug": "legumes-nuts-seeds",
+    "food_type": "generic",
+    "status": "draft",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "خورش فسنجان گردو و رب انار (پیش‌نویس)",
+        "description": "خورش اصیل گردوی سابیده‌شده با رب انار ترش و شیرین. وضعیت پیش‌نویس تا استعلام مقادیر رسمی ترکیبات غذایی."
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Fesenjan Walnut Pomegranate Stew (Draft)",
+        "description": "Rich stew made with ground walnuts, sweet-sour pomegranate molasses and poultry. Retained in draft."
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "فسنجان" },
+      { "locale": "fa", "alias": "فسنجون" },
+      { "locale": "en", "alias": "Fesenjan" }
+    ],
+    "nutrients": [],
+    "servings": [
+      {
+        "name_fa": "۱ کاسه خورش‌خوری",
+        "name_en": "1 Stew Bowl",
+        "weight_g": 250,
+        "household_unit": "کاسه"
+      }
+    ]
+  },
+  {
+    "external_id": "draft_ash_reshteh",
+    "slug": "ash-reshteh-draft",
+    "category_id": "cat_grains",
+    "category_slug": "grains-cereals",
+    "food_type": "generic",
+    "status": "draft",
+    "source_id": "src_open_iranian_foods",
+    "translations": [
+      {
+        "locale": "fa",
+        "name": "آش رشته سنتی ایرانی (پیش‌نویس)",
+        "description": "آش غلیظ سنتی با رشته آشی، حبوبات، سبزی آش و تزیین نعناع داغ و کشک. وضعیت پیش‌نویس به دلیل عدم تخمین ارزش غذایی متغیر."
+      },
+      {
+        "locale": "en",
+        "name": "Traditional Persian Ash Reshteh Noodle Soup (Draft)",
+        "description": "Thick Persian herb, bean, and noodle soup topped with fried mint and kashk. Retained in draft status."
+      }
+    ],
+    "aliases": [
+      { "locale": "fa", "alias": "آش رشته" },
+      { "locale": "fa", "alias": "اش رشته" },
+      { "locale": "en", "alias": "Ash Reshteh" }
+    ],
+    "nutrients": [],
+    "servings": [
+      {
+        "name_fa": "۱ کاسه بزرگ",
+        "name_en": "1 Large Bowl",
+        "weight_g": 350,
+        "household_unit": "کاسه"
+      }
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "id": "src_open_iranian_foods",
+  "name": "NutriAI Open Iranian Food Catalog Baseline",
+  "code": "open_iranian_foods",
+  "publisher": "NutriAI Persia Project",
+  "url": "https://github.com/engmiladfrs20/rezhim/tree/main/data/sources/open-iranian-foods",
+  "version": "1.0.0",
+  "acquisitionDate": "2026-08-30T00:00:00.000Z",
+  "license": "CC0-1.0",
+  "redistributionAllowed": true,
+  "sha256Checksum": "babc92f91d78a73958114228b4b990fd6982a405f435ea3844655e454f2f53f6",
+  "language": "fa, en",
+  "description": "Open baseline dataset of Iranian traditional foods, breads, and dishes curated from open laboratory food composition references and verified portion weights."
+}

@@ -142,3 +142,97 @@ export interface PaginatedResult<T> {
   hasMore: boolean;
   totalCount?: number;
 }
+
+export interface FoodSourceManifest {
+  id: string;
+  name: string;
+  code: string;
+  publisher: string;
+  url: string;
+  version: string;
+  acquisitionDate: string;
+  license: string;
+  redistributionAllowed: boolean;
+  sha256Checksum: string;
+  language: string;
+  description: string | null;
+}
+
+export interface FoodDatasetTranslationInput {
+  locale: SupportedLocale;
+  name: string;
+  description?: string | null | undefined;
+}
+
+export interface FoodDatasetAliasInput {
+  locale: SupportedLocale;
+  alias: string;
+}
+
+export interface FoodDatasetNutrientInput {
+  nutrient_id: string;
+  amount_per_100g: number;
+}
+
+export interface FoodDatasetServingInput {
+  name_fa: string;
+  name_en: string;
+  weight_g: number;
+  household_unit?: string | null | undefined;
+}
+
+export interface FoodDatasetItem {
+  id?: string | undefined;
+  slug?: string | undefined;
+  category_id?: string | null | undefined;
+  category_slug?: string | null | undefined;
+  food_type: FoodType;
+  brand_name?: string | null | undefined;
+  barcode?: string | null | undefined;
+  status: FoodStatus;
+  source_id: string;
+  external_id: string;
+  translations: FoodDatasetTranslationInput[];
+  aliases?: FoodDatasetAliasInput[] | undefined;
+  nutrients?: FoodDatasetNutrientInput[] | undefined;
+  servings?: FoodDatasetServingInput[] | undefined;
+}
+
+export interface FoodDatasetFile {
+  manifest: FoodSourceManifest;
+  foods: FoodDatasetItem[];
+}
+
+export type ImportMode = 'validate' | 'dry-run' | 'import';
+
+export interface ImportResult {
+  sourceId: string;
+  datasetName: string;
+  mode: ImportMode;
+  fileChecksum: string;
+  totalRecords: number;
+  insertedCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  status: 'success' | 'failed' | 'dry_run';
+  errors: string[];
+  executionTimeMs: number;
+}
+
+export interface FoodImportLog {
+  id: string;
+  sourceId: string;
+  datasetName: string;
+  fileChecksum: string;
+  totalRecords: number;
+  insertedCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+  skippedCount: number;
+  status: 'success' | 'failed' | 'dry_run';
+  errorSummary: string | null;
+  executedBy: string;
+  createdAt: string;
+}
