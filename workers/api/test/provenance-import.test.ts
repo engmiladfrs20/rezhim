@@ -8,23 +8,19 @@ import { FoodImportLogRepository } from '../src/db/food-import-log.repository';
 import type {
   FoodDatasetFile,
   FoodDatasetItem,
-  FoodSourceManifest,
   ApiResponse,
   FoodDetail,
   FoodSummary,
   PaginatedResult,
 } from '@nutriai/types';
-import openIranianDataset from '../../data/sources/open-iranian-foods/foods.json';
-import openIranianManifest from '../../data/sources/open-iranian-foods/source-manifest.json';
-import fctTemplateManifest from '../../data/sources/iranian-fct-template/source-manifest.json';
-import fctSampleTemplate from '../../data/sources/iranian-fct-template/sample-template.json';
+import {
+  openIranianFoods,
+  openIranianSourceManifest,
+  fctManifest,
+  fctTemplateFoods,
+} from './dataset-fixtures';
 
 const testEnv = env as ProvidedEnv;
-
-const openIranianFoods = openIranianDataset as unknown as FoodDatasetItem[];
-const openIranianSourceManifest = openIranianManifest as unknown as FoodSourceManifest;
-const fctManifest = fctTemplateManifest as unknown as FoodSourceManifest;
-const fctTemplateFoods = fctSampleTemplate as unknown as FoodDatasetItem[];
 
 describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => {
   let importer: FoodImporterService;
@@ -264,7 +260,7 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
   it('detects Persian alias collisions across items during validation', async () => {
     const aliasCollisionBatch: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: 'a'.repeat(64),
       },
       foods: [
