@@ -14,35 +14,17 @@ import type {
   FoodSummary,
   PaginatedResult,
 } from '@nutriai/types';
-import fs from 'node:fs';
-import path from 'node:path';
-
-const openIranianDataset = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, '../../data/sources/open-iranian-foods/foods.json'),
-    'utf-8',
-  ),
-);
-const openIranianManifest = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, '../../data/sources/open-iranian-foods/source-manifest.json'),
-    'utf-8',
-  ),
-);
-const fctTemplateManifest = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, '../../data/sources/iranian-fct-template/source-manifest.json'),
-    'utf-8',
-  ),
-);
-const fctSampleTemplate = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, '../../data/sources/iranian-fct-template/sample-template.json'),
-    'utf-8',
-  ),
-);
+import openIranianDataset from '../../data/sources/open-iranian-foods/foods.json';
+import openIranianManifest from '../../data/sources/open-iranian-foods/source-manifest.json';
+import fctTemplateManifest from '../../data/sources/iranian-fct-template/source-manifest.json';
+import fctSampleTemplate from '../../data/sources/iranian-fct-template/sample-template.json';
 
 const testEnv = env as ProvidedEnv;
+
+const openIranianFoods = openIranianDataset as unknown as FoodDatasetItem[];
+const openIranianSourceManifest = openIranianManifest as unknown as FoodSourceManifest;
+const fctManifest = fctTemplateManifest as unknown as FoodSourceManifest;
+const fctTemplateFoods = fctSampleTemplate as unknown as FoodDatasetItem[];
 
 describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => {
   let importer: FoodImporterService;
@@ -96,16 +78,16 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
   });
 
   it('verifies manifest and checksum validation against dataset content', async () => {
-    const rawContent = JSON.stringify(openIranianDataset);
+    const rawContent = JSON.stringify(openIranianFoods);
     const calculatedChecksum = await importer.computeChecksum(rawContent);
 
     // Dynamic manifest with matching checksum
     const validDataset: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: calculatedChecksum,
       },
-      foods: openIranianDataset as unknown as FoodDatasetItem[],
+      foods: openIranianFoods,
     };
 
     const valResult = await importer.validateDataset(validDataset, rawContent);
@@ -115,10 +97,10 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     // Tampered checksum
     const tamperedDataset: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: '0000000000000000000000000000000000000000000000000000000000000000',
       },
-      foods: openIranianDataset as unknown as FoodDatasetItem[],
+      foods: openIranianFoods,
     };
 
     const badVal = await importer.validateDataset(tamperedDataset, rawContent);
@@ -128,8 +110,8 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
 
   it('rejects sources with restricted redistribution policy from unauthenticated/direct production ingestion', async () => {
     const restrictedDataset: FoodDatasetFile = {
-      manifest: fctTemplateManifest as unknown as FoodSourceManifest,
-      foods: fctSampleTemplate as unknown as FoodDatasetItem[],
+      manifest: fctManifest,
+      foods: fctTemplateFoods,
     };
 
     const valResult = await importer.validateDataset(restrictedDataset);
@@ -138,21 +120,21 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
   });
 
   it('imports the authentic Iranian foods baseline idempotently and logs the run in food_import_logs', async () => {
-    const rawContent = JSON.stringify(openIranianDataset);
+    const rawContent = JSON.stringify(openIranianFoods);
     const calculatedChecksum = await importer.computeChecksum(rawContent);
 
     const validDataset: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: calculatedChecksum,
       },
-      foods: openIranianDataset as unknown as FoodDatasetItem[],
+      foods: openIranianFoods,
     };
 
     // 1. Initial Import Run
     const run1 = await importer.runPipeline(validDataset, rawContent, 'import', 'test-runner');
     expect(run1.status).toBe('success');
-    expect(run1.insertedCount).toBe(openIranianDataset.length);
+    expect(run1.insertedCount).toBe(openIranianFoods.length);
     expect(run1.updatedCount).toBe(0);
     expect(run1.unchangedCount).toBe(0);
     expect(run1.failedCount).toBe(0);
@@ -162,14 +144,14 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     const logs = await logRepo.findBySourceId('src_open_iranian_foods');
     expect(logs.length).toBeGreaterThan(0);
     expect(logs[0]?.status).toBe('success');
-    expect(logs[0]?.inserted_count).toBe(openIranianDataset.length);
+    expect(logs[0]?.inserted_count).toBe(openIranianFoods.length);
 
     // 2. Re-import run (Idempotency assertion)
     const run2 = await importer.runPipeline(validDataset, rawContent, 'import', 'test-runner');
     expect(run2.status).toBe('success');
     expect(run2.insertedCount).toBe(0);
     expect(run2.updatedCount).toBe(0);
-    expect(run2.unchangedCount).toBe(openIranianDataset.length);
+    expect(run2.unchangedCount).toBe(openIranianFoods.length);
     expect(run2.failedCount).toBe(0);
 
     // Direct D1 query asserting no duplicate items were inserted
@@ -180,45 +162,48 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
   });
 
   it('detects and counts partial updates vs unchanged records accurately', async () => {
-    const rawContent = JSON.stringify(openIranianDataset);
+    const rawContent = JSON.stringify(openIranianFoods);
     const calculatedChecksum = await importer.computeChecksum(rawContent);
 
     const validDataset: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: calculatedChecksum,
       },
-      foods: openIranianDataset as unknown as FoodDatasetItem[],
+      foods: openIranianFoods,
     };
 
     // Ensure initial import
     await importer.runPipeline(validDataset, rawContent, 'import');
 
     // Modify a single item's translation
-    const modifiedFoods = JSON.parse(JSON.stringify(openIranianDataset));
-    modifiedFoods[0].translations[0].description = 'توضیحات به‌روزشده نان سنگک سنتی';
+    const modifiedFoods = JSON.parse(JSON.stringify(openIranianFoods)) as FoodDatasetItem[];
+    const firstFood = modifiedFoods[0];
+    if (firstFood && firstFood.translations[0]) {
+      firstFood.translations[0].description = 'توضیحات به‌روزشده نان سنگک سنتی';
+    }
 
     const modRawContent = JSON.stringify(modifiedFoods);
     const modChecksum = await importer.computeChecksum(modRawContent);
     const modifiedDataset: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: modChecksum,
       },
-      foods: modifiedFoods as FoodDatasetItem[],
+      foods: modifiedFoods,
     };
 
     const runMod = await importer.runPipeline(modifiedDataset, modRawContent, 'import');
     expect(runMod.status).toBe('success');
     expect(runMod.insertedCount).toBe(0);
     expect(runMod.updatedCount).toBe(1);
-    expect(runMod.unchangedCount).toBe(openIranianDataset.length - 1);
+    expect(runMod.unchangedCount).toBe(openIranianFoods.length - 1);
   });
 
   it('rejects invalid batches (negative nutrients, zero servings, bad categories, duplicate aliases) with atomic rollback', async () => {
     const invalidBatch: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: 'a'.repeat(64),
       },
       foods: [
@@ -309,14 +294,14 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
 
   it('retrieves authentic Iranian food catalog via public and admin APIs in Persian and English with resolvedLocale', async () => {
     // Import authentic dataset
-    const rawContent = JSON.stringify(openIranianDataset);
+    const rawContent = JSON.stringify(openIranianFoods);
     const calculatedChecksum = await importer.computeChecksum(rawContent);
     const validDataset: FoodDatasetFile = {
       manifest: {
-        ...(openIranianManifest as unknown as FoodSourceManifest),
+        ...openIranianSourceManifest,
         sha256Checksum: calculatedChecksum,
       },
-      foods: openIranianDataset as unknown as FoodDatasetItem[],
+      foods: openIranianFoods,
     };
     await importer.runPipeline(validDataset, rawContent, 'import');
 
