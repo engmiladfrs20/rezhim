@@ -45,24 +45,52 @@ export const canonicalBarcodeSchema = z
   .nullable()
   .optional();
 
+export const rfc3339TimestampSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/,
+    'Must be a valid RFC3339 UTC timestamp',
+  )
+  .refine((ts) => !isNaN(Date.parse(ts)), 'Must be a parseable timestamp');
+
+export const provenanceMethodEnum = z.enum(['laboratory', 'database', 'calculated', 'measured']);
+export type ProvenanceMethodDto = z.infer<typeof provenanceMethodEnum>;
+
 export const foodServingInputSchema = z.object({
   name_fa: z.string().trim().min(1, 'Persian serving name is required').max(100),
   name_en: z.string().trim().min(1, 'English serving name is required').max(100),
   weight_g: z.number().positive('Serving weight must be strictly greater than 0'),
   household_unit: z.string().trim().max(50).nullable().optional(),
+  source_id: z.string().trim().min(1).nullable().optional(),
+  external_id: z.string().trim().max(100).nullable().optional(),
+  source_url: z.string().trim().url('Must be a valid URL').nullable().optional(),
+  citation: z.string().trim().max(500).nullable().optional(),
+  dataset_version: z.string().trim().max(50).nullable().optional(),
+  method: provenanceMethodEnum.nullable().optional(),
+  retrieved_at: rfc3339TimestampSchema.nullable().optional(),
+  license: z.string().trim().max(250).nullable().optional(),
 });
 export type FoodServingInputDto = z.infer<typeof foodServingInputSchema>;
 
 export const foodNutrientInputSchema = z.object({
   nutrient_id: z.string().trim().min(1, 'Nutrient ID is required'),
   amount_per_100g: z.number().min(0, 'Nutrient amount cannot be negative'),
+  source_id: z.string().trim().min(1).nullable().optional(),
+  external_id: z.string().trim().max(100).nullable().optional(),
+  source_url: z.string().trim().url('Must be a valid URL').nullable().optional(),
+  citation: z.string().trim().max(500).nullable().optional(),
+  dataset_version: z.string().trim().max(50).nullable().optional(),
+  method: provenanceMethodEnum.nullable().optional(),
+  retrieved_at: rfc3339TimestampSchema.nullable().optional(),
+  license: z.string().trim().max(250).nullable().optional(),
 });
 export type FoodNutrientInputDto = z.infer<typeof foodNutrientInputSchema>;
 
 export const foodTranslationInputSchema = z.object({
   locale: localeEnum,
   name: z.string().trim().min(1, 'Food name is required').max(200),
-  description: z.string().trim().max(1000).nullable().optional(),
+  description: z.string().trim().max(1000).nullable().default(null),
 });
 export type FoodTranslationInputDto = z.infer<typeof foodTranslationInputSchema>;
 
@@ -145,6 +173,85 @@ function validateUniqueServings(servings: FoodServingInputDto[], ctx: z.Refineme
   return true;
 }
 
+const REQUIRED_ACTIVE_MACROS = [
+  'nut_energy',
+  'nut_protein',
+  'nut_carbohydrate',
+  'nut_fat_total',
+] as const;
+
+const REQUIRED_PROVENANCE_FIELDS = [
+  'source_id',
+  'external_id',
+  'source_url',
+  'citation',
+  'dataset_version',
+  'method',
+  'retrieved_at',
+  'license',
+] as const;
+
+type ProvenanceInput = FoodNutrientInputDto | FoodServingInputDto;
+
+function validateCompleteProvenance(
+  item: ProvenanceInput,
+  ctx: z.RefinementCtx,
+  path: 'nutrients' | 'servings',
+  index: number,
+  label: string,
+) {
+  for (const field of REQUIRED_PROVENANCE_FIELDS) {
+    const value = item[field];
+    if (
+      value === undefined ||
+      value === null ||
+      (typeof value === 'string' && value.trim() === '')
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Active food ${label} must have non-empty ${field}`,
+        path: [path, index, field],
+      });
+    }
+  }
+}
+
+function validateActiveFoodPublication(
+  data: {
+    status: z.infer<typeof foodStatusEnum>;
+    nutrients?: FoodNutrientInputDto[] | undefined;
+    servings?: FoodServingInputDto[] | undefined;
+  },
+  ctx: z.RefinementCtx,
+) {
+  if (data.status !== 'active') return;
+
+  const nutrients = data.nutrients ?? [];
+  const nutrientIds = new Set(nutrients.map((nutrient) => nutrient.nutrient_id));
+  for (const requiredMacro of REQUIRED_ACTIVE_MACROS) {
+    if (!nutrientIds.has(requiredMacro)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Active food must have '${requiredMacro}' defined in nutrients array`,
+        path: ['nutrients'],
+      });
+    }
+  }
+
+  nutrients.forEach((nutrient, index) => {
+    validateCompleteProvenance(
+      nutrient,
+      ctx,
+      'nutrients',
+      index,
+      `nutrient '${nutrient.nutrient_id}'`,
+    );
+  });
+  (data.servings ?? []).forEach((serving, index) => {
+    validateCompleteProvenance(serving, ctx, 'servings', index, `serving '${serving.name_en}'`);
+  });
+}
+
 export const createFoodCategorySchema = z
   .object({
     slug: z
@@ -208,7 +315,7 @@ export const createFoodSchema = z
     food_type: foodTypeEnum.default('generic'),
     brand_name: z.string().trim().max(100).nullable().optional(),
     barcode: canonicalBarcodeSchema,
-    status: foodStatusEnum.default('active'),
+    status: foodStatusEnum.default('draft'),
     source_id: z.string().trim().min(1).nullable().optional(),
     external_id: z.string().trim().max(100).nullable().optional(),
     translations: z
@@ -242,6 +349,8 @@ export const createFoodSchema = z
         path: ['source_id'],
       });
     }
+
+    validateActiveFoodPublication(data, ctx);
   });
 export type CreateFoodDto = z.infer<typeof createFoodSchema>;
 
@@ -319,15 +428,6 @@ export type AdminFoodListQueryDto = z.infer<typeof adminFoodListQuerySchema>;
 // Phase 5: Dataset Manifest & Import Schemas
 // ==========================================
 
-export const rfc3339TimestampSchema = z
-  .string()
-  .trim()
-  .regex(
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/,
-    'Must be a valid RFC3339 UTC timestamp',
-  )
-  .refine((ts) => !isNaN(Date.parse(ts)), 'Must be a parseable timestamp');
-
 export const foodSourceManifestSchema = z.object({
   id: z
     .string()
@@ -358,37 +458,10 @@ export const foodSourceManifestSchema = z.object({
 });
 export type FoodSourceManifestDto = z.infer<typeof foodSourceManifestSchema>;
 
-export const provenanceMethodEnum = z.enum(['laboratory', 'database', 'calculated']);
-export type ProvenanceMethodDto = z.infer<typeof provenanceMethodEnum>;
-
-export const foodDatasetNutrientInputSchema = z.object({
-  nutrient_id: z.string().trim().min(1, 'Nutrient ID is required'),
-  amount_per_100g: z.number().min(0, 'Nutrient amount cannot be negative'),
-  source_id: z.string().trim().min(1).nullable().optional(),
-  external_id: z.string().trim().max(100).nullable().optional(),
-  source_url: z.string().trim().url('Must be a valid URL').nullable().optional(),
-  citation: z.string().trim().max(500).nullable().optional(),
-  dataset_version: z.string().trim().max(50).nullable().optional(),
-  method: provenanceMethodEnum.nullable().optional(),
-  retrieved_at: rfc3339TimestampSchema.nullable().optional(),
-  license: z.string().trim().max(100).nullable().optional(),
-});
+export const foodDatasetNutrientInputSchema = foodNutrientInputSchema;
 export type FoodDatasetNutrientInputDto = z.infer<typeof foodDatasetNutrientInputSchema>;
 
-export const foodDatasetServingInputSchema = z.object({
-  name_fa: z.string().trim().min(1, 'Persian serving name is required').max(100),
-  name_en: z.string().trim().min(1, 'English serving name is required').max(100),
-  weight_g: z.number().positive('Serving weight must be strictly greater than 0'),
-  household_unit: z.string().trim().max(50).nullable().optional(),
-  source_id: z.string().trim().min(1).nullable().optional(),
-  external_id: z.string().trim().max(100).nullable().optional(),
-  source_url: z.string().trim().url('Must be a valid URL').nullable().optional(),
-  citation: z.string().trim().max(500).nullable().optional(),
-  dataset_version: z.string().trim().max(50).nullable().optional(),
-  method: provenanceMethodEnum.nullable().optional(),
-  retrieved_at: rfc3339TimestampSchema.nullable().optional(),
-  license: z.string().trim().max(100).nullable().optional(),
-});
+export const foodDatasetServingInputSchema = foodServingInputSchema;
 export type FoodDatasetServingInputDto = z.infer<typeof foodDatasetServingInputSchema>;
 
 export const foodDatasetItemSchema = z
@@ -400,7 +473,7 @@ export const foodDatasetItemSchema = z
     food_type: foodTypeEnum.default('generic'),
     brand_name: z.string().trim().max(100).nullable().optional(),
     barcode: canonicalBarcodeSchema,
-    status: foodStatusEnum.default('active'),
+    status: foodStatusEnum.default('draft'),
     source_id: z.string().trim().min(1),
     external_id: z.string().trim().min(1).max(100),
     translations: z
@@ -430,70 +503,7 @@ export const foodDatasetItemSchema = z
       });
     }
 
-    // Active foods must have complete macro nutrients and valid provenance
-    if (data.status === 'active') {
-      const nutrients = data.nutrients || [];
-      const nutrientIds = new Set(nutrients.map((n) => n.nutrient_id));
-      const requiredMacros = ['nut_energy', 'nut_protein', 'nut_carbohydrate', 'nut_fat_total'];
-      for (const req of requiredMacros) {
-        if (!nutrientIds.has(req)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food must have '${req}' defined in nutrients array`,
-            path: ['nutrients'],
-          });
-        }
-      }
-
-      nutrients.forEach((n, idx) => {
-        if (!n.source_id || n.source_id.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food nutrient '${n.nutrient_id}' must have a valid source_id`,
-            path: ['nutrients', idx, 'source_id'],
-          });
-        }
-        if (!n.method) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food nutrient '${n.nutrient_id}' must have method ('laboratory', 'database', 'calculated')`,
-            path: ['nutrients', idx, 'method'],
-          });
-        }
-        if (!n.retrieved_at) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food nutrient '${n.nutrient_id}' must have retrieved_at timestamp`,
-            path: ['nutrients', idx, 'retrieved_at'],
-          });
-        }
-      });
-
-      const servings = data.servings || [];
-      servings.forEach((s, idx) => {
-        if (!s.source_id || s.source_id.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food serving '${s.name_en}' must have a valid source_id`,
-            path: ['servings', idx, 'source_id'],
-          });
-        }
-        if (!s.method) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food serving '${s.name_en}' must have method ('laboratory', 'database', 'calculated')`,
-            path: ['servings', idx, 'method'],
-          });
-        }
-        if (!s.retrieved_at) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food serving '${s.name_en}' must have retrieved_at timestamp`,
-            path: ['servings', idx, 'retrieved_at'],
-          });
-        }
-      });
-    }
+    validateActiveFoodPublication(data, ctx);
   });
 export type FoodDatasetItemDto = z.infer<typeof foodDatasetItemSchema>;
 

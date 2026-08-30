@@ -556,10 +556,25 @@ export class FoodRepository {
         statements.push(
           this.db
             .prepare(
-              `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             )
-            .bind(n.id, n.food_id, n.nutrient_id, n.amount_per_100g, n.created_at, n.updated_at),
+            .bind(
+              n.id,
+              n.food_id,
+              n.nutrient_id,
+              n.amount_per_100g,
+              n.source_id ?? null,
+              n.external_id ?? null,
+              n.source_url ?? null,
+              n.citation ?? null,
+              n.dataset_version ?? null,
+              n.method ?? null,
+              n.retrieved_at ?? null,
+              n.license ?? null,
+              n.created_at,
+              n.updated_at,
+            ),
         );
       }
 
@@ -567,8 +582,8 @@ export class FoodRepository {
         statements.push(
           this.db
             .prepare(
-              `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             )
             .bind(
               s.id,
@@ -576,7 +591,15 @@ export class FoodRepository {
               s.name_fa,
               s.name_en,
               s.weight_g,
-              s.household_unit,
+              s.household_unit ?? null,
+              s.source_id ?? null,
+              s.external_id ?? null,
+              s.source_url ?? null,
+              s.citation ?? null,
+              s.dataset_version ?? null,
+              s.method ?? null,
+              s.retrieved_at ?? null,
+              s.license ?? null,
               s.created_at,
               s.updated_at,
             ),
@@ -657,10 +680,25 @@ export class FoodRepository {
           statements.push(
             this.db
               .prepare(
-                `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               )
-              .bind(n.id, n.food_id, n.nutrient_id, n.amount_per_100g, n.created_at, n.updated_at),
+              .bind(
+                n.id,
+                n.food_id,
+                n.nutrient_id,
+                n.amount_per_100g,
+                n.source_id ?? null,
+                n.external_id ?? null,
+                n.source_url ?? null,
+                n.citation ?? null,
+                n.dataset_version ?? null,
+                n.method ?? null,
+                n.retrieved_at ?? null,
+                n.license ?? null,
+                n.created_at,
+                n.updated_at,
+              ),
           );
         }
       }
@@ -673,8 +711,8 @@ export class FoodRepository {
           statements.push(
             this.db
               .prepare(
-                `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               )
               .bind(
                 s.id,
@@ -682,7 +720,15 @@ export class FoodRepository {
                 s.name_fa,
                 s.name_en,
                 s.weight_g,
-                s.household_unit,
+                s.household_unit ?? null,
+                s.source_id ?? null,
+                s.external_id ?? null,
+                s.source_url ?? null,
+                s.citation ?? null,
+                s.dataset_version ?? null,
+                s.method ?? null,
+                s.retrieved_at ?? null,
+                s.license ?? null,
                 s.created_at,
                 s.updated_at,
               ),

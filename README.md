@@ -6,7 +6,7 @@
 - **[x] Phase 2**: Cloudflare Workers API Foundation & Data Layer Setup
 - **[x] Phase 3**: Authentication and Roles Foundation
 - **[x] Phase 4**: Comprehensive Food Catalog Data Foundation
-- **[x] Phase 5**: Iranian Food Database and Provenance Pipeline
+- **[x] Phase 5**: Iranian Food Catalog and Provenance Pipeline
 
 ---
 

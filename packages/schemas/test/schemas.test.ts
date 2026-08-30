@@ -110,7 +110,7 @@ describe('Zod Schemas Package', () => {
     const validFood = createFoodSchema.safeParse({
       translations: [{ locale: 'fa', name: 'نان جو' }],
       food_type: 'generic',
-      status: 'active',
+      status: 'draft',
       nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: 220 }],
       servings: [{ name_fa: 'یک برش', name_en: '1 Slice', weight_g: 35 }],
     });
@@ -233,7 +233,18 @@ describe('Zod Schemas Package', () => {
     });
     expect(badChecksumManifest.success).toBe(false);
 
-    // 2. Valid Dataset Item (Active with required macros and provenance)
+    const completeProvenance = {
+      source_id: 'src_usda_fdc',
+      external_id: 'fdc-test-record',
+      source_url: 'https://fdc.nal.usda.gov/',
+      citation: 'USDA FoodData Central test fixture',
+      dataset_version: 'test-1',
+      method: 'database' as const,
+      retrieved_at: '2026-08-30T00:00:00.000Z',
+      license: 'Public Domain',
+    };
+
+    // 2. Valid Dataset Item (Active with required macros and complete provenance)
     const validItem = foodDatasetItemSchema.safeParse({
       source_id: 'src_open_iranian_foods',
       external_id: 'item_lentils',
@@ -248,30 +259,22 @@ describe('Zod Schemas Package', () => {
         {
           nutrient_id: 'nut_energy',
           amount_per_100g: 116,
-          source_id: 'src_open_iranian_foods',
-          method: 'laboratory',
-          retrieved_at: '2026-08-30T00:00:00.000Z',
+          ...completeProvenance,
         },
         {
           nutrient_id: 'nut_protein',
           amount_per_100g: 9.02,
-          source_id: 'src_open_iranian_foods',
-          method: 'laboratory',
-          retrieved_at: '2026-08-30T00:00:00.000Z',
+          ...completeProvenance,
         },
         {
           nutrient_id: 'nut_carbohydrate',
           amount_per_100g: 20.13,
-          source_id: 'src_open_iranian_foods',
-          method: 'laboratory',
-          retrieved_at: '2026-08-30T00:00:00.000Z',
+          ...completeProvenance,
         },
         {
           nutrient_id: 'nut_fat_total',
           amount_per_100g: 0.38,
-          source_id: 'src_open_iranian_foods',
-          method: 'laboratory',
-          retrieved_at: '2026-08-30T00:00:00.000Z',
+          ...completeProvenance,
         },
       ],
       servings: [
@@ -279,13 +282,20 @@ describe('Zod Schemas Package', () => {
           name_fa: '۱ لیوان',
           name_en: '1 Cup',
           weight_g: 198,
-          source_id: 'src_open_iranian_foods',
-          method: 'database',
-          retrieved_at: '2026-08-30T00:00:00.000Z',
+          ...completeProvenance,
         },
       ],
     });
     expect(validItem.success).toBe(true);
+    if (!validItem.success) throw new Error('Expected the complete active item fixture to parse');
+
+    const incompleteActiveItem = foodDatasetItemSchema.safeParse({
+      ...validItem.data,
+      nutrients: validItem.data.nutrients?.map((nutrient, index) =>
+        index === 0 ? { ...nutrient, citation: null } : nutrient,
+      ),
+    });
+    expect(incompleteActiveItem.success).toBe(false);
 
     // 3. Valid Full Dataset File
     if (validManifest.success && validItem.success) {

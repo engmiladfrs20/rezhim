@@ -1,22 +1,19 @@
 import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
 import { FoodRepository } from '../db/food.repository';
+import type { FullFoodDetailRecord } from '../db/food.repository';
 import { FoodCategoryRepository } from '../db/food-category.repository';
 import { NutrientRepository } from '../db/nutrient.repository';
 import { FoodImportLogRepository } from '../db/food-import-log.repository';
+import { FoodSourceRepository } from '../db/food-source.repository';
 import { foodSourceManifestSchema, foodDatasetFileSchema } from '@nutriai/schemas';
 import { normalizePersianForComparison } from '@nutriai/localization';
 import type { FoodDatasetFile, FoodDatasetItem, ImportMode, ImportResult } from '@nutriai/types';
-import type {
-  FoodRecord,
-  FoodTranslationRecord,
-  FoodAliasRecord,
-  FoodServingRecord,
-} from '../db/models';
 import { validateFoodInvariants } from './food.service';
 
 export interface PipelineOptions {
   allowLicensedLocal?: boolean;
   executedBy?: string;
+  environment?: 'development' | 'test' | 'ci' | 'staging' | 'production';
 }
 
 export class FoodImporterService {
@@ -25,6 +22,7 @@ export class FoodImporterService {
   private readonly catRepo: FoodCategoryRepository;
   private readonly nutrientRepo: NutrientRepository;
   private readonly importLogRepo: FoodImportLogRepository;
+  private readonly sourceRepo: FoodSourceRepository;
 
   constructor(db: D1Database) {
     this.db = db;
@@ -32,6 +30,7 @@ export class FoodImporterService {
     this.catRepo = new FoodCategoryRepository(db);
     this.nutrientRepo = new NutrientRepository(db);
     this.importLogRepo = new FoodImportLogRepository(db);
+    this.sourceRepo = new FoodSourceRepository(db);
   }
 
   /**
@@ -87,9 +86,13 @@ export class FoodImporterService {
 
     // 4. License redistribution check
     if (dataset.manifest && dataset.manifest.redistributionAllowed === false) {
-      if (!options?.allowLicensedLocal) {
+      const isExplicitLocal =
+        options?.allowLicensedLocal === true &&
+        (options.environment === 'development' || options.environment === 'test');
+
+      if (!isExplicitLocal) {
         errors.push(
-          `Dataset license "${dataset.manifest.license}" disallows redistribution. Direct ingestion is restricted to licensed local environments with explicit --licensed-local flag.`,
+          `Dataset license "${dataset.manifest.license}" disallows redistribution. Import requires both explicit licensed-local consent and environment development/test; CI, staging, and production are prohibited.`,
         );
       }
     }
@@ -101,13 +104,16 @@ export class FoodImporterService {
     }
 
     // 6. Pre-load valid Categories and Nutrients for fast lookup
-    const [allCategories, allNutrients] = await Promise.all([
+    const [allCategories, allNutrients, allSources] = await Promise.all([
       this.catRepo.listAll('active'),
       this.nutrientRepo.listAll(),
+      this.sourceRepo.listAll(),
     ]);
     const validCategoryIds = new Set(allCategories.map((c) => c.category.id));
     const validCategorySlugs = new Map(allCategories.map((c) => [c.category.slug, c.category.id]));
     const validNutrientIds = new Set(allNutrients.map((n) => n.id));
+    const validSourceIds = new Set(allSources.map((source) => source.id));
+    if (dataset.manifest?.id) validSourceIds.add(dataset.manifest.id);
 
     // Duplicate detection trackers
     const seenExternalIds = new Set<string>();
@@ -165,6 +171,9 @@ export class FoodImporterService {
               `${itemContext} negative nutrient amount for "${n.nutrient_id}": ${n.amount_per_100g}`,
             );
           }
+          if (n.source_id && !validSourceIds.has(n.source_id)) {
+            errors.push(`${itemContext} references invalid nutrient source ID: "${n.source_id}"`);
+          }
         }
       }
 
@@ -173,6 +182,9 @@ export class FoodImporterService {
         for (const s of item.servings) {
           if (s.weight_g <= 0) {
             errors.push(`${itemContext} zero or negative serving weight: ${s.weight_g}`);
+          }
+          if (s.source_id && !validSourceIds.has(s.source_id)) {
+            errors.push(`${itemContext} references invalid serving source ID: "${s.source_id}"`);
           }
         }
       }
@@ -262,6 +274,9 @@ export class FoodImporterService {
     }
 
     // 2. Dry-Run / Validate Mode
+    const allCategories = await this.catRepo.listAll('active');
+    const slugToCatId = new Map(allCategories.map((c) => [c.category.slug, c.category.id]));
+
     if (mode === 'validate' || mode === 'dry-run') {
       let insertedCount = 0;
       let updatedCount = 0;
@@ -275,9 +290,8 @@ export class FoodImporterService {
         if (!existing) {
           insertedCount++;
         } else {
-          // Compare if data changed
           const fullExisting = await this.foodRepo.findFullDetailById(existing.id);
-          if (this.isItemIdentical(item, fullExisting)) {
+          if (this.isItemIdentical(item, fullExisting, slugToCatId)) {
             unchangedCount++;
           } else {
             updatedCount++;
@@ -303,11 +317,31 @@ export class FoodImporterService {
     }
 
     // 3. Import Mode (Execute ALL operations in a single atomic D1 batch)
+    if (!rawContent || rawContent.trim().length === 0) {
+      return {
+        sourceId,
+        datasetName,
+        mode,
+        fileChecksum: '',
+        totalRecords: dataset.foods?.length || 0,
+        insertedCount: 0,
+        updatedCount: 0,
+        unchangedCount: 0,
+        skippedCount: 0,
+        failedCount: dataset.foods?.length || 0,
+        status: 'failed',
+        errors: [
+          'Raw content is strictly required for mode: import to verify cryptographic SHA-256 checksum.',
+        ],
+        executionTimeMs: Date.now() - startTime,
+      };
+    }
+
     const now = new Date().toISOString();
     const manifest = dataset.manifest;
     const statements: D1PreparedStatement[] = [];
 
-    // Statement 1: Upsert Food Source
+    // Upsert the dataset source inside the same atomic batch.
     statements.push(
       this.db
         .prepare(
@@ -339,10 +373,6 @@ export class FoodImporterService {
     let updatedCount = 0;
     let unchangedCount = 0;
 
-    // Load category slugs mapping
-    const allCategories = await this.catRepo.listAll('active');
-    const slugToCatId = new Map(allCategories.map((c) => [c.category.slug, c.category.id]));
-
     for (const item of dataset.foods) {
       let categoryId = item.category_id;
       if (!categoryId && item.category_slug) {
@@ -354,17 +384,18 @@ export class FoodImporterService {
         item.external_id,
       );
 
+      const fullExisting = existing ? await this.foodRepo.findFullDetailById(existing.id) : null;
+      if (this.isItemIdentical(item, fullExisting, slugToCatId)) {
+        unchangedCount++;
+        continue; // Strictly skip statements for unchanged food
+      }
+
       const foodId = existing ? existing.id : item.id || `food_${crypto.randomUUID()}`;
 
       if (!existing) {
         insertedCount++;
       } else {
-        const fullExisting = await this.foodRepo.findFullDetailById(existing.id);
-        if (this.isItemIdentical(item, fullExisting)) {
-          unchangedCount++;
-        } else {
-          updatedCount++;
-        }
+        updatedCount++;
       }
 
       // Upsert Food Record
@@ -450,14 +481,14 @@ export class FoodImporterService {
               foodId,
               n.nutrient_id,
               n.amount_per_100g,
-              n.source_id ?? item.source_id,
-              n.external_id ?? item.external_id,
-              n.source_url ?? manifest.url,
-              n.citation ?? manifest.name,
-              n.dataset_version ?? manifest.version,
-              n.method ?? 'database',
-              n.retrieved_at ?? manifest.acquisitionDate,
-              n.license ?? manifest.license,
+              n.source_id ?? null,
+              n.external_id ?? null,
+              n.source_url ?? null,
+              n.citation ?? null,
+              n.dataset_version ?? null,
+              n.method ?? null,
+              n.retrieved_at ?? null,
+              n.license ?? null,
               now,
               now,
             ),
@@ -479,14 +510,14 @@ export class FoodImporterService {
               s.name_en,
               s.weight_g,
               s.household_unit ?? null,
-              s.source_id ?? item.source_id,
+              s.source_id ?? null,
               s.external_id ?? null,
-              s.source_url ?? manifest.url,
-              s.citation ?? manifest.name,
-              s.dataset_version ?? manifest.version,
-              s.method ?? 'database',
-              s.retrieved_at ?? manifest.acquisitionDate,
-              s.license ?? manifest.license,
+              s.source_url ?? null,
+              s.citation ?? null,
+              s.dataset_version ?? null,
+              s.method ?? null,
+              s.retrieved_at ?? null,
+              s.license ?? null,
               now,
               now,
             ),
@@ -536,25 +567,24 @@ export class FoodImporterService {
         errors: [],
         executionTimeMs: Date.now() - startTime,
       };
-    } catch (batchErr) {
-      const rawMsg = batchErr instanceof Error ? batchErr.message : String(batchErr);
-      let safeSummary = 'Database batch transaction failed';
-      if (rawMsg.includes('UNIQUE constraint failed')) {
-        safeSummary =
-          'Database constraint violation: duplicate unique value encountered during ingestion';
-      } else if (rawMsg.includes('CHECK constraint failed')) {
-        safeSummary = 'Database constraint violation: invalid value failed check constraint';
-      } else if (rawMsg.includes('FOREIGN KEY constraint failed')) {
-        safeSummary = 'Database constraint violation: referenced foreign key not found';
+    } catch (batchErr: unknown) {
+      const errStr = batchErr instanceof Error ? batchErr.message : String(batchErr);
+      let safeSummary = 'Database constraint violation during atomic dataset ingestion';
+      if (errStr.includes('UNIQUE constraint failed: foods.barcode')) {
+        safeSummary = 'Duplicate barcode collision violating unique constraint on foods table';
+      } else if (errStr.includes('UNIQUE constraint failed: foods.source_id, foods.external_id')) {
+        safeSummary = 'Duplicate (source_id, external_id) pair collision';
+      } else if (errStr.includes('FOREIGN KEY constraint failed')) {
+        safeSummary = 'Foreign key constraint failure on referenced food category or nutrient';
       }
 
-      // Record failed import log safely outside the failed transaction
+      // Record failed import log in a separate isolated statement
       try {
         await this.importLogRepo.create({
           id: `imp_${crypto.randomUUID()}`,
           source_id: sourceId,
           dataset_name: datasetName,
-          file_checksum: valResult.checksum || 'unknown',
+          file_checksum: valResult.checksum,
           total_records: dataset.foods.length,
           inserted_count: 0,
           updated_count: 0,
@@ -563,10 +593,10 @@ export class FoodImporterService {
           status: 'failed',
           error_summary: safeSummary,
           executed_by: executedBy,
-          created_at: now,
+          created_at: new Date().toISOString(),
         });
       } catch {
-        // ignore logging error
+        // ignore logging failure
       }
 
       return {
@@ -592,23 +622,25 @@ export class FoodImporterService {
    */
   private isItemIdentical(
     item: FoodDatasetItem,
-    existing: {
-      food: FoodRecord;
-      translations: FoodTranslationRecord[];
-      aliases: FoodAliasRecord[];
-      nutrients: Array<{ nutrient_id: string; amount_per_100g: number }>;
-      servings: FoodServingRecord[];
-    } | null,
+    existing: FullFoodDetailRecord | null,
+    slugToCatId: Map<string, string>,
   ): boolean {
     if (!existing) return false;
 
-    // Check core fields
+    // 1. Check core fields
+    let resolvedCatId = item.category_id;
+    if (!resolvedCatId && item.category_slug) {
+      resolvedCatId = slugToCatId.get(item.category_slug) || null;
+    }
+    if ((resolvedCatId ?? null) !== (existing.food.category_id ?? null)) return false;
     if (item.food_type !== existing.food.food_type) return false;
-    if ((item.brand_name ?? null) !== existing.food.brand_name) return false;
-    if ((item.barcode ?? null) !== existing.food.barcode) return false;
+    if ((item.brand_name ?? null) !== (existing.food.brand_name ?? null)) return false;
+    if ((item.barcode ?? null) !== (existing.food.barcode ?? null)) return false;
     if (item.status !== existing.food.status) return false;
+    if ((item.source_id ?? null) !== (existing.food.source_id ?? null)) return false;
+    if ((item.external_id ?? null) !== (existing.food.external_id ?? null)) return false;
 
-    // Check translations length and content
+    // 2. Check translations length and content
     if (item.translations.length !== existing.translations.length) return false;
     for (const t of item.translations) {
       const match = existing.translations.find((et) => et.locale === t.locale);
@@ -618,7 +650,7 @@ export class FoodImporterService {
       }
     }
 
-    // Check aliases
+    // 3. Check aliases
     const itemAliases = item.aliases || [];
     if (itemAliases.length !== existing.aliases.length) return false;
     for (const a of itemAliases) {
@@ -626,22 +658,42 @@ export class FoodImporterService {
       if (!match) return false;
     }
 
-    // Check nutrients
+    // 4. Check nutrients & all granular provenance
     const itemNutrients = item.nutrients || [];
     if (itemNutrients.length !== existing.nutrients.length) return false;
     for (const n of itemNutrients) {
       const match = existing.nutrients.find((en) => en.nutrient_id === n.nutrient_id);
-      if (!match || match.amount_per_100g !== n.amount_per_100g) return false;
+      if (!match) return false;
+      if (Number(match.amount_per_100g) !== Number(n.amount_per_100g)) return false;
+      if ((match.source_id ?? null) !== (n.source_id ?? null)) return false;
+      if ((match.external_id ?? null) !== (n.external_id ?? null)) return false;
+      if ((match.source_url ?? null) !== (n.source_url ?? null)) return false;
+      if ((match.citation ?? null) !== (n.citation ?? null)) return false;
+      if ((match.dataset_version ?? null) !== (n.dataset_version ?? null)) return false;
+      if ((match.method ?? null) !== (n.method ?? null)) return false;
+      if ((match.retrieved_at ?? null) !== (n.retrieved_at ?? null)) return false;
+      if ((match.license ?? null) !== (n.license ?? null)) return false;
     }
 
-    // Check servings
+    // 5. Check servings & all granular provenance
     const itemServings = item.servings || [];
     if (itemServings.length !== existing.servings.length) return false;
     for (const s of itemServings) {
-      const match = existing.servings.find((es) => es.name_fa === s.name_fa);
-      if (!match || match.name_en !== s.name_en || match.weight_g !== s.weight_g) {
-        return false;
-      }
+      const match = existing.servings.find(
+        (existingServing) =>
+          existingServing.name_fa === s.name_fa && existingServing.name_en === s.name_en,
+      );
+      if (!match) return false;
+      if (Number(match.weight_g) !== Number(s.weight_g)) return false;
+      if ((match.household_unit ?? null) !== (s.household_unit ?? null)) return false;
+      if ((match.source_id ?? null) !== (s.source_id ?? null)) return false;
+      if ((match.external_id ?? null) !== (s.external_id ?? null)) return false;
+      if ((match.source_url ?? null) !== (s.source_url ?? null)) return false;
+      if ((match.citation ?? null) !== (s.citation ?? null)) return false;
+      if ((match.dataset_version ?? null) !== (s.dataset_version ?? null)) return false;
+      if ((match.method ?? null) !== (s.method ?? null)) return false;
+      if ((match.retrieved_at ?? null) !== (s.retrieved_at ?? null)) return false;
+      if ((match.license ?? null) !== (s.license ?? null)) return false;
     }
 
     return true;

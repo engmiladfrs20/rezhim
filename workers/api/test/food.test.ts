@@ -16,6 +16,26 @@ const testEnv = env as ProvidedEnv;
 
 const STRICT_RFC3339_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
+const VERIFIED_PROVENANCE = {
+  source_id: 'src_usda_fdc',
+  external_id: 'test-fdc-record',
+  source_url: 'https://fdc.nal.usda.gov/',
+  citation: 'USDA FoodData Central integration-test fixture',
+  dataset_version: 'test-1',
+  method: 'database' as const,
+  retrieved_at: '2026-08-30T00:00:00.000Z',
+  license: 'Public Domain',
+};
+
+function verifiedMacros(energy: number) {
+  return [
+    { nutrient_id: 'nut_energy', amount_per_100g: energy, ...VERIFIED_PROVENANCE },
+    { nutrient_id: 'nut_protein', amount_per_100g: 1, ...VERIFIED_PROVENANCE },
+    { nutrient_id: 'nut_carbohydrate', amount_per_100g: 1, ...VERIFIED_PROVENANCE },
+    { nutrient_id: 'nut_fat_total', amount_per_100g: 1, ...VERIFIED_PROVENANCE },
+  ];
+}
+
 describe('Food Catalog Data Foundation & Security Integration Tests', () => {
   let adminToken: string;
   let userToken: string;
@@ -165,6 +185,55 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
         servingError = true;
       }
       expect(servingError).toBe(true);
+
+      let invalidMethodError = false;
+      try {
+        await db
+          .prepare(
+            `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, source_id, method, retrieved_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(
+            'fn_invalid_method',
+            'food_constraint_test',
+            'nut_energy',
+            10,
+            'src_usda_fdc',
+            'guessed',
+            '2026-08-30T00:00:00.000Z',
+            now,
+            now,
+          )
+          .run();
+      } catch {
+        invalidMethodError = true;
+      }
+      expect(invalidMethodError).toBe(true);
+
+      let invalidTimestampError = false;
+      try {
+        await db
+          .prepare(
+            `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, source_id, method, retrieved_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .bind(
+            'fs_invalid_timestamp',
+            'food_constraint_test',
+            'یک واحد',
+            'One unit',
+            10,
+            'src_usda_fdc',
+            'measured',
+            'not-a-timestamp',
+            now,
+            now,
+          )
+          .run();
+      } catch {
+        invalidTimestampError = true;
+      }
+      expect(invalidTimestampError).toBe(true);
     });
 
     it('enforces barcode and external source uniqueness in D1', async () => {
@@ -241,6 +310,49 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
   });
 
   describe('Admin Food CRUD, Atomic Operations & Edit Data Loss Prevention', () => {
+    it('rejects active publication with incomplete or unknown provenance sources', async () => {
+      const incomplete = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            status: 'active',
+            translations: [{ locale: 'fa', name: 'غذای فعال بدون مدرک' }],
+            nutrients: verifiedMacros(100).map((nutrient, index) =>
+              index === 0 ? { ...nutrient, citation: null } : nutrient,
+            ),
+          }),
+        },
+        testEnv,
+      );
+      expect(incomplete.status).toBe(400);
+
+      const unknownSource = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            status: 'active',
+            translations: [{ locale: 'fa', name: 'غذای فعال با منبع جعلی' }],
+            nutrients: verifiedMacros(100).map((nutrient) => ({
+              ...nutrient,
+              source_id: 'src_does_not_exist',
+            })),
+          }),
+        },
+        testEnv,
+      );
+      expect(unknownSource.status).toBe(400);
+    });
+
     it('creates a new food atomically with translations, nutrients, and servings', async () => {
       const createPayload = {
         category_id: 'cat_grains',
@@ -260,11 +372,15 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
           { locale: 'en', alias: 'Sangak' },
         ],
         nutrients: [
-          { nutrient_id: 'nut_energy', amount_per_100g: 259 },
-          { nutrient_id: 'nut_protein', amount_per_100g: 9.2 },
-          { nutrient_id: 'nut_carbohydrate', amount_per_100g: 52.4 },
-          { nutrient_id: 'nut_fat_total', amount_per_100g: 1.5 },
-          { nutrient_id: 'nut_fiber', amount_per_100g: 3.8 },
+          { nutrient_id: 'nut_energy', amount_per_100g: 259, ...VERIFIED_PROVENANCE },
+          { nutrient_id: 'nut_protein', amount_per_100g: 9.2, ...VERIFIED_PROVENANCE },
+          {
+            nutrient_id: 'nut_carbohydrate',
+            amount_per_100g: 52.4,
+            ...VERIFIED_PROVENANCE,
+          },
+          { nutrient_id: 'nut_fat_total', amount_per_100g: 1.5, ...VERIFIED_PROVENANCE },
+          { nutrient_id: 'nut_fiber', amount_per_100g: 3.8, ...VERIFIED_PROVENANCE },
         ],
         servings: [
           {
@@ -272,12 +388,14 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             name_en: '1 Palm size (approx 10x10 cm)',
             weight_g: 30,
             household_unit: 'کف دست',
+            ...VERIFIED_PROVENANCE,
           },
           {
             name_fa: 'یک قرص کامل',
             name_en: '1 Full loaf',
             weight_g: 400,
             household_unit: 'قرص',
+            ...VERIFIED_PROVENANCE,
           },
         ],
       };
@@ -917,7 +1035,8 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
             },
             body: JSON.stringify({
               translations: [{ locale: 'fa', name: `غذای تست ${i}` }],
-              nutrients: [{ nutrient_id: 'nut_energy', amount_per_100g: 100 * i }],
+              status: 'active',
+              nutrients: verifiedMacros(100 * i),
             }),
           },
           testEnv,
@@ -995,6 +1114,8 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
           },
           body: JSON.stringify({
             translations: [{ locale: 'fa', name: 'کشک بادمجان خانگی' }],
+            status: 'active',
+            nutrients: verifiedMacros(180),
           }),
         },
         testEnv,

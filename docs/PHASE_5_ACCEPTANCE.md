@@ -1,88 +1,77 @@
-# Phase 5 Acceptance: Iranian Food Database & Provenance Pipeline
+# Phase 5 Acceptance: Iranian Food Catalog and Provenance Pipeline
 
-## 1. Overview
+## Outcome
 
-Phase 5 establishes a verified baseline dataset of traditional Iranian foods and an automated, idempotent data ingestion pipeline with granular nutrient and serving level provenance, cryptographic checksum verification, dataset-level atomicity, and strict license compliance for NutriAI Persia.
+Phase 5 provides a provenance-first catalog foundation and an idempotent D1 ingestion pipeline. It does not claim that generic USDA commodities are Iranian recipes or regional products.
 
----
+The committed open dataset contains 30 records:
 
-## 2. Technical Architecture & Invariant Enforcement
+- 10 active generic commodities whose public names and nutrient values match the cited USDA FoodData Central records.
+- 20 Iranian foods and preparations kept as `draft`, with no nutrient or serving values, until a matching licensed source or laboratory assay is available.
+- 0 active records without complete nutrient and serving provenance.
 
-### 1. Granular Provenance Relational Schema (`0006_nutrient_serving_provenance.sql`)
+The active records are cooked lentils, cooked chickpeas, raw English walnuts, raw pomegranate, brewed black tea, plain whole-milk yogurt, Deglet Noor dates, grilled chicken breast, cooked 80/20 ground-beef patty, and fresh parsley. Joojeh Kabab, Kabab Koobideh, Sabzi Khordan, Lahijan tea, and Bam Mazafati dates remain separate draft records; they are not aliases for those generic commodities.
 
-- Added granular provenance columns to `food_nutrients` and `food_servings`:
-  - `source_id`: Foreign key referencing `food_sources(id)`.
-  - `external_id`: External record identifier (e.g. USDA FoodData Central FDC ID `172420`, portion ID).
-  - `source_url`: Direct URL to external record page or API.
-  - `citation`: Full citation text.
-  - `dataset_version`: Version of source dataset.
-  - `method`: Ingestion method (`laboratory`, `database`, `calculated`).
-  - `retrieved_at`: RFC3339 UTC timestamp when data was retrieved from source.
-  - `license`: Rights notice of external reference.
-- Relational audit logs via `food_import_logs` table (`id`, `source_id`, `dataset_name`, `file_checksum`, `total_records`, `inserted_count`, `updated_count`, `unchanged_count`, `skipped_count`, `status`, `error_summary`, `executed_by`, `created_at`).
-- Seeded standard sources: `src_open_iranian_foods` (CC0-1.0 structure/curation with USDA FDC public domain underlying data) and `src_iranian_fct_adapter` (Proprietary NNFTRI adapter template).
-- Updated `system_metadata` schema version to `0006_nutrient_serving_provenance`.
+## Enforced invariants
 
-### 2. Scientific Truth & Dataset Rights Policy
+- New Admin records default to `draft`.
+- Every active record requires energy, protein, carbohydrate, and total-fat values.
+- Every active nutrient and serving requires `source_id`, `external_id`, `source_url`, `citation`, `dataset_version`, `method`, `retrieved_at`, and `license`.
+- Allowed methods are `laboratory`, `database`, `calculated`, and `measured`.
+- Nested provenance sources must exist in `food_sources`.
+- The Admin editor preserves all provenance on unchanged values and refuses to publish unverifiable changes.
+- Draft records may omit provenance and remain excluded from public food endpoints.
 
-- **No Self-Referencing Claims**: Repository is not claimed as the scientific authority for nutrient values.
-- **Active Foods Invariant**: Active foods (`status: 'active'`) must define complete macro nutrients (`nut_energy`, `nut_protein`, `nut_carbohydrate`, `nut_fat_total`) and valid granular provenance (`source_id`, `method`, `retrieved_at`).
-- **Dataset Composition (25 Foods Total)**:
-  - **10 Active Generic Commodities**: Cooked brown lentils, cooked chickpeas, raw walnuts, fresh pomegranate, brewed Persian black tea, whole milk yogurt, fresh greens (Sabzi Khordan), grilled chicken breast (Joojeh), grilled minced beef/lamb (Koobideh), and fresh dates (Bam Mazafati) mapped to verified USDA FoodData Central laboratory records with direct URLs and FDC IDs.
-  - **15 Draft Traditional Items**: Sangak, Barbari, Taftoon, Lavash, Barley Bread, Kateh, Chelow, Strained Labneh, Kashk, Doogh, Tabriz Lighvan cheese, Ghormeh Sabzi, Gheimeh, Fesenjan, and Ash Reshteh are strictly maintained in `draft` status without unverified nutrient numbers.
-  - **0 Active Foods without Provenance**.
-- **License Boundary Management**:
-  - `data/sources/open-iranian-foods/LICENSE.md` contains an explicit rights waiver and provenance documentation.
-  - `src_iranian_fct_adapter` (NNFTRI Iranian FCT) provides a typed ingestion adapter template without committing proprietary raw databases to git (`redistributionAllowed: false`).
-  - Public ingestion automatically rejects sources with restricted redistribution policies unless `--licensed-local` is explicitly passed in a local environment.
+## Database and pipeline
 
-### 3. True Dataset-Level Atomicity (`db.batch`)
+- `0006_nutrient_serving_provenance.sql` adds granular provenance fields.
+- `0007_phase5_provenance_integrity.sql` adds D1 guards for provenance methods and UTC timestamps.
+- `FoodImporterService` executes each dataset mutation and its success log in one D1 batch. Unchanged records produce no delete, insert, or update statements.
+- Failed imports return sanitized messages and do not expose SQL text.
+- The local CLI verifies the SHA-256 hash of the exact `foods.json` bytes, compares complete nested state, escapes every SQL text value centrally, and reports inserted, updated, and unchanged counts.
+- Restricted datasets require both explicit `--licensed-local` consent and `NUTRIAI_DATA_ENV=development|test`. CI, staging, and production are rejected even when the flag is supplied.
 
-- Multi-item batch ingestion rollback: all operations of a dataset import (source upsert, food upserts, deletions of old relations, insertions of translations, aliases, nutrients with provenance, servings with provenance, and success log) execute in a single Cloudflare D1 `db.batch(statements)` transaction.
-- If a constraint failure or SQLite error occurs mid-dataset, the entire batch rolls back completely with zero partial rows left in D1.
-- Ingestion errors are sanitized to prevent leaking internal SQLite SQL strings, and failed logs are recorded safely in a separate statement.
+## Dataset integrity
 
-### 4. Persian Typography Normalization
+- Open dataset path: `data/sources/open-iranian-foods/foods.json`
+- Manifest checksum: `91e3784ca77aa9e056c5092c3c9fabc8b69483e4c1b996a97f8e6426fbe79a43`
+- Curation license: CC0-1.0
+- Underlying active nutrient source: USDA FoodData Central public-domain records, cited per nutrient and serving
+- Restricted NNFTRI data: not committed; only a local adapter template is present
 
-- Implemented `normalizePersianText` and `normalizePersianForComparison` in `packages/localization`.
-- Standardizes Arabic letter variants (ي/ى -> ی, ك -> ک), digits (۰-۹ / ٠-٩ -> 0-9), diacritics (اعراب), and zero-width non-joiners (ZWNJ).
-- Detects semantic alias collisions across dataset items during pre-ingestion validation.
+## Verification commands
 
-### 5. CLI Tooling & Local D1 Operations
+```bash
+pnpm install --frozen-lockfile
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm data:validate
+pnpm --filter @nutriai/worker-api run db:migrations:apply:local
+pnpm data:dry-run
+pnpm data:import:local
+pnpm data:dry-run
+pnpm exec turbo run test:coverage --force
+pnpm exec turbo run build --force
+pnpm audit --prod --audit-level=critical
+npx expo-doctor@latest
+git diff --check
+```
 
-- Implemented `FoodImporterService` in `workers/api/src/services/food-importer.service.ts` with `validate`, `dry-run`, and `import` execution modes.
-- Created `scripts/data-pipeline.mjs` CLI tool:
-  - `pnpm data:validate`: Verifies schema, raw-bytes SHA-256 checksum, manifest match, and license compliance.
-  - `pnpm data:dry-run`: Runs against local Miniflare D1 database, simulates insertion/update counts, and proves zero database mutation.
-  - `pnpm data:import:local`: Executes atomic ingestion into local D1 database.
-  - `--licensed-local`: Explicit confirmation flag for local restricted datasets.
+## Measured acceptance results
 
----
+The following results were measured from the final local verification on 2026-08-30:
 
-## 3. Monorepo Quality Gates & Test Summary
+- Frozen install, formatting, lint, TypeScript typecheck, and all local D1 migrations: passed.
+- Dataset validation: 30 of 30 records passed and the raw-byte SHA-256 matched the manifest.
+- Import cycle: after replacing 80 obsolete USDA detail links, the first dry-run detected exactly 10 changed records without mutating D1; import updated those 10 records; the second dry-run reported 0 inserts, 0 updates, and 30 unchanged records.
+- Uncached test coverage: 164 of 164 tests passed across all 15 Turbo tasks.
+- Worker API coverage: 74.32% statements, 58.04% branches, 83.50% functions, and 76.15% lines.
+- Uncached production build: all 11 workspaces passed.
+- Production dependency audit: 0 critical vulnerabilities; 2 documented high-severity transitive findings remain below the configured critical acceptance gate.
+- Expo Doctor: 18 of 18 checks passed.
+- `git diff --check`: passed.
 
-| Package / Workspace      | Tests Passed  | Pass Rate | Test Framework & Runner                      |
-| :----------------------- | :------------ | :-------- | :------------------------------------------- |
-| `@nutriai/worker-api`    | 62 / 62       | 100%      | Vitest + Cloudflare Miniflare D1 Worker Pool |
-| `@nutriai/schemas`       | 8 / 8         | 100%      | Vitest + Zod Type Testing                    |
-| `@nutriai/localization`  | 10 / 10       | 100%      | Vitest + Persian Text & Intl Engine          |
-| `@nutriai/storage`       | 6 / 6         | 100%      | Vitest + S3 / B2 Mock Providers              |
-| `@nutriai/admin`         | 11 / 11       | 100%      | Vitest + React Testing Library               |
-| `@nutriai/web`           | 8 / 8         | 100%      | Vitest + React Testing Library               |
-| `@nutriai/mobile`        | 4 / 4         | 100%      | Vitest + React Native Testing Library        |
-| **Total Monorepo Tests** | **160 / 160** | **100%**  | **Turborepo Monorepo Pipeline**              |
+Final acceptance requires the matching commit to reproduce these gates in GitHub Actions.
 
----
-
-## 4. Acceptance Criteria Verification Checklist
-
-- [x] **Relational Schema Migration**: `0006_nutrient_serving_provenance.sql` applied cleanly with granular provenance columns on `food_nutrients` and `food_servings`, `food_import_logs`, and category seeds.
-- [x] **Granular Provenance**: Active foods contain valid `source_id`, `external_id`, `source_url`, `citation`, `dataset_version`, `method`, `retrieved_at`, and `license` on all nutrients and servings.
-- [x] **Scientific Provenance Traceability**: Active commodities reference verifiable USDA FoodData Central records; composite dishes kept strictly in `draft` status without guessed values.
-- [x] **License Compliance**: CC0-1.0 open baseline with explicit `LICENSE.md`; proprietary NNFTRI tables restricted to `--licensed-local` environments without raw data in git.
-- [x] **Dataset-Level Atomicity**: Full dataset ingestion executed in single `db.batch()` transaction; mid-batch constraint failure rolls back 100% with zero partial writes in D1.
-- [x] **Persian Text Normalization**: Arabic/Persian letter variants, digits, diacritics, and ZWNJs normalized for search indexing and collision detection.
-- [x] **Idempotent Ingestion**: Repeated dataset runs produce `0 inserted, 0 updated, 25 unchanged` with zero duplicates.
-- [x] **Public & Admin API Compatibility**: Active Iranian foods served via `/api/v1/foods` and `/api/v1/foods/:id` with Persian and English translations and `resolvedLocale`; draft items excluded from public endpoint and accessible in admin API.
-- [x] **CLI Tooling & Local D1 Operations**: `pnpm data:validate`, `pnpm data:dry-run`, and `pnpm data:import:local` operational with zero-mutation dry-run verification.
-- [x] **Monorepo Quality Gates**: Typecheck, ESLint, Prettier, Turbo build, D1 migrations, dependency audit, and Expo doctor all passing.
+Phase 6 is not included in this acceptance document.

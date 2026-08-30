@@ -8,7 +8,7 @@
   "acquisitionDate": "2026-08-30T00:00:00.000Z",
   "license": "CC0-1.0 (Dataset structure & curation; underlying nutrition data derived from USDA FoodData Central and public domain records)",
   "redistributionAllowed": true,
-  "sha256Checksum": "2be3d3d51d2281365beac43e97c703196b9e2d4d1d2a5953b3eb345c459bb372",
+  "sha256Checksum": "91e3784ca77aa9e056c5092c3c9fabc8b69483e4c1b996a97f8e6426fbe79a43",
   "language": "fa, en",
-  "description": "Curated baseline dataset of Iranian food items with granular nutrient and serving provenance referencing USDA FoodData Central records for active commodities and draft state for unverified composite dishes."
+  "description": "Provenance-first catalog containing exact USDA generic commodities as active references and separate unpublished Iranian food identities without guessed nutrition values."
 }

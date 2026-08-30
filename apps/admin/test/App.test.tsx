@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminAuthProvider, useAdminAuth } from '../src/auth/AdminAuthProvider';
 import App from '../src/App';
 import type { PublicUser } from '@nutriai/types';
+import type { FoodNutrientInputDto, FoodServingInputDto } from '@nutriai/schemas';
 
 const mockAdminUser: PublicUser = {
   id: 'admin-12345678-abcd',
@@ -30,6 +31,17 @@ const mockRegularUser: PublicUser = {
   last_login_at: '2026-08-29T10:00:00.000Z',
   created_at: '2026-08-29T09:00:00.000Z',
   updated_at: '2026-08-29T09:00:00.000Z',
+};
+
+const verifiedProvenance = {
+  sourceId: 'src_usda_fdc',
+  externalId: 'test-provenance-record',
+  sourceUrl: 'https://fdc.nal.usda.gov/',
+  citation: 'USDA FoodData Central test fixture',
+  datasetVersion: 'test-1',
+  method: 'database' as const,
+  retrievedAt: '2026-08-30T00:00:00.000Z',
+  license: 'Public Domain',
 };
 
 function renderAdminApp(initialUser: PublicUser | null = null) {
@@ -532,6 +544,7 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
       nutrients: [
         {
           nutrientId: 'nut_energy',
+          ...verifiedProvenance,
           code: 'energy',
           name: 'انرژی',
           unit: 'kcal',
@@ -663,8 +676,8 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
     let patchPayload: {
       translations: Array<{ locale: string; name: string }>;
       aliases: Array<{ locale: string; alias: string }>;
-      nutrients: Array<{ nutrient_id: string; amount_per_100g: number }>;
-      servings: Array<{ name_fa: string; name_en: string; weight_g: number }>;
+      nutrients: FoodNutrientInputDto[];
+      servings: FoodServingInputDto[];
     } | null = null;
 
     const mockRichFoodDetail = {
@@ -716,6 +729,7 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
       nutrients: [
         {
           nutrientId: 'nut_energy',
+          ...verifiedProvenance,
           code: 'energy',
           name: 'Energy',
           unit: 'kcal',
@@ -723,6 +737,7 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
         },
         {
           nutrientId: 'nut_protein',
+          ...verifiedProvenance,
           code: 'protein',
           name: 'Protein',
           unit: 'g',
@@ -730,6 +745,7 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
         },
         {
           nutrientId: 'nut_carbohydrate',
+          ...verifiedProvenance,
           code: 'carbohydrate',
           name: 'Carbs',
           unit: 'g',
@@ -737,15 +753,31 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
         },
         {
           nutrientId: 'nut_fat_total',
+          ...verifiedProvenance,
           code: 'fat_total',
           name: 'Fat',
           unit: 'g',
           amountPer100g: 1.5,
         },
-        { nutrientId: 'nut_fiber', code: 'fiber', name: 'Fiber', unit: 'g', amountPer100g: 3.8 },
-        { nutrientId: 'nut_iron', code: 'iron', name: 'Iron', unit: 'mg', amountPer100g: 2.5 },
+        {
+          nutrientId: 'nut_fiber',
+          ...verifiedProvenance,
+          code: 'fiber',
+          name: 'Fiber',
+          unit: 'g',
+          amountPer100g: 3.8,
+        },
+        {
+          nutrientId: 'nut_iron',
+          ...verifiedProvenance,
+          code: 'iron',
+          name: 'Iron',
+          unit: 'mg',
+          amountPer100g: 2.5,
+        },
         {
           nutrientId: 'nut_calcium',
+          ...verifiedProvenance,
           code: 'calcium',
           name: 'Calcium',
           unit: 'mg',
@@ -755,6 +787,7 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
       servings: [
         {
           id: 's1',
+          ...verifiedProvenance,
           foodId: 'food_rich_edit_1',
           nameFa: 'یک کف دست',
           nameEn: '1 Palm',
@@ -763,6 +796,7 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
         },
         {
           id: 's2',
+          ...verifiedProvenance,
           foodId: 'food_rich_edit_1',
           nameFa: 'یک قرص کامل',
           nameEn: '1 Loaf',
@@ -879,10 +913,20 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
         (n) => n.nutrient_id === 'nut_calcium' && n.amount_per_100g === 50,
       ),
     ).toBe(true);
+    expect(
+      patchPayload!.nutrients.every(
+        (n) => n.source_id === 'src_usda_fdc' && n.citation && n.retrieved_at,
+      ),
+    ).toBe(true);
 
     // Assert all 2 servings are preserved
     expect(patchPayload!.servings.length).toBe(2);
     expect(patchPayload!.servings.some((s) => s.weight_g === 400)).toBe(true);
+    expect(
+      patchPayload!.servings.every(
+        (s) => s.source_id === 'src_usda_fdc' && s.citation && s.retrieved_at,
+      ),
+    ).toBe(true);
   });
 
   it('archives food item when confirmed by admin', async () => {

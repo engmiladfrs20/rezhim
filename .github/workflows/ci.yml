@@ -63,6 +63,15 @@ jobs:
       - name: Local D1 Migration & Readiness Check
         run: pnpm --filter @nutriai/worker-api run db:migrations:apply:local
 
+      - name: Dataset Dry-Run (Zero Mutation)
+        run: pnpm data:dry-run
+
+      - name: Open Dataset Local Import
+        run: pnpm data:import:local
+
+      - name: Dataset Idempotency Dry-Run
+        run: pnpm data:dry-run
+
       - name: Build Workspaces & Worker Bundling
         run: pnpm build
 

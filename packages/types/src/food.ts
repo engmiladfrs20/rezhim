@@ -56,7 +56,7 @@ export interface NutrientDefinition {
   updatedAt: string;
 }
 
-export type ProvenanceMethod = 'laboratory' | 'database' | 'calculated';
+export type ProvenanceMethod = 'laboratory' | 'database' | 'calculated' | 'measured';
 
 export interface FoodNutrientValue {
   nutrientId: string;

@@ -1,19 +1,39 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
+const pnpmEntryPoint = process.env.npm_execpath;
+
+function executePnpm(args, options = {}) {
+  if (!pnpmEntryPoint) {
+    throw new Error('This data pipeline must be run through the repository pnpm scripts');
+  }
+  return execFileSync(process.execPath, [pnpmEntryPoint, ...args], options);
+}
+
+function sqlText(value) {
+  if (value === undefined || value === null) return 'NULL';
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function sqlNumber(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error('Refusing to serialize a non-finite SQL number');
+  }
+  return String(value);
+}
 
 // Normalization function matching @nutriai/localization
 export function normalizePersianForComparison(text) {
   if (!text) return '';
   return text
-    .replace(/[\u06F0-\u06F9]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 48))
+    .replace(/[\u06F0-\u06F9]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0x06f0 + 48))
     .replace(/[\u0660-\u0669]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48))
     .replace(/[\u064A\u0649\u06D0\u06D1]/g, 'ی')
     .replace(/\u0643/g, 'ک')
@@ -32,7 +52,7 @@ const rfc3339TimestampSchema = z
   .string()
   .trim()
   .regex(
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/,
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/,
     'Must be a valid RFC3339 UTC timestamp',
   )
   .refine((ts) => !isNaN(Date.parse(ts)), 'Must be a parseable timestamp');
@@ -55,7 +75,7 @@ const foodSourceManifestSchema = z.object({
   url: z.string().trim().url('Must be a valid URL'),
   version: z.string().trim().min(1).max(50),
   acquisitionDate: rfc3339TimestampSchema,
-  license: z.string().trim().min(1).max(150),
+  license: z.string().trim().min(1).max(250),
   redistributionAllowed: z.boolean(),
   sha256Checksum: z
     .string()
@@ -66,7 +86,7 @@ const foodSourceManifestSchema = z.object({
   description: z.string().trim().max(1000).nullable().optional(),
 });
 
-const provenanceMethodEnum = z.enum(['laboratory', 'database', 'calculated']);
+const provenanceMethodEnum = z.enum(['laboratory', 'database', 'calculated', 'measured']);
 
 const foodDatasetNutrientInputSchema = z.object({
   nutrient_id: z.string().trim().min(1, 'Nutrient ID is required'),
@@ -78,7 +98,7 @@ const foodDatasetNutrientInputSchema = z.object({
   dataset_version: z.string().trim().max(50).nullable().optional(),
   method: provenanceMethodEnum.nullable().optional(),
   retrieved_at: rfc3339TimestampSchema.nullable().optional(),
-  license: z.string().trim().max(150).nullable().optional(),
+  license: z.string().trim().max(250).nullable().optional(),
 });
 
 const foodDatasetServingInputSchema = z.object({
@@ -93,7 +113,7 @@ const foodDatasetServingInputSchema = z.object({
   dataset_version: z.string().trim().max(50).nullable().optional(),
   method: provenanceMethodEnum.nullable().optional(),
   retrieved_at: rfc3339TimestampSchema.nullable().optional(),
-  license: z.string().trim().max(150).nullable().optional(),
+  license: z.string().trim().max(250).nullable().optional(),
 });
 
 const foodDatasetItemSchema = z
@@ -105,7 +125,7 @@ const foodDatasetItemSchema = z
     food_type: z.enum(['generic', 'branded']).default('generic'),
     brand_name: z.string().trim().max(100).nullable().optional(),
     barcode: z.string().trim().nullable().optional(),
-    status: z.enum(['draft', 'active', 'archived']).default('active'),
+    status: z.enum(['draft', 'active', 'archived']).default('draft'),
     source_id: z.string().trim().min(1),
     external_id: z.string().trim().min(1).max(100),
     translations: z
@@ -179,78 +199,78 @@ const foodDatasetItemSchema = z
         }
       }
 
+      const requiredProvenance = [
+        'source_id',
+        'external_id',
+        'source_url',
+        'citation',
+        'dataset_version',
+        'method',
+        'retrieved_at',
+        'license',
+      ];
       nutrients.forEach((n, idx) => {
-        if (!n.source_id || n.source_id.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food nutrient '${n.nutrient_id}' must have a valid source_id`,
-            path: ['nutrients', idx, 'source_id'],
-          });
-        }
-        if (!n.method) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food nutrient '${n.nutrient_id}' must have method ('laboratory', 'database', 'calculated')`,
-            path: ['nutrients', idx, 'method'],
-          });
-        }
-        if (!n.retrieved_at) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food nutrient '${n.nutrient_id}' must have retrieved_at timestamp`,
-            path: ['nutrients', idx, 'retrieved_at'],
-          });
-        }
+        requiredProvenance.forEach((field) => {
+          if (!n[field]) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Active food nutrient '${n.nutrient_id}' must have non-empty ${field}`,
+              path: ['nutrients', idx, field],
+            });
+          }
+        });
       });
 
       const servings = data.servings || [];
       servings.forEach((s, idx) => {
-        if (!s.source_id || s.source_id.trim().length === 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food serving '${s.name_en}' must have a valid source_id`,
-            path: ['servings', idx, 'source_id'],
-          });
-        }
-        if (!s.method) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food serving '${s.name_en}' must have method ('laboratory', 'database', 'calculated')`,
-            path: ['servings', idx, 'method'],
-          });
-        }
-        if (!s.retrieved_at) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Active food serving '${s.name_en}' must have retrieved_at timestamp`,
-            path: ['servings', idx, 'retrieved_at'],
-          });
-        }
+        requiredProvenance.forEach((field) => {
+          if (!s[field]) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Active food serving '${s.name_en}' must have non-empty ${field}`,
+              path: ['servings', idx, field],
+            });
+          }
+        });
       });
     }
   });
 
 function executeD1Command(command) {
-  try {
-    const raw = execSync(
-      `pnpm --filter @nutriai/worker-api exec wrangler d1 execute DB --local --json --command "${command}"`,
-      { cwd: rootDir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+  const raw = executePnpm(
+    [
+      '--filter',
+      '@nutriai/worker-api',
+      'exec',
+      'wrangler',
+      'd1',
+      'execute',
+      'DB',
+      '--local',
+      '--json',
+      '--command',
+      command,
+    ],
+    { cwd: rootDir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+  );
+  const jsonStart = raw.indexOf('[');
+  if (jsonStart !== -1) {
+    const parsed = JSON.parse(raw.substring(jsonStart));
+    return (parsed[0]?.results || []).map((row) =>
+      Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [key, value === 'null' ? null : value]),
+      ),
     );
-    const jsonStart = raw.indexOf('[');
-    if (jsonStart !== -1) {
-      const parsed = JSON.parse(raw.substring(jsonStart));
-      return parsed[0]?.results || [];
-    }
-    return [];
-  } catch (err) {
-    return null;
   }
+  return [];
 }
 
 export function runDataPipeline(options) {
-  const { sourceDir, mode, allowLicensedLocal } = options;
+  const { sourceDir, mode, allowLicensedLocal, environment } = options;
   const manifestPath = path.join(sourceDir, 'source-manifest.json');
-  const foodsPath = path.join(sourceDir, 'foods.json');
+  const standardFoodsPath = path.join(sourceDir, 'foods.json');
+  const templateFoodsPath = path.join(sourceDir, 'sample-template.json');
+  const foodsPath = fs.existsSync(standardFoodsPath) ? standardFoodsPath : templateFoodsPath;
 
   const errors = [];
 
@@ -260,7 +280,7 @@ export function runDataPipeline(options) {
   }
 
   if (!fs.existsSync(foodsPath)) {
-    errors.push(`Foods dataset not found at ${foodsPath}`);
+    errors.push(`Foods dataset not found at ${standardFoodsPath} or ${templateFoodsPath}`);
     return { success: false, totalItems: 0, errors, manifest: null, checksum: '' };
   }
 
@@ -291,9 +311,11 @@ export function runDataPipeline(options) {
         `SHA-256 Checksum mismatch! Manifest specified: ${manifestParsed.data.sha256Checksum}, Actual file: ${computedChecksum}`,
       );
     }
-    if (manifestParsed.data.redistributionAllowed === false && !allowLicensedLocal) {
+    const isExplicitLicensedLocal =
+      allowLicensedLocal === true && (environment === 'development' || environment === 'test');
+    if (manifestParsed.data.redistributionAllowed === false && !isExplicitLicensedLocal) {
       errors.push(
-        `Dataset license "${manifestParsed.data.license}" disallows redistribution. Direct ingestion is restricted to licensed local environments with explicit --licensed-local flag.`,
+        `Dataset license "${manifestParsed.data.license}" disallows redistribution. Import requires --licensed-local and NUTRIAI_DATA_ENV=development|test; CI, staging, and production are prohibited.`,
       );
     }
   }
@@ -386,21 +408,130 @@ export function runDataPipeline(options) {
       d1InitialCount = Number(countRes[0].total) || 0;
     }
 
-    const existingRows = executeD1Command(
-      `SELECT id, external_id FROM foods WHERE source_id = '${manifestParsed.data.id}'`,
+    const sourceId = manifestParsed.data.id;
+    const existingFoods = executeD1Command(
+      `SELECT * FROM foods WHERE source_id = ${sqlText(sourceId)}`,
     );
-    const existingMap = new Map((existingRows || []).map((r) => [r.external_id, r.id]));
+    const existingTranslations = executeD1Command(
+      `SELECT * FROM food_translations WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+    );
+    const existingAliases = executeD1Command(
+      `SELECT * FROM food_aliases WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+    );
+    const existingNutrients = executeD1Command(
+      `SELECT * FROM food_nutrients WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+    );
+    const existingServings = executeD1Command(
+      `SELECT * FROM food_servings WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+    );
+    const categoryRows = executeD1Command(
+      "SELECT id, slug FROM food_categories WHERE status = 'active'",
+    );
+    const categoryIdsBySlug = new Map(categoryRows.map((row) => [row.slug, row.id]));
+    const resolveCategoryId = (item) =>
+      item.category_id ??
+      (item.category_slug ? categoryIdsBySlug.get(item.category_slug) ?? null : null);
 
+    const existingMap = new Map();
+    existingFoods.forEach((f) => {
+      existingMap.set(f.external_id, {
+        food: f,
+        translations: existingTranslations.filter((t) => t.food_id === f.id),
+        aliases: existingAliases.filter((a) => a.food_id === f.id),
+        nutrients: existingNutrients.filter((n) => n.food_id === f.id),
+        servings: existingServings.filter((s) => s.food_id === f.id),
+      });
+    });
+
+    function isItemIdentical(item, fullExisting) {
+      if (!fullExisting) return false;
+      const f = fullExisting.food;
+      if (item.food_type !== f.food_type) return false;
+      if ((item.brand_name ?? null) !== (f.brand_name ?? null)) return false;
+      if ((item.barcode ?? null) !== (f.barcode ?? null)) return false;
+      if (item.status !== f.status) return false;
+      if (resolveCategoryId(item) !== (f.category_id ?? null)) return false;
+
+      // Translations
+      if (item.translations.length !== fullExisting.translations.length) return false;
+      for (const t of item.translations) {
+        const et = fullExisting.translations.find((x) => x.locale === t.locale);
+        if (!et || et.name !== t.name || (et.description ?? null) !== (t.description ?? null)) {
+          return false;
+        }
+      }
+
+      // Aliases
+      const itemAliases = item.aliases || [];
+      if (itemAliases.length !== fullExisting.aliases.length) return false;
+      for (const a of itemAliases) {
+        const ea = fullExisting.aliases.find((x) => x.locale === a.locale && x.alias === a.alias);
+        if (!ea) return false;
+      }
+
+      // Nutrients & granular provenance
+      const itemNutrients = item.nutrients || [];
+      if (itemNutrients.length !== fullExisting.nutrients.length) return false;
+      for (const n of itemNutrients) {
+        const en = fullExisting.nutrients.find((x) => x.nutrient_id === n.nutrient_id);
+        if (!en || Number(en.amount_per_100g) !== Number(n.amount_per_100g)) return false;
+        if ((en.source_id ?? null) !== (n.source_id ?? null)) return false;
+        if ((en.external_id ?? null) !== (n.external_id ?? null)) return false;
+        if ((en.source_url ?? null) !== (n.source_url ?? null)) return false;
+        if ((en.citation ?? null) !== (n.citation ?? null)) return false;
+        if ((en.dataset_version ?? null) !== (n.dataset_version ?? null)) return false;
+        if ((en.method ?? null) !== (n.method ?? null)) return false;
+        if ((en.retrieved_at ?? null) !== (n.retrieved_at ?? null)) return false;
+        if ((en.license ?? null) !== (n.license ?? null)) return false;
+      }
+
+      // Servings & granular provenance
+      const itemServings = item.servings || [];
+      if (itemServings.length !== fullExisting.servings.length) return false;
+      for (const s of itemServings) {
+        const es = fullExisting.servings.find(
+          (x) => x.name_fa === s.name_fa && x.name_en === s.name_en,
+        );
+        if (!es || Number(es.weight_g) !== Number(s.weight_g)) return false;
+        if ((es.household_unit ?? null) !== (s.household_unit ?? null)) return false;
+        if ((es.source_id ?? null) !== (s.source_id ?? null)) return false;
+        if ((es.external_id ?? null) !== (s.external_id ?? null)) return false;
+        if ((es.source_url ?? null) !== (s.source_url ?? null)) return false;
+        if ((es.citation ?? null) !== (s.citation ?? null)) return false;
+        if ((es.dataset_version ?? null) !== (s.dataset_version ?? null)) return false;
+        if ((es.method ?? null) !== (s.method ?? null)) return false;
+        if ((es.retrieved_at ?? null) !== (s.retrieved_at ?? null)) return false;
+        if ((es.license ?? null) !== (s.license ?? null)) return false;
+      }
+
+      return true;
+    }
+
+    const itemsToMutate = [];
     validItems.forEach((item) => {
-      if (existingMap.has(item.external_id)) {
+      const fullExisting = existingMap.get(item.external_id);
+      if (!fullExisting) {
+        insertedCount++;
+        itemsToMutate.push({
+          item,
+          categoryId: resolveCategoryId(item),
+          isNew: true,
+          foodId: item.id || `food_${crypto.randomUUID()}`,
+        });
+      } else if (isItemIdentical(item, fullExisting)) {
         unchangedCount++;
       } else {
-        insertedCount++;
+        updatedCount++;
+        itemsToMutate.push({
+          item,
+          categoryId: resolveCategoryId(item),
+          isNew: false,
+          foodId: fullExisting.food.id,
+        });
       }
     });
 
     if (mode === 'import-local') {
-      // Execute local import SQL script via wrangler d1
       const tmpSqlPath = path.join(rootDir, '.wrangler', `import_${Date.now()}.sql`);
       const now = new Date().toISOString();
       const sqlLines = ['BEGIN TRANSACTION;'];
@@ -408,64 +539,70 @@ export function runDataPipeline(options) {
       // Source upsert
       const m = manifestParsed.data;
       sqlLines.push(
-        `INSERT INTO food_sources (id, name, code, description, url, license, acquisition_date, created_at, updated_at) VALUES ('${m.id}', '${m.name.replace(/'/g, "''")}', '${m.code}', ${m.description ? `'${m.description.replace(/'/g, "''")}'` : 'NULL'}, '${m.url}', '${m.license}', '${m.acquisitionDate}', '${now}', '${now}') ON CONFLICT(id) DO UPDATE SET name = excluded.name, updated_at = excluded.updated_at;`,
+        `INSERT INTO food_sources (id, name, code, description, url, license, acquisition_date, created_at, updated_at) VALUES (${sqlText(m.id)}, ${sqlText(m.name)}, ${sqlText(m.code)}, ${sqlText(m.description)}, ${sqlText(m.url)}, ${sqlText(m.license)}, ${sqlText(m.acquisitionDate)}, ${sqlText(now)}, ${sqlText(now)}) ON CONFLICT(id) DO UPDATE SET name = excluded.name, code = excluded.code, description = excluded.description, url = excluded.url, license = excluded.license, acquisition_date = excluded.acquisition_date, updated_at = excluded.updated_at;`,
       );
 
-      // Foods
-      validItems.forEach((item) => {
-        const foodId = existingMap.get(item.external_id) || item.id || `food_${crypto.randomUUID()}`;
+      // Only write mutating items
+      itemsToMutate.forEach(({ item, categoryId, isNew, foodId }) => {
+        const fullExisting = existingMap.get(item.external_id);
+        const createdAt = isNew ? now : fullExisting.food.created_at;
         sqlLines.push(
-          `INSERT INTO foods (id, category_id, food_type, brand_name, barcode, status, source_id, external_id, created_at, updated_at) VALUES ('${foodId}', ${item.category_id ? `'${item.category_id}'` : 'NULL'}, '${item.food_type}', ${item.brand_name ? `'${item.brand_name.replace(/'/g, "''")}'` : 'NULL'}, ${item.barcode ? `'${item.barcode}'` : 'NULL'}, '${item.status}', '${item.source_id}', '${item.external_id}', '${now}', '${now}') ON CONFLICT(id) DO UPDATE SET category_id = excluded.category_id, food_type = excluded.food_type, brand_name = excluded.brand_name, barcode = excluded.barcode, status = excluded.status, updated_at = excluded.updated_at;`,
+          `INSERT INTO foods (id, category_id, food_type, brand_name, barcode, status, source_id, external_id, created_at, updated_at) VALUES (${sqlText(foodId)}, ${sqlText(categoryId)}, ${sqlText(item.food_type)}, ${sqlText(item.brand_name)}, ${sqlText(item.barcode)}, ${sqlText(item.status)}, ${sqlText(item.source_id)}, ${sqlText(item.external_id)}, ${sqlText(createdAt)}, ${sqlText(now)}) ON CONFLICT(id) DO UPDATE SET category_id = excluded.category_id, food_type = excluded.food_type, brand_name = excluded.brand_name, barcode = excluded.barcode, status = excluded.status, source_id = excluded.source_id, external_id = excluded.external_id, updated_at = excluded.updated_at;`,
         );
 
-        // Delete existing relations
-        sqlLines.push(`DELETE FROM food_translations WHERE food_id = '${foodId}';`);
-        sqlLines.push(`DELETE FROM food_aliases WHERE food_id = '${foodId}';`);
-        sqlLines.push(`DELETE FROM food_nutrients WHERE food_id = '${foodId}';`);
-        sqlLines.push(`DELETE FROM food_servings WHERE food_id = '${foodId}';`);
+        if (!isNew) {
+          sqlLines.push(`DELETE FROM food_translations WHERE food_id = ${sqlText(foodId)};`);
+          sqlLines.push(`DELETE FROM food_aliases WHERE food_id = ${sqlText(foodId)};`);
+          sqlLines.push(`DELETE FROM food_nutrients WHERE food_id = ${sqlText(foodId)};`);
+          sqlLines.push(`DELETE FROM food_servings WHERE food_id = ${sqlText(foodId)};`);
+        }
 
-        // Translations
         item.translations.forEach((t) => {
           sqlLines.push(
-            `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at) VALUES ('ft_${crypto.randomUUID()}', '${foodId}', '${t.locale}', '${t.name.replace(/'/g, "''")}', ${t.description ? `'${t.description.replace(/'/g, "''")}'` : 'NULL'}, '${now}', '${now}');`,
+            `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at) VALUES (${sqlText(`ft_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(t.locale)}, ${sqlText(t.name)}, ${sqlText(t.description)}, ${sqlText(now)}, ${sqlText(now)});`,
           );
         });
 
-        // Aliases
         (item.aliases || []).forEach((a) => {
           sqlLines.push(
-            `INSERT INTO food_aliases (id, food_id, locale, alias, created_at) VALUES ('fa_${crypto.randomUUID()}', '${foodId}', '${a.locale}', '${a.alias.replace(/'/g, "''")}', '${now}');`,
+            `INSERT INTO food_aliases (id, food_id, locale, alias, created_at) VALUES (${sqlText(`fa_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(a.locale)}, ${sqlText(a.alias)}, ${sqlText(now)});`,
           );
         });
 
-        // Nutrients
         (item.nutrients || []).forEach((n) => {
           sqlLines.push(
-            `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at) VALUES ('fn_${crypto.randomUUID()}', '${foodId}', '${n.nutrient_id}', ${n.amount_per_100g}, '${n.source_id || m.id}', ${n.external_id ? `'${n.external_id}'` : 'NULL'}, ${n.source_url ? `'${n.source_url}'` : 'NULL'}, ${n.citation ? `'${n.citation.replace(/'/g, "''")}'` : 'NULL'}, ${n.dataset_version ? `'${n.dataset_version}'` : 'NULL'}, ${n.method ? `'${n.method}'` : 'NULL'}, ${n.retrieved_at ? `'${n.retrieved_at}'` : 'NULL'}, ${n.license ? `'${n.license.replace(/'/g, "''")}'` : 'NULL'}, '${now}', '${now}');`,
+            `INSERT INTO food_nutrients (id, food_id, nutrient_id, amount_per_100g, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at) VALUES (${sqlText(`fn_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(n.nutrient_id)}, ${sqlNumber(n.amount_per_100g)}, ${sqlText(n.source_id)}, ${sqlText(n.external_id)}, ${sqlText(n.source_url)}, ${sqlText(n.citation)}, ${sqlText(n.dataset_version)}, ${sqlText(n.method)}, ${sqlText(n.retrieved_at)}, ${sqlText(n.license)}, ${sqlText(now)}, ${sqlText(now)});`,
           );
         });
 
-        // Servings
         (item.servings || []).forEach((s) => {
           sqlLines.push(
-            `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at) VALUES ('fs_${crypto.randomUUID()}', '${foodId}', '${s.name_fa.replace(/'/g, "''")}', '${s.name_en.replace(/'/g, "''")}', ${s.weight_g}, ${s.household_unit ? `'${s.household_unit.replace(/'/g, "''")}'` : 'NULL'}, '${s.source_id || m.id}', ${s.external_id ? `'${s.external_id}'` : 'NULL'}, ${s.source_url ? `'${s.source_url}'` : 'NULL'}, ${s.citation ? `'${s.citation.replace(/'/g, "''")}'` : 'NULL'}, ${s.dataset_version ? `'${s.dataset_version}'` : 'NULL'}, ${s.method ? `'${s.method}'` : 'NULL'}, ${s.retrieved_at ? `'${s.retrieved_at}'` : 'NULL'}, ${s.license ? `'${s.license.replace(/'/g, "''")}'` : 'NULL'}, '${now}', '${now}');`,
+            `INSERT INTO food_servings (id, food_id, name_fa, name_en, weight_g, household_unit, source_id, external_id, source_url, citation, dataset_version, method, retrieved_at, license, created_at, updated_at) VALUES (${sqlText(`fs_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(s.name_fa)}, ${sqlText(s.name_en)}, ${sqlNumber(s.weight_g)}, ${sqlText(s.household_unit)}, ${sqlText(s.source_id)}, ${sqlText(s.external_id)}, ${sqlText(s.source_url)}, ${sqlText(s.citation)}, ${sqlText(s.dataset_version)}, ${sqlText(s.method)}, ${sqlText(s.retrieved_at)}, ${sqlText(s.license)}, ${sqlText(now)}, ${sqlText(now)});`,
           );
         });
       });
 
-      // Success log
       sqlLines.push(
-        `INSERT INTO food_import_logs (id, source_id, dataset_name, file_checksum, total_records, inserted_count, updated_count, unchanged_count, skipped_count, status, error_summary, executed_by, created_at) VALUES ('imp_${crypto.randomUUID()}', '${m.id}', '${m.name.replace(/'/g, "''")}', '${computedChecksum}', ${validItems.length}, ${insertedCount}, ${updatedCount}, ${unchangedCount}, 0, 'success', NULL, 'cli_local', '${now}');`,
+        `INSERT INTO food_import_logs (id, source_id, dataset_name, file_checksum, total_records, inserted_count, updated_count, unchanged_count, skipped_count, status, error_summary, executed_by, created_at) VALUES (${sqlText(`imp_${crypto.randomUUID()}`)}, ${sqlText(m.id)}, ${sqlText(m.name)}, ${sqlText(computedChecksum)}, ${validItems.length}, ${insertedCount}, ${updatedCount}, ${unchangedCount}, 0, 'success', NULL, 'cli_local', ${sqlText(now)});`,
       );
-
       sqlLines.push('COMMIT;');
 
       fs.mkdirSync(path.dirname(tmpSqlPath), { recursive: true });
       fs.writeFileSync(tmpSqlPath, sqlLines.join('\n'), 'utf-8');
 
       try {
-        execSync(
-          `pnpm --filter @nutriai/worker-api exec wrangler d1 execute DB --local --file="${tmpSqlPath}"`,
+        executePnpm(
+          [
+            '--filter',
+            '@nutriai/worker-api',
+            'exec',
+            'wrangler',
+            'd1',
+            'execute',
+            'DB',
+            '--local',
+            `--file=${tmpSqlPath}`,
+          ],
           { cwd: rootDir, stdio: ['pipe', 'pipe', 'pipe'] },
         );
       } finally {
@@ -523,11 +660,18 @@ if (args.includes('--dry-run')) mode = 'dry-run';
 if (args.includes('--import-local')) mode = 'import-local';
 
 const allowLicensedLocal = args.includes('--licensed-local');
+const detectedEnvironment =
+  process.env.CI === 'true'
+    ? 'ci'
+    : process.env.NODE_ENV === 'production'
+      ? 'production'
+      : process.env.NUTRIAI_DATA_ENV || 'development';
 
 const result = runDataPipeline({
   sourceDir: targetDir,
   mode,
   allowLicensedLocal,
+  environment: detectedEnvironment,
 });
 
 if (!result.success) {

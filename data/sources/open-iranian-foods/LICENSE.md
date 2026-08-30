@@ -7,12 +7,13 @@ The curation structure, category taxonomies, Persian translations, and schema me
 ### Underlying Nutritional Data Provenance
 
 1. **Active Generic Items**:
-   - Primary reference values for active generic raw and cooked commodities (such as cooked lentils, chickpeas, walnuts, pomegranate arils, brewed tea, yogurt, grilled chicken, grilled minced meat, fresh greens, and dates) are derived from **U.S. Department of Agriculture, Agricultural Research Service (USDA FoodData Central)**, Foundation and SR Legacy datasets.
+   - Primary reference values for the 10 active records (cooked lentils, cooked chickpeas, raw English walnuts, raw pomegranate, brewed black tea, plain whole-milk yogurt, Deglet Noor dates, grilled chicken breast, a cooked 80/20 ground-beef patty, and fresh parsley) are derived from **U.S. Department of Agriculture, Agricultural Research Service (USDA FoodData Central)** records.
    - USDA FoodData Central data are public domain works of the United States Government.
    - Direct record links (FDC IDs) and retrieval dates are documented in each nutrient and serving record's granular provenance metadata.
+   - These generic commodities are not represented as Joojeh Kabab, Kabab Koobideh, Sabzi Khordan, Lahijan tea, or Bam Mazafati dates.
 
 2. **Draft Traditional Dishes and Artisanal Preparations**:
-   - Traditional Iranian flatbreads (Sangak, Barbari, Taftoon, Lavash), traditional cooked rices (Kateh, Chelow), artisanal dairy (Kashk, Doogh, Tabriz Lighvan cheese), and traditional composite recipes (Ghormeh Sabzi, Gheimeh, Fesenjan, Ash Reshteh) are maintained in `draft` status without unsubstantiated or estimated nutrient assertions.
+   - Twenty Iranian foods and preparations—including traditional flatbreads, rice preparations, artisanal dairy, Joojeh Kabab, Kabab Koobideh, Sabzi Khordan, Lahijan tea, Bam Mazafati dates, and composite dishes—are maintained in `draft` status without unsubstantiated nutrient or serving assertions.
    - They will transition to `active` status only when verified official laboratory assays or authorized food composition table licenses are linked.
 
 ### No Warranty & Waiver

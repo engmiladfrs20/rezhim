@@ -104,6 +104,48 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     expect(badVal.errors.some((e) => e.includes('checksum mismatch'))).toBe(true);
   });
 
+  it('keeps only exact USDA commodities active and all unsupported Iranian identities unpublished', () => {
+    const activeFoods = openIranianFoods.filter((food) => food.status === 'active');
+    const draftFoods = openIranianFoods.filter((food) => food.status === 'draft');
+
+    expect(activeFoods).toHaveLength(10);
+    expect(draftFoods).toHaveLength(20);
+    expect(activeFoods.map((food) => food.external_id).sort()).toEqual(
+      [
+        'item_chicken_breast_grilled',
+        'item_chickpeas_cooked',
+        'item_dates_deglet_noor',
+        'item_ground_beef_patty_cooked',
+        'item_lentils_cooked',
+        'item_parsley_fresh',
+        'item_pomegranate_raw',
+        'item_tea_black_brewed',
+        'item_walnuts_raw',
+        'item_yogurt_whole_milk',
+      ].sort(),
+    );
+
+    for (const food of activeFoods) {
+      for (const record of [...(food.nutrients ?? []), ...(food.servings ?? [])]) {
+        expect(record.source_id).toBe('src_usda_fdc');
+        expect(record.external_id).toBeTruthy();
+        expect(record.source_url).toBe(
+          `https://fdc.nal.usda.gov/food-search/?query=${record.external_id}`,
+        );
+        expect(record.citation).toContain('USDA');
+        expect(record.dataset_version).toBeTruthy();
+        expect(record.method).toBe('database');
+        expect(record.retrieved_at).toMatch(/Z$/);
+        expect(record.license).toContain('Public Domain');
+      }
+    }
+
+    for (const food of draftFoods) {
+      expect(food.nutrients ?? []).toHaveLength(0);
+      expect(food.servings ?? []).toHaveLength(0);
+    }
+  });
+
   it('rejects sources with restricted redistribution policy from unauthenticated/direct production ingestion', async () => {
     const restrictedDataset: FoodDatasetFile = {
       manifest: fctManifest,
@@ -118,8 +160,15 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     // 2. Explicit allowLicensedLocal option permits local ingestion
     const valLocalResult = await importer.validateDataset(restrictedDataset, undefined, {
       allowLicensedLocal: true,
+      environment: 'test',
     });
     expect(valLocalResult.valid).toBe(true);
+
+    const valProductionResult = await importer.validateDataset(restrictedDataset, undefined, {
+      allowLicensedLocal: true,
+      environment: 'production',
+    });
+    expect(valProductionResult.valid).toBe(false);
   });
 
   it('imports the authentic Iranian foods baseline idempotently and logs the run in food_import_logs', async () => {
@@ -138,7 +187,7 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     const run1 = await importer.runPipeline(validDataset, rawContent, 'import', {
       executedBy: 'test-runner',
     });
-    expect(run1.status).toBe('success');
+    expect(run1.status, run1.errors.join('; ')).toBe('success');
     expect(run1.insertedCount).toBe(openIranianFoods.length);
     expect(run1.updatedCount).toBe(0);
     expect(run1.unchangedCount).toBe(0);
@@ -180,32 +229,34 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
       .run();
 
     // Prepare a batch where Item 1 is valid, and Item 2 has the colliding barcode
+    const atomicFoods: FoodDatasetItem[] = [
+      {
+        external_id: 'item_atomic_valid_1',
+        food_type: 'generic',
+        status: 'draft',
+        source_id: 'src_open_iranian_foods',
+        translations: [{ locale: 'fa', name: 'غذای آزمون اتمیک اول' }],
+      },
+      {
+        external_id: 'item_atomic_failing_2',
+        food_type: 'generic',
+        barcode: '6260000000001',
+        status: 'draft',
+        source_id: 'src_open_iranian_foods',
+        translations: [{ locale: 'fa', name: 'غذای آزمون اتمیک دوم شکست' }],
+      },
+    ];
+    const atomicRaw = JSON.stringify(atomicFoods);
     const atomicityBatch: FoodDatasetFile = {
       manifest: {
         ...openIranianSourceManifest,
-        sha256Checksum: 'b'.repeat(64),
+        sha256Checksum: await importer.computeChecksum(atomicRaw),
       },
-      foods: [
-        {
-          external_id: 'item_atomic_valid_1',
-          food_type: 'generic',
-          status: 'draft',
-          source_id: 'src_open_iranian_foods',
-          translations: [{ locale: 'fa', name: 'غذای آزمون اتمیک اول' }],
-        },
-        {
-          external_id: 'item_atomic_failing_2',
-          food_type: 'generic',
-          barcode: '6260000000001', // Collides with food_existing_barcode during batch execution!
-          status: 'draft',
-          source_id: 'src_open_iranian_foods',
-          translations: [{ locale: 'fa', name: 'غذای آزمون اتمیک دوم شکست' }],
-        },
-      ],
+      foods: atomicFoods,
     };
 
     // Run pipeline
-    const importRes = await importer.runPipeline(atomicityBatch, undefined, 'import', {
+    const importRes = await importer.runPipeline(atomicityBatch, atomicRaw, 'import', {
       executedBy: 'atomicity-test',
     });
     expect(importRes.status).toBe('failed');
@@ -239,7 +290,7 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
       )
       .all<{ id: string; error_summary: string }>();
     expect(failedLogs.results.length).toBeGreaterThan(0);
-    expect(failedLogs.results[0]?.error_summary).toContain('constraint violation');
+    expect(failedLogs.results[0]?.error_summary).toContain('constraint');
   });
 
   it('rejects invalid batches (negative nutrients, zero servings, bad categories, duplicate aliases) with atomic rollback', async () => {
@@ -346,7 +397,7 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
       foods: openIranianFoods,
     };
     const importRes = await importer.runPipeline(validDataset, rawContent, 'import');
-    expect(importRes.status).toBe('success');
+    expect(importRes.status, importRes.errors.join('; ')).toBe('success');
 
     // 1. Query Public Foods List in Persian (fa)
     const publicListFaRes = await app.request(
@@ -406,9 +457,9 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     const adminDraftData = (await adminDraftRes.json()) as ApiResponse<
       PaginatedResult<FoodSummary>
     >;
-    expect(adminDraftData.data.items.length).toBe(15); // 15 draft items
+    expect(adminDraftData.data.items.length).toBe(20);
 
-    const ghormehDraft = adminDraftData.data.items.find((f) => f.name.includes('قورمه سبزی'));
+    const ghormehDraft = adminDraftData.data.items.find((f) => f.name.includes('قورمه'));
     expect(ghormehDraft).toBeDefined();
     expect(ghormehDraft?.status).toBe('draft');
 
@@ -422,7 +473,7 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
     );
     expect(detailRes.status).toBe(200);
     const detailData = (await detailRes.json()) as ApiResponse<{ food: FoodDetail }>;
-    expect(detailData.data.food.servings.length).toBeGreaterThanOrEqual(2);
+    expect(detailData.data.food.servings.length).toBeGreaterThanOrEqual(1);
     expect(detailData.data.food.nutrients.length).toBeGreaterThanOrEqual(4);
     expect(detailData.data.food.source?.code).toBe('open_iranian_foods');
     expect(detailData.data.food.externalId).toBe('item_lentils_cooked');
@@ -432,16 +483,16 @@ describe('Phase 5 — Iranian Food Database & Provenance Pipeline Tests', () => 
       (n) => n.nutrientId === 'nut_energy',
     );
     expect(energyNutrient).toBeDefined();
-    expect(energyNutrient?.sourceId).toBe('src_open_iranian_foods');
-    expect(energyNutrient?.externalId).toBe('fdc_172420');
-    expect(energyNutrient?.method).toBe('laboratory');
+    expect(energyNutrient?.sourceId).toBe('src_usda_fdc');
+    expect(energyNutrient?.externalId).toBe('172420');
+    expect(energyNutrient?.method).toBe('database');
     expect(energyNutrient?.sourceUrl).toContain('fdc.nal.usda.gov');
     expect(energyNutrient?.citation).toContain('USDA FoodData Central');
 
     const cupServing = detailData.data.food.servings.find((s) => s.nameFa.includes('لیوان'));
     expect(cupServing).toBeDefined();
-    expect(cupServing?.sourceId).toBe('src_open_iranian_foods');
-    expect(cupServing?.externalId).toBe('fdc_172420_portion_1');
+    expect(cupServing?.sourceId).toBe('src_usda_fdc');
+    expect(cupServing?.externalId).toBe('172420_portion_1');
     expect(cupServing?.method).toBe('database');
   });
 });

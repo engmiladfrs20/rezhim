@@ -19,7 +19,7 @@ import type {
   ApiResponse,
   PaginatedResult,
 } from '@nutriai/types';
-import type { CreateFoodDto } from '@nutriai/schemas';
+import type { CreateFoodDto, FoodNutrientInputDto, FoodServingInputDto } from '@nutriai/schemas';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
 
@@ -195,7 +195,7 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
   const [brandName, setBrandName] = useState(foodToEdit?.brandName || '');
   const [barcode, setBarcode] = useState(foodToEdit?.barcode || '');
   const [status, setStatus] = useState<'draft' | 'active' | 'archived'>(
-    foodToEdit?.status || 'active',
+    foodToEdit?.status || 'draft',
   );
 
   const [aliases, setAliases] = useState<Array<{ locale: 'fa' | 'en'; alias: string }>>(
@@ -216,15 +216,21 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
   const [fatG, setFatG] = useState(getNutVal('fat_total'));
   const [fiberG, setFiberG] = useState(getNutVal('fiber'));
 
-  const [servings, setServings] = useState<
-    Array<{ name_fa: string; name_en: string; weight_g: number; household_unit?: string | null }>
-  >(
+  const [servings, setServings] = useState<FoodServingInputDto[]>(
     foodToEdit?.servings
       ? foodToEdit.servings.map((s) => ({
           name_fa: s.nameFa,
           name_en: s.nameEn,
           weight_g: s.weightG,
           household_unit: s.householdUnit,
+          source_id: s.sourceId,
+          external_id: s.externalId,
+          source_url: s.sourceUrl,
+          citation: s.citation,
+          dataset_version: s.datasetVersion,
+          method: s.method,
+          retrieved_at: s.retrievedAt,
+          license: s.license,
         }))
       : [],
   );
@@ -352,25 +358,44 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
 
     const standardCodes = new Set(['energy', 'protein', 'carbohydrate', 'fat_total', 'fiber']);
 
-    const finalNutrients: Array<{ nutrient_id: string; amount_per_100g: number }> = [];
+    const toNutrientInput = (nutrient: FoodDetail['nutrients'][number]): FoodNutrientInputDto => ({
+      nutrient_id: nutrient.nutrientId,
+      amount_per_100g: nutrient.amountPer100g,
+      source_id: nutrient.sourceId,
+      external_id: nutrient.externalId,
+      source_url: nutrient.sourceUrl,
+      citation: nutrient.citation,
+      dataset_version: nutrient.datasetVersion,
+      method: nutrient.method,
+      retrieved_at: nutrient.retrievedAt,
+      license: nutrient.license,
+    });
+
+    const finalNutrients: FoodNutrientInputDto[] = [];
     if (foodToEdit?.nutrients) {
       for (const n of foodToEdit.nutrients) {
         if (!standardCodes.has(n.code)) {
-          finalNutrients.push({ nutrient_id: n.nutrientId, amount_per_100g: n.amountPer100g });
+          finalNutrients.push(toNutrientInput(n));
         }
       }
     }
 
-    if (energyDef && energyKcal !== '')
-      finalNutrients.push({ nutrient_id: energyDef.id, amount_per_100g: Number(energyKcal) });
-    if (proteinDef && proteinG !== '')
-      finalNutrients.push({ nutrient_id: proteinDef.id, amount_per_100g: Number(proteinG) });
-    if (carbsDef && carbsG !== '')
-      finalNutrients.push({ nutrient_id: carbsDef.id, amount_per_100g: Number(carbsG) });
-    if (fatDef && fatG !== '')
-      finalNutrients.push({ nutrient_id: fatDef.id, amount_per_100g: Number(fatG) });
-    if (fiberDef && fiberG !== '')
-      finalNutrients.push({ nutrient_id: fiberDef.id, amount_per_100g: Number(fiberG) });
+    const addNutrient = (definition: NutrientDefinition | undefined, rawAmount: string) => {
+      if (!definition || rawAmount === '') return;
+      const amount = Number(rawAmount);
+      const existingNutrient = foodToEdit?.nutrients.find((n) => n.code === definition.code);
+      if (existingNutrient && existingNutrient.amountPer100g === amount) {
+        finalNutrients.push(toNutrientInput(existingNutrient));
+      } else {
+        finalNutrients.push({ nutrient_id: definition.id, amount_per_100g: amount });
+      }
+    };
+
+    addNutrient(energyDef, energyKcal);
+    addNutrient(proteinDef, proteinG);
+    addNutrient(carbsDef, carbsG);
+    addNutrient(fatDef, fatG);
+    addNutrient(fiberDef, fiberG);
 
     let finalServings = [...servings];
     if (
@@ -387,6 +412,28 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
           household_unit: newServingUnit.trim() || null,
         },
       ];
+    }
+
+    const hasCompleteProvenance = (item: FoodNutrientInputDto | FoodServingInputDto): boolean =>
+      Boolean(
+        item.source_id &&
+        item.external_id &&
+        item.source_url &&
+        item.citation &&
+        item.dataset_version &&
+        item.method &&
+        item.retrieved_at &&
+        item.license,
+      );
+
+    if (
+      status === 'active' &&
+      (!finalNutrients.every(hasCompleteProvenance) || !finalServings.every(hasCompleteProvenance))
+    ) {
+      setFormError(
+        'Active foods require complete nutrient and serving provenance. Save as Draft and publish through the verified data pipeline.',
+      );
+      return;
     }
 
     const payload: CreateFoodDto = {
@@ -513,8 +560,10 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
                 onChange={(e) => setStatus(e.target.value as 'draft' | 'active' | 'archived')}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-hidden focus:border-indigo-500"
               >
-                <option value="active">Active</option>
                 <option value="draft">Draft</option>
+                <option value="active" disabled={!foodToEdit || foodToEdit.status !== 'active'}>
+                  Active (verified records only)
+                </option>
                 <option value="archived">Archived</option>
               </select>
             </div>
