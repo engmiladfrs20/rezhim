@@ -14,6 +14,7 @@ import type {
   FoodSource,
   PaginatedResult,
   SupportedLocale,
+  FoodType,
 } from '@nutriai/types';
 import type {
   CreateFoodDto,
@@ -31,6 +32,27 @@ import type {
   FoodCategoryRecord,
   FoodCategoryTranslationRecord,
 } from '../db/models';
+
+export interface FoodInvariantsInput {
+  food_type: FoodType;
+  brand_name?: string | null | undefined;
+  source_id?: string | null | undefined;
+  external_id?: string | null | undefined;
+}
+
+export function validateFoodInvariants(input: FoodInvariantsInput): void {
+  if (input.food_type === 'branded') {
+    if (!input.brand_name || input.brand_name.trim().length === 0) {
+      throw new FoodValidationError('Branded food requires a valid brand_name');
+    }
+  }
+
+  if (input.external_id && input.external_id.trim().length > 0) {
+    if (!input.source_id || input.source_id.trim().length === 0) {
+      throw new FoodValidationError('external_id requires source_id');
+    }
+  }
+}
 
 export class FoodService {
   private readonly foodRepo: FoodRepository;
@@ -109,6 +131,14 @@ export class FoodService {
 
   async createFood(dto: CreateFoodDto): Promise<FoodDetail> {
     const now = new Date().toISOString();
+
+    // 0. Enforce food model invariants
+    validateFoodInvariants({
+      food_type: dto.food_type,
+      brand_name: dto.brand_name,
+      source_id: dto.source_id,
+      external_id: dto.external_id,
+    });
 
     // 1. Validate Category if provided
     if (dto.category_id) {
@@ -230,7 +260,30 @@ export class FoodService {
 
     const now = new Date().toISOString();
 
-    // Validate Category
+    // 1. Resolve merged core fields
+    const newFoodType = dto.food_type ?? existing.food_type;
+    let newBrandName: string | null;
+    if (dto.brand_name !== undefined) {
+      newBrandName = dto.brand_name;
+    } else if (dto.food_type === 'generic' && existing.food_type === 'branded') {
+      // Switching from branded to generic clears brand_name when not explicitly passed
+      newBrandName = null;
+    } else {
+      newBrandName = existing.brand_name;
+    }
+
+    const newSourceId = dto.source_id !== undefined ? dto.source_id : existing.source_id;
+    const newExternalId = dto.external_id !== undefined ? dto.external_id : existing.external_id;
+
+    // 2. Enforce model invariants on final merged state
+    validateFoodInvariants({
+      food_type: newFoodType,
+      brand_name: newBrandName,
+      source_id: newSourceId,
+      external_id: newExternalId,
+    });
+
+    // 3. Validate Category
     const categoryId = dto.category_id !== undefined ? dto.category_id : existing.category_id;
     if (categoryId) {
       const cat = await this.catRepo.findById(categoryId);
@@ -239,16 +292,15 @@ export class FoodService {
       }
     }
 
-    // Validate Source
-    const sourceId = dto.source_id !== undefined ? dto.source_id : existing.source_id;
-    if (sourceId) {
-      const source = await this.sourceRepo.findById(sourceId);
+    // 4. Validate Source if present
+    if (newSourceId) {
+      const source = await this.sourceRepo.findById(newSourceId);
       if (!source) {
-        throw new FoodValidationError(`Food source with ID ${sourceId} not found`);
+        throw new FoodValidationError(`Food source with ID ${newSourceId} not found`);
       }
     }
 
-    // Validate Barcode conflict
+    // 5. Validate Barcode conflict
     const barcode = dto.barcode !== undefined ? dto.barcode : existing.barcode;
     if (barcode && barcode !== existing.barcode) {
       const existingBarcode = await this.foodRepo.findByBarcode(barcode);
@@ -257,22 +309,24 @@ export class FoodService {
       }
     }
 
-    // Validate Source + External ID conflict
-    const externalId = dto.external_id !== undefined ? dto.external_id : existing.external_id;
+    // 6. Validate Source + External ID conflict
     if (
-      sourceId &&
-      externalId &&
-      (sourceId !== existing.source_id || externalId !== existing.external_id)
+      newSourceId &&
+      newExternalId &&
+      (newSourceId !== existing.source_id || newExternalId !== existing.external_id)
     ) {
-      const existingExternal = await this.foodRepo.findBySourceAndExternalId(sourceId, externalId);
+      const existingExternal = await this.foodRepo.findBySourceAndExternalId(
+        newSourceId,
+        newExternalId,
+      );
       if (existingExternal && existingExternal.id !== id) {
         throw new FoodConflictError(
-          `A food with external ID "${externalId}" from source "${sourceId}" already exists`,
+          `A food with external ID "${newExternalId}" from source "${newSourceId}" already exists`,
         );
       }
     }
 
-    // Validate nutrient IDs if updated
+    // 7. Validate nutrient IDs if updated
     if (dto.nutrients && dto.nutrients.length > 0) {
       const allNutrients = await this.nutrientRepo.listAll();
       const validNutrientIds = new Set(allNutrients.map((n) => n.id));
@@ -286,12 +340,12 @@ export class FoodService {
     const updatedRecord: FoodRecord = {
       id,
       category_id: categoryId ?? null,
-      food_type: dto.food_type ?? existing.food_type,
-      brand_name: dto.brand_name !== undefined ? dto.brand_name : existing.brand_name,
+      food_type: newFoodType,
+      brand_name: newBrandName ?? null,
       barcode: barcode ?? null,
       status: dto.status ?? existing.status,
-      source_id: sourceId ?? null,
-      external_id: externalId ?? null,
+      source_id: newSourceId ?? null,
+      external_id: newExternalId ?? null,
       created_at: existing.created_at,
       updated_at: now,
     };

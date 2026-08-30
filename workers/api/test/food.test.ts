@@ -572,6 +572,208 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(badParentCatRes.status).toBe(400);
     });
 
+    it('enforces merged food invariants on PATCH and preserves atomic D1 state upon validation failure', async () => {
+      const db = testEnv.DB!;
+
+      // Scenario 1: Valid branded food created, then PATCH with brand_name: null -> 400, D1 unchanged
+      const res1 = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            food_type: 'branded',
+            brand_name: 'Pegah',
+            translations: [{ locale: 'fa', name: 'شیر پگاه' }],
+          }),
+        },
+        testEnv,
+      );
+      expect(res1.status).toBe(201);
+      const food1Id = ((await res1.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
+
+      const patchNullBrandRes = await app.request(
+        `/api/v1/admin/foods/${food1Id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ brand_name: null }),
+        },
+        testEnv,
+      );
+      expect(patchNullBrandRes.status).toBe(400);
+      const err1 = (await patchNullBrandRes.json()) as ApiErrorResponse;
+      expect(err1.error.code).toBe('VALIDATION_ERROR');
+      expect(err1.error.message).not.toMatch(/sqlite|constraint|table|foods/i);
+
+      // Direct D1 query: verify brand_name and food_type remain unchanged
+      const d1Record1 = await db
+        .prepare('SELECT food_type, brand_name FROM foods WHERE id = ?')
+        .bind(food1Id)
+        .first<{ food_type: string; brand_name: string }>();
+      expect(d1Record1?.food_type).toBe('branded');
+      expect(d1Record1?.brand_name).toBe('Pegah');
+
+      // Scenario 2: Generic food created, then PATCH only food_type: 'branded' -> 400, D1 unchanged
+      const res2 = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            food_type: 'generic',
+            translations: [{ locale: 'fa', name: 'سیب زمینی' }],
+          }),
+        },
+        testEnv,
+      );
+      expect(res2.status).toBe(201);
+      const food2Id = ((await res2.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
+
+      const patchBrandedNoBrandRes = await app.request(
+        `/api/v1/admin/foods/${food2Id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ food_type: 'branded' }),
+        },
+        testEnv,
+      );
+      expect(patchBrandedNoBrandRes.status).toBe(400);
+      const err2 = (await patchBrandedNoBrandRes.json()) as ApiErrorResponse;
+      expect(err2.error.code).toBe('VALIDATION_ERROR');
+      expect(err2.error.message).not.toMatch(/sqlite|constraint|table|foods/i);
+
+      const d1Record2 = await db
+        .prepare('SELECT food_type, brand_name FROM foods WHERE id = ?')
+        .bind(food2Id)
+        .first<{ food_type: string; brand_name: string | null }>();
+      expect(d1Record2?.food_type).toBe('generic');
+      expect(d1Record2?.brand_name).toBeNull();
+
+      // Scenario 3: Food with source_id and external_id created, then PATCH only source_id: null -> 400, D1 unchanged
+      const res3 = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            source_id: 'src_usda_fdc',
+            external_id: 'usda_item_7777',
+            translations: [{ locale: 'fa', name: 'گردو' }],
+          }),
+        },
+        testEnv,
+      );
+      expect(res3.status).toBe(201);
+      const food3Id = ((await res3.json()) as ApiResponse<{ food: FoodDetail }>).data.food.id;
+
+      const patchNullSourceRes = await app.request(
+        `/api/v1/admin/foods/${food3Id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ source_id: null }),
+        },
+        testEnv,
+      );
+      expect(patchNullSourceRes.status).toBe(400);
+      const err3 = (await patchNullSourceRes.json()) as ApiErrorResponse;
+      expect(err3.error.code).toBe('VALIDATION_ERROR');
+      expect(err3.error.message).not.toMatch(/sqlite|constraint|table|foods/i);
+
+      const d1Record3 = await db
+        .prepare('SELECT source_id, external_id FROM foods WHERE id = ?')
+        .bind(food3Id)
+        .first<{ source_id: string; external_id: string }>();
+      expect(d1Record3?.source_id).toBe('src_usda_fdc');
+      expect(d1Record3?.external_id).toBe('usda_item_7777');
+
+      // Scenario 4: PATCH simultaneously source_id: null and external_id: null -> Allowed (200), D1 verified
+      const patchBothNullRes = await app.request(
+        `/api/v1/admin/foods/${food3Id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ source_id: null, external_id: null }),
+        },
+        testEnv,
+      );
+      expect(patchBothNullRes.status).toBe(200);
+
+      const d1Record3Updated = await db
+        .prepare('SELECT source_id, external_id FROM foods WHERE id = ?')
+        .bind(food3Id)
+        .first<{ source_id: string | null; external_id: string | null }>();
+      expect(d1Record3Updated?.source_id).toBeNull();
+      expect(d1Record3Updated?.external_id).toBeNull();
+
+      // Scenario 5: PATCH generic food to branded with valid brand_name -> 200, D1 verified
+      const patchToBrandedRes = await app.request(
+        `/api/v1/admin/foods/${food2Id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ food_type: 'branded', brand_name: 'Damavand' }),
+        },
+        testEnv,
+      );
+      expect(patchToBrandedRes.status).toBe(200);
+
+      const d1Record2Updated = await db
+        .prepare('SELECT food_type, brand_name FROM foods WHERE id = ?')
+        .bind(food2Id)
+        .first<{ food_type: string; brand_name: string }>();
+      expect(d1Record2Updated?.food_type).toBe('branded');
+      expect(d1Record2Updated?.brand_name).toBe('Damavand');
+
+      // Scenario 6: PATCH branded food to generic -> 200, D1 verified (brand_name cleared)
+      const patchToGenericRes = await app.request(
+        `/api/v1/admin/foods/${food1Id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ food_type: 'generic' }),
+        },
+        testEnv,
+      );
+      expect(patchToGenericRes.status).toBe(200);
+
+      const d1Record1Updated = await db
+        .prepare('SELECT food_type, brand_name FROM foods WHERE id = ?')
+        .bind(food1Id)
+        .first<{ food_type: string; brand_name: string | null }>();
+      expect(d1Record1Updated?.food_type).toBe('generic');
+      expect(d1Record1Updated?.brand_name).toBeNull();
+    });
+
     it('handles concurrent duplicate creation gracefully returning 409 without 500 or leaking SQL text', async () => {
       const payload = {
         barcode: '6265555555555',

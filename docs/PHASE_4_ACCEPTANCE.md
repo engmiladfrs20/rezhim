@@ -63,16 +63,16 @@ Derived from full uncached execution (`pnpm exec turbo run test:coverage --force
 
 | Workspace / Package     | Test Files | Passed Tests   | Stmts %  | Branch % | Funcs %  | Lines %  |
 | :---------------------- | :--------- | :------------- | :------- | :------- | :------- | :------- |
-| `packages/schemas`      | 1          | 7 passed       | 97.05%   | 100.00%  | 50.00%   | 97.05%   |
+| `packages/schemas`      | 1          | 7 passed       | 74.07%   | 46.29%   | 73.33%   | 76.19%   |
 | `packages/localization` | 1          | 9 passed       | 95.00%   | 93.93%   | 100.00%  | 94.82%   |
 | `packages/storage`      | 2          | 33 passed      | 98.13%   | 80.29%   | 100.00%  | 99.51%   |
 | `packages/testing`      | 1          | 2 passed       | 100.00%  | 100.00%  | 100.00%  | 100.00%  |
 | `workers/ai-jobs`       | 1          | 2 passed       | 100.00%  | 100.00%  | 100.00%  | 100.00%  |
-| `workers/api`           | 5          | 54 passed      | 73.57%   | 53.12%   | 81.97%   | 73.72%   |
+| `workers/api`           | 5          | 55 passed      | 75.20%   | 56.67%   | 83.81%   | 75.40%   |
 | `apps/web`              | 1          | 12 passed      | 93.10%   | 70.16%   | 92.68%   | 93.66%   |
-| `apps/admin`            | 1          | 16 passed      | 79.54%   | 67.74%   | 67.02%   | 84.04%   |
+| `apps/admin`            | 1          | 16 passed      | 80.16%   | 72.31%   | 68.10%   | 83.08%   |
 | `apps/mobile`           | 1          | 17 passed      | 93.06%   | 78.50%   | 92.30%   | 94.92%   |
-| **Total Monorepo**      | **14**     | **152 passed** | **PASS** | **PASS** | **PASS** | **PASS** |
+| **Total Monorepo**      | **14**     | **153 passed** | **PASS** | **PASS** | **PASS** | **PASS** |
 
 ---
 
@@ -82,7 +82,7 @@ Derived from full uncached execution (`pnpm exec turbo run test:coverage --force
 2. `pnpm format:check`: **PASS**
 3. `pnpm exec turbo run lint --force`: **PASS** (0 errors, 0 warnings across 11 packages)
 4. `pnpm exec turbo run typecheck --force`: **PASS** (0 errors across 11 packages)
-5. `pnpm exec turbo run test:coverage --force`: **PASS** (152/152 tests passed across 14 test files)
+5. `pnpm exec turbo run test:coverage --force`: **PASS** (153/153 tests passed across 14 test files)
 6. `pnpm exec turbo run build --force`: **PASS** (All 11 packages and client bundles built)
 7. Fresh D1 Migrations (`0001`, `0002`, `0003`, `0004`): **PASS**
 8. `pnpm audit --prod --audit-level=critical`: **PASS** (0 critical vulnerabilities, 2 high build-time dependencies)
