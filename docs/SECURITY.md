@@ -19,8 +19,8 @@
 
 ### Cryptographic Configuration
 
-- **Hashing Algorithm:** PBKDF2 with HMAC-SHA256 (`PBKDF2-HMAC-SHA256`)
-- **Iteration Count:** 600,000 minimum
+- **Hashing Algorithm:** Versioned chained PBKDF2 with HMAC-SHA256 (`PBKDF2-HMAC-SHA256-CHUNKED-v1`)
+- **Iteration Count:** 600,000 minimum total cost; each Workerd Web Crypto call is bounded to 100,000 iterations
 - **Salt Generation:** 16-bytes securely random (`crypto.getRandomValues`)
 - **Hash Dimensions:** 32-bytes securely random (`crypto.getRandomValues`)
 - **Comparison Method:** Constant-time comparison (`crypto.subtle.timingSafeEqual`)

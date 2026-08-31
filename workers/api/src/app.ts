@@ -25,6 +25,7 @@ import { storageRouter } from './routes/storage';
 import { recipesRouter } from './routes/recipes';
 import { pantryRouter } from './routes/pantry';
 import { shoppingListRouter } from './routes/shopping-list';
+import { progressRouter } from './routes/progress';
 
 const app = new Hono<AppEnv>();
 
@@ -50,6 +51,7 @@ app.use('/api/v1/storage/*', databaseMiddleware);
 app.use('/api/v1/recipes/*', databaseMiddleware);
 app.use('/api/v1/pantry/*', databaseMiddleware);
 app.use('/api/v1/shopping-list/*', databaseMiddleware);
+app.use('/api/v1/progress/*', databaseMiddleware);
 
 // Centralized Safe Error Handling
 app.onError(errorHandler);
@@ -76,6 +78,7 @@ app.route('/api/v1/storage', storageRouter);
 app.route('/api/v1/recipes', recipesRouter);
 app.route('/api/v1/pantry', pantryRouter);
 app.route('/api/v1/shopping-list', shoppingListRouter);
+app.route('/api/v1/progress', progressRouter);
 
 // Disabled Phase 1 placeholders
 app.all('/api/storage/*', (c) => {

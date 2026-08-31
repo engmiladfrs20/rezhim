@@ -1,12 +1,18 @@
 /**
- * PBKDF2-HMAC-SHA256 password hashing and verification.
- * Enforces strict cryptographic iteration bounds and constant-time comparisons.
+ * Runtime-compatible password hashing and verification.
+ *
+ * Cloudflare Workerd currently rejects a single PBKDF2 Web Crypto operation
+ * above 100,000 iterations. We retain the application's 600,000–2,000,000
+ * cost policy by chaining bounded PBKDF2 derivations. The algorithm identifier
+ * is versioned so the stored representation is never mistaken for a standard
+ * single-call PBKDF2 hash.
  */
 export class PasswordService {
   static readonly ITERATIONS = 600_000;
   static readonly MIN_ITERATIONS = 600_000;
   static readonly MAX_ITERATIONS = 2_000_000;
-  static readonly HASH_ALGORITHM = 'PBKDF2-HMAC-SHA256';
+  static readonly HASH_ALGORITHM = 'PBKDF2-HMAC-SHA256-CHUNKED-v1';
+  private static readonly MAX_RUNTIME_ITERATIONS = 100_000;
   private static readonly KEY_LENGTH_BITS = 256;
   private static readonly SALT_LENGTH_BYTES = 16;
 
@@ -108,24 +114,47 @@ export class PasswordService {
     salt: Uint8Array,
     iterations: number,
   ): Promise<ArrayBuffer> {
-    const keyMaterial = await crypto.subtle.importKey(
+    let keyMaterial = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(password),
       { name: 'PBKDF2' },
       false,
       ['deriveBits'],
     );
+    let remaining = iterations;
+    let derived: ArrayBuffer | undefined;
 
-    return crypto.subtle.deriveBits(
-      {
-        name: 'PBKDF2',
-        salt: salt.buffer as ArrayBuffer,
-        iterations,
-        hash: 'SHA-256',
-      },
-      keyMaterial,
-      this.KEY_LENGTH_BITS,
-    );
+    // Keep every individual Web Crypto call within Workerd's 100k limit while
+    // preserving the configured total cost. Each subsequent chunk uses the
+    // previous chunk as its key material, producing a deterministic KDF chain.
+    while (remaining > 0) {
+      const chunkIterations = Math.min(remaining, this.MAX_RUNTIME_ITERATIONS);
+      derived = await crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: salt.buffer as ArrayBuffer,
+          iterations: chunkIterations,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        this.KEY_LENGTH_BITS,
+      );
+      remaining -= chunkIterations;
+
+      if (remaining > 0) {
+        keyMaterial = await crypto.subtle.importKey('raw', derived, { name: 'PBKDF2' }, false, [
+          'deriveBits',
+        ]);
+      }
+    }
+
+    // Iteration validation happens before this method is called, so this is
+    // unreachable for valid inputs; keeping the guard makes the contract
+    // explicit if the private method is changed later.
+    if (!derived) {
+      throw new Error('Password derivation requires at least one iteration');
+    }
+    return derived;
   }
 
   static bufferToBase64Url(buffer: ArrayBuffer | Uint8Array): string {

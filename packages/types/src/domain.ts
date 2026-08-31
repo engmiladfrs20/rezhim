@@ -213,6 +213,26 @@ export interface DailyDiarySummary {
   nutrition: AggregatedNutritionResult;
 }
 
+export interface WeightEntry {
+  id: string;
+  userId: string;
+  weightKg: number;
+  measuredAt: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WeightTrend {
+  entries: WeightEntry[];
+  firstWeightKg: number | null;
+  latestWeightKg: number | null;
+  changeKg: number | null;
+  changePercent: number | null;
+  lowestWeightKg: number | null;
+  highestWeightKg: number | null;
+}
+
 export interface MealPlanGenerationInput {
   targets: CalculatedNutritionTargets;
   candidates: FoodPortionNutrition[];

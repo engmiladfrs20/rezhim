@@ -10,12 +10,12 @@ Phase 3 establishes the authentication, authorization, session management, and r
 
 ### Password Hashing & Verification
 
-- **Algorithm**: `PBKDF2-HMAC-SHA256` using the Web Crypto API (`crypto.subtle`).
+- **Algorithm**: Versioned `PBKDF2-HMAC-SHA256-CHUNKED-v1` using the Web Crypto API (`crypto.subtle`). Each derivation is chained across bounded Web Crypto calls so it works in Cloudflare Workerd.
 - **Iteration Bounds**: Clamped between `600,000` and `2,000,000` iterations. Out-of-range iteration values fail immediately before key derivation.
 - **Salt & Hash Parameters**: 16-byte random salt, 32-byte derived key hash.
 - **Comparison**: Constant-time byte-by-byte comparison (`crypto.subtle.timingSafeEqual` with length guard) to prevent timing side-channels.
 - **Timing Equalization (`dummyVerify`)**: Fixed-cost dummy verification executed for non-existent users and disabled accounts to maintain consistent response latency.
-- **Measured Benchmark**: Measured runtime for 600,000 PBKDF2 iterations in the Cloudflare Worker runtime is 463 ms to 491 ms.
+- **Runtime limit**: Workerd rejects an individual PBKDF2 call above 100,000 iterations. The implementation preserves the 600,000 minimum total cost by chaining six 100,000-iteration derivations (and similarly bounded chunks for larger values).
 
 ### Session Management & Dual Transport
 

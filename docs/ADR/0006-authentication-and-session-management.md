@@ -11,7 +11,7 @@ Phase 3 requires an authentication and session management architecture within Cl
 ## Decision
 
 1. **Opaque Session Tokens**: High-entropy random tokens generated via `crypto.getRandomValues`. Raw tokens are never persisted to D1; only their SHA-256 hashes are stored.
-2. **Password Cryptography**: Passwords use `PBKDF2-HMAC-SHA256` via the Web Crypto API with 600,000 iterations, 16-byte random salt, and 32-byte derived key hash. Byte comparisons use constant-time checking to eliminate timing side-channels, and non-existent users trigger dummy verification.
+2. **Password Cryptography**: Passwords use the versioned `PBKDF2-HMAC-SHA256-CHUNKED-v1` construction via the Web Crypto API with a 600,000-iteration total cost, 16-byte random salt, and 32-byte derived key hash. The total cost is executed as chained chunks of at most 100,000 iterations because Workerd rejects larger individual PBKDF2 calls. Byte comparisons use constant-time checking to eliminate timing side-channels, and non-existent users trigger dummy verification.
 3. **Dual Transport Architecture**:
    - Web and Admin frontends use `HttpOnly; SameSite=Lax` session cookies (`__Host-nutriai_session` with `Secure` in production).
    - Mobile clients receive the bearer token in the JSON response body and store it encrypted in device storage using `expo-secure-store`.
