@@ -160,3 +160,17 @@ export interface FoodImportLogRecord {
   executed_by: string;
   created_at: string;
 }
+
+export interface FoodDiaryEntryRecord {
+  id: string;
+  user_id: string;
+  food_id: string;
+  serving_id: string | null;
+  grams: number | null;
+  quantity: number;
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  consumed_at: string;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}

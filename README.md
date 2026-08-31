@@ -9,6 +9,7 @@
 - **[x] Phase 5**: Iranian Food Catalog and Provenance Pipeline
 - **[x] Phase 6**: Deterministic Nutrition Engine & Energy Calculations
 - **[x] Phase 7**: Bilingual Food Search & Discovery
+- **[x] Phase 8**: Authenticated Food Diary & Daily Nutrition Summaries
 
 ---
 
@@ -96,6 +97,7 @@ pnpm audit --prod --audit-level=critical
 
 - **Cloudflare Workers**: مسیر `GET /health` وضعیت سرویس را با امنیت بالا و بدون افشای سکرت‌ها برمی‌گرداند.
 - **جست‌وجوی غذا**: `GET /api/v1/foods?q=...` و مسیر مدیریتی متن فارسی/انگلیسی، alias، برند و بارکد را با نرمال‌سازی قطعی جست‌وجو می‌کنند.
+- **دفترچه غذایی**: `GET/POST /api/v1/diary` و `PATCH/DELETE /api/v1/diary/:id` رکوردهای خصوصی کاربر و جمع روزانه‌ی تغذیه را با همان موتور قطعی محاسبه می‌کنند.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
 

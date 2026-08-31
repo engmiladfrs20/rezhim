@@ -131,3 +131,29 @@ export interface AggregatedNutritionResult {
   missingNutrients?: string[] | undefined;
   warnings?: string[] | undefined;
 }
+
+export type DiaryMealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export interface FoodDiaryEntry {
+  id: string;
+  userId: string;
+  foodId: string;
+  servingId: string | null;
+  grams: number | null;
+  quantity: number;
+  mealType: DiaryMealType;
+  consumedAt: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FoodDiaryEntryWithNutrition extends FoodDiaryEntry {
+  nutrition: FoodPortionNutrition;
+}
+
+export interface DailyDiarySummary {
+  date: string;
+  entries: FoodDiaryEntryWithNutrition[];
+  nutrition: AggregatedNutritionResult;
+}

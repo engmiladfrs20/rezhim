@@ -427,6 +427,86 @@ export const adminFoodListQuerySchema = z.object({
 export type AdminFoodListQueryDto = z.infer<typeof adminFoodListQuerySchema>;
 
 // ==========================================
+// Phase 8: Food Diary Schemas
+// ==========================================
+
+export const diaryMealTypeEnum = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
+export type DiaryMealTypeDto = z.infer<typeof diaryMealTypeEnum>;
+
+export const diaryDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  }, 'Date must be a valid calendar date');
+
+const diaryPortionFields = {
+  grams: z.number().finite().positive('Grams must be strictly positive').optional(),
+  serving_id: z.string().trim().min(1).optional(),
+  quantity: z.number().finite().positive('Quantity must be strictly positive').default(1),
+};
+
+function validateDiaryPortion(
+  data: {
+    grams?: number | null | undefined;
+    serving_id?: string | null | undefined;
+    quantity?: number | undefined;
+  },
+  ctx: z.RefinementCtx,
+) {
+  const hasGrams = data.grams !== undefined && data.grams !== null;
+  const hasServing = data.serving_id !== undefined && data.serving_id !== null;
+  if (hasGrams === hasServing) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Specify exactly one of grams or serving_id',
+      path: ['grams'],
+    });
+  }
+  if (hasGrams && data.quantity !== undefined && data.quantity !== 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Quantity is only supported with serving_id; grams entries must use quantity 1.',
+      path: ['quantity'],
+    });
+  }
+}
+
+export const createDiaryEntrySchema = z
+  .object({
+    food_id: z.string().trim().min(1),
+    ...diaryPortionFields,
+    meal_type: diaryMealTypeEnum.default('snack'),
+    consumed_at: rfc3339TimestampSchema.optional(),
+    note: z.string().trim().max(500).nullable().optional(),
+  })
+  .superRefine((data, ctx) => validateDiaryPortion(data, ctx));
+export type CreateDiaryEntryDto = z.infer<typeof createDiaryEntrySchema>;
+
+export const updateDiaryEntrySchema = z
+  .object({
+    grams: z.number().finite().positive('Grams must be strictly positive').nullable().optional(),
+    serving_id: z.string().trim().min(1).nullable().optional(),
+    quantity: z.number().finite().positive('Quantity must be strictly positive').optional(),
+    meal_type: diaryMealTypeEnum.optional(),
+    consumed_at: rfc3339TimestampSchema.optional(),
+    note: z.string().trim().max(500).nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.grams !== undefined || data.serving_id !== undefined) {
+      validateDiaryPortion(data, ctx);
+    }
+  });
+export type UpdateDiaryEntryDto = z.infer<typeof updateDiaryEntrySchema>;
+
+export const diaryListQuerySchema = z.object({
+  date: diaryDateSchema,
+  locale: localeEnum.default('fa'),
+});
+export type DiaryListQueryDto = z.infer<typeof diaryListQuerySchema>;
+
+// ==========================================
 // Phase 5: Dataset Manifest & Import Schemas
 // ==========================================
 

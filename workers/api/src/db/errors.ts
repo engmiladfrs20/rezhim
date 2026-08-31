@@ -36,6 +36,13 @@ export class FoodValidationError extends Error {
   }
 }
 
+export class DiaryEntryNotFoundError extends Error {
+  constructor(message: string = 'Food diary entry not found') {
+    super(message);
+    this.name = 'DiaryEntryNotFoundError';
+  }
+}
+
 export class InvalidCursorError extends Error {
   constructor(message: string = 'Invalid or malformed pagination cursor') {
     super(message);

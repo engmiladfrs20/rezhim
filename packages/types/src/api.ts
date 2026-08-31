@@ -46,7 +46,8 @@ export interface ApiErrorResponse {
       | 'ACCOUNT_DISABLED'
       | 'RATE_LIMITED'
       | 'FORBIDDEN'
-      | 'USER_NOT_FOUND';
+      | 'USER_NOT_FOUND'
+      | 'DIARY_ENTRY_NOT_FOUND';
     message: string;
     details?: unknown;
   };
