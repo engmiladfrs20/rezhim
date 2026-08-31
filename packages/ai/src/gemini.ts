@@ -1,8 +1,9 @@
-import type { AiGenerationRequest, AiGenerationResponse } from '@nutriai/types';
+import type { AiGenerationRequest, AiGenerationResponse, AiVisionRequest } from '@nutriai/types';
 import { AiProviderError, AiUnavailableError } from './errors';
 
 export interface AiProvider {
   generate(request: AiGenerationRequest): Promise<AiGenerationResponse>;
+  generateVision(request: AiVisionRequest): Promise<AiGenerationResponse>;
 }
 
 export interface GeminiProviderConfig {
@@ -45,6 +46,21 @@ function validateRequest(request: AiGenerationRequest): void {
   }
 }
 
+function validateVisionRequest(request: AiVisionRequest): void {
+  validateRequest(request);
+  if (
+    !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(request.imageBase64)
+  ) {
+    throw new AiProviderError('AI image data must be valid base64.');
+  }
+  if (request.imageBase64.length > 4_000_000) {
+    throw new AiProviderError('AI image data exceeds the 3 MB safety limit.');
+  }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(request.mimeType)) {
+    throw new AiProviderError('AI image MIME type is not supported.');
+  }
+}
+
 export class GeminiProvider implements AiProvider {
   private readonly model: string;
   private readonly endpoint: string;
@@ -65,10 +81,25 @@ export class GeminiProvider implements AiProvider {
   private readonly apiKey: string;
 
   async generate(request: AiGenerationRequest): Promise<AiGenerationResponse> {
+    return this.generateContent(request, [{ text: request.prompt }]);
+  }
+
+  async generateVision(request: AiVisionRequest): Promise<AiGenerationResponse> {
+    validateVisionRequest(request);
+    return this.generateContent(request, [
+      { text: request.prompt },
+      { inline_data: { mime_type: request.mimeType, data: request.imageBase64 } },
+    ]);
+  }
+
+  private async generateContent(
+    request: AiGenerationRequest,
+    parts: Array<Record<string, string | Record<string, string>>>,
+  ): Promise<AiGenerationResponse> {
     validateRequest(request);
     const url = `${this.endpoint}/v1beta/models/${encodeURIComponent(this.model)}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
     const payload = {
-      contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
+      contents: [{ role: 'user', parts }],
       ...(request.systemInstruction
         ? { systemInstruction: { parts: [{ text: request.systemInstruction }] } }
         : {}),

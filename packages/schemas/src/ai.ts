@@ -18,3 +18,27 @@ export const aiCoachInputSchema = z.object({
   biometrics: nutritionTargetsInputSchema,
 });
 export type AiCoachInputDto = z.infer<typeof aiCoachInputSchema>;
+
+const base64ImageSchema = z
+  .string()
+  .min(16, 'Image data is required.')
+  .max(4_000_000, 'Image data must not exceed 3 MB.')
+  .regex(
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+    'Invalid base64 image data.',
+  );
+
+export const aiFoodRecognitionInputSchema = z.object({
+  image_base64: base64ImageSchema,
+  mime_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  locale: localeEnum.default('fa'),
+  prompt: z
+    .string()
+    .trim()
+    .max(1000, 'Recognition prompt must not exceed 1000 characters.')
+    .optional()
+    .default(
+      'Identify the visible foods and describe uncertainty without estimating nutrition values.',
+    ),
+});
+export type AiFoodRecognitionInputDto = z.infer<typeof aiFoodRecognitionInputSchema>;

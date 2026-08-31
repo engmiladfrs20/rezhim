@@ -91,4 +91,36 @@ describe('Phase 11 — AI gateway configuration boundary', () => {
       'AI_UNAVAILABLE',
     );
   });
+
+  it('validates food recognition images before reaching an unavailable provider', async () => {
+    const response = await app.request(
+      '/api/v1/ai/food-recognition',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ image_base64: 'not-base64!', mime_type: 'image/jpeg' }),
+      },
+      testEnv,
+    );
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+      'VALIDATION_ERROR',
+    );
+  });
+
+  it('fails closed with 503 for a valid image when Gemini credentials are absent', async () => {
+    const response = await app.request(
+      '/api/v1/ai/food-recognition',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ image_base64: 'aGVsbG8gd29ybGQ=', mime_type: 'image/jpeg' }),
+      },
+      testEnv,
+    );
+    expect(response.status).toBe(503);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+      'AI_UNAVAILABLE',
+    );
+  });
 });

@@ -43,4 +43,40 @@ describe('Gemini provider boundary', () => {
     );
     await expect(failed.generate({ prompt: 'hello' })).rejects.toThrow('HTTP 503');
   });
+
+  it('sends vision content as bounded inline data', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'نان' }] } }] }), {
+        status: 200,
+      }),
+    );
+    const provider = new GeminiProvider({ apiKey: 'secret-key-123' }, fetcher);
+    await expect(
+      provider.generateVision({
+        prompt: 'Identify the food.',
+        imageBase64: 'aGVsbG8gd29ybGQ=',
+        mimeType: 'image/jpeg',
+      }),
+    ).resolves.toMatchObject({ text: 'نان' });
+    const [, init] = fetcher.mock.calls[0]!;
+    const payload = JSON.parse(String(init?.body)) as {
+      contents: Array<{ parts: Array<Record<string, unknown>> }>;
+    };
+    expect(payload.contents[0]?.parts[1]).toEqual({
+      inline_data: { mime_type: 'image/jpeg', data: 'aGVsbG8gd29ybGQ=' },
+    });
+  });
+
+  it('rejects malformed or oversized vision data before network access', async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    const provider = new GeminiProvider({ apiKey: 'secret-key-123' }, fetcher);
+    await expect(
+      provider.generateVision({
+        prompt: 'Identify the food.',
+        imageBase64: 'not-base64!',
+        mimeType: 'image/png',
+      }),
+    ).rejects.toThrow('valid base64');
+    expect(fetcher).not.toHaveBeenCalled();
+  });
 });

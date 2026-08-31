@@ -14,6 +14,7 @@
 - **[x] Phase 10**: Deterministic Food Substitution
 - **[x] Phase 11**: Gemini AI Provider Gateway
 - **[x] Phase 12**: AI Coach with Diary Context
+- **[x] Phase 13**: Photo Food Recognition Boundary
 
 ---
 
@@ -107,6 +108,7 @@ pnpm audit --prod --audit-level=critical
 - **جایگزینی غذا**: `POST /api/v1/substitutions` گزینه‌های فعال و دارای منشأ را بر اساس شباهت کالری و ماکرو، به‌صورت قطعی رتبه‌بندی می‌کند.
 - **دروازه هوش مصنوعی**: `POST /api/v1/ai/generate` فقط در Worker و پس از احراز هویت به Gemini متصل می‌شود؛ در نبود کلید، پاسخ امن ۵۰۳ می‌دهد.
 - **مربی هوش مصنوعی**: `POST /api/v1/ai/coach` با احراز هویت، جمع تغذیه روزانه کاربر را از دفترچه غذایی می‌خواند، اهداف را سمت سرور محاسبه می‌کند و پرسش را با دستورهای ایمنی ثابت به Gemini می‌فرستد؛ هیچ شناسه یا داده حساس کاربر وارد prompt نمی‌شود.
+- **تشخیص غذای تصویری**: `POST /api/v1/ai/food-recognition` تصویر JPEG/PNG/WebP را با سقف ۳ مگابایت و فقط از مسیر احراز هویت‌شده به Gemini Vision می‌فرستد؛ تصویر ذخیره نمی‌شود و نتیجه تقریبی همراه disclaimer برمی‌گردد.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
 

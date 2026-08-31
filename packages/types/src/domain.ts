@@ -205,6 +205,13 @@ export interface AiGenerationRequest {
   temperature?: number | undefined;
 }
 
+export type AiImageMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
+
+export interface AiVisionRequest extends AiGenerationRequest {
+  imageBase64: string;
+  mimeType: AiImageMimeType;
+}
+
 export interface AiGenerationResponse {
   provider: 'gemini';
   model: string;
@@ -214,4 +221,9 @@ export interface AiGenerationResponse {
 export interface AiCoachResponse extends AiGenerationResponse {
   disclaimer: string;
   date: string;
+}
+
+export interface AiFoodRecognitionResponse extends AiGenerationResponse {
+  disclaimer: string;
+  locale: SupportedLocale;
 }
