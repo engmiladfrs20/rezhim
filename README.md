@@ -20,6 +20,12 @@
 - **[x] Phase 16**: Authenticated Backblaze B2 Signed Storage URLs
 - **[x] Phase 17**: Deterministic Recipe Nutrition Engine
 - **[x] Phase 18**: Pantry, Fridge & Shopping List Inventory
+- **[x] Phase 21**: Weight Progress & Deterministic Trend API
+- **[x] Phase 22**: Water, Fasting & Habit Tracking API
+- **[x] Phase 23**: Admin User/Food Management & Analytics Overview
+- **[~] Phase 24**: Subscription Entitlement Boundary (billing provider pending)
+- **[x] Phase 25**: Security Headers, CSRF, Rate Limits & Admin Analytics
+- **[~] Phase 26**: Cloudflare staging deployment (production custom domains/secrets pending)
 
 ---
 
@@ -120,6 +126,10 @@ pnpm audit --prod --audit-level=critical
 - **موتور دستور غذا**: `POST /api/v1/recipes/calculate` ترکیب غذاهای active و دارای منشأ معتبر را به‌صورت قطعی محاسبه می‌کند و مجموع، مقدار در ۱۰۰ گرم و مقدار هر سهم را بدون حدس‌زدن داده‌های تغذیه‌ای برمی‌گرداند.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
+- **پایش سبک زندگی**: مسیرهای احراز هویت‌شده‌ی `/api/v1/lifestyle` برای آب، روزه و عادت‌ها با خلاصه‌ی روزانه و مالکیت کامل داده.
+- **روند وزن**: مسیرهای `/api/v1/progress/weight` برای ثبت، ویرایش، حذف و محاسبه‌ی deterministic trend.
+- **اشتراک**: `/api/v1/subscription` فقط وضعیت entitlement را برمی‌گرداند؛ checkout بدون Stripe و webhook معتبر عمداً با ۵۰۳ fail-closed می‌شود.
+- **تحلیل مدیر**: `/api/v1/admin/analytics/overview` فقط برای نقش admin و بدون افشای داده‌ی حساس، شمارش‌های عملیاتی را گزارش می‌کند.
 
 مستندات تکمیلی در پوشه `docs/` در دسترس است.
 

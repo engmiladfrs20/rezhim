@@ -25,6 +25,8 @@ export interface CloudflareEnv {
   GEMINI_API_KEY?: string | undefined;
   GEMINI_MODEL?: string | undefined;
   GEMINI_ENDPOINT?: string | undefined;
+  STRIPE_SECRET_KEY?: string | undefined;
+  STRIPE_PRICE_PRO?: string | undefined;
 
   // Cloudflare D1 Database binding placeholder
   DB?: D1Database | undefined;

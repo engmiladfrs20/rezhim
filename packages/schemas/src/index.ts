@@ -9,4 +9,7 @@ export * from './substitution';
 export * from './recipe';
 export * from './inventory';
 export * from './progress';
+export * from './lifestyle';
+export * from './subscription';
+export * from './admin';
 export * from './ai';

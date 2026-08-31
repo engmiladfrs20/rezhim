@@ -233,6 +233,65 @@ export interface WeightTrend {
   highestWeightKg: number | null;
 }
 
+export type FastingSessionStatus = 'active' | 'completed';
+
+export interface WaterIntake {
+  id: string;
+  userId: string;
+  amountMl: number;
+  consumedAt: string;
+  createdAt: string;
+}
+
+export interface FastingSession {
+  id: string;
+  userId: string;
+  startedAt: string;
+  endedAt: string | null;
+  goalHours: number;
+  status: FastingSessionStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HabitLog {
+  id: string;
+  userId: string;
+  habitKey: string;
+  occurredOn: string;
+  completed: boolean;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DailyLifestyleSummary {
+  date: string;
+  waterTotalMl: number;
+  waterEntries: WaterIntake[];
+  activeFast: FastingSession | null;
+  fastingSessions: FastingSession[];
+  habits: HabitLog[];
+}
+
+export type SubscriptionPlan = 'free' | 'pro';
+export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'past_due';
+
+export interface UserSubscription {
+  id: string | null;
+  userId: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
+export interface AdminAnalyticsOverview {
+  users: { total: number; active: number; disabled: number; newSince: number };
+  foods: { total: number; active: number; draft: number };
+  diary: { entries: number; entriesSince: number };
+}
+
 export interface MealPlanGenerationInput {
   targets: CalculatedNutritionTargets;
   candidates: FoodPortionNutrition[];

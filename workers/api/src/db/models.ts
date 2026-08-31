@@ -195,6 +195,36 @@ export interface WeightEntryRecord {
   updated_at: string;
 }
 
+export interface WaterIntakeRecord {
+  id: string;
+  user_id: string;
+  amount_ml: number;
+  consumed_at: string;
+  created_at: string;
+}
+
+export interface FastingSessionRecord {
+  id: string;
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  goal_hours: number;
+  status: 'active' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HabitLogRecord {
+  id: string;
+  user_id: string;
+  habit_key: string;
+  occurred_on: string;
+  completed: number;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface FoodDiaryEntryRecord {
   id: string;
   user_id: string;
