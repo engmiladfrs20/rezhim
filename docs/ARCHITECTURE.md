@@ -13,11 +13,12 @@ NutriAI Persia is built as a modular TypeScript Monorepo:
 │   └── sources/       # Curated Iranian food datasets and ingestion adapter templates
 ├── workers/
 │   ├── api/           # Cloudflare Workers + Hono REST API
-│   └── ai-jobs/       # Asynchronous Queue Worker placeholder
+│   └── ai-jobs/       # Typed asynchronous Queue Worker boundary
 ├── packages/
 │   ├── config/        # Base TSConfigs, ESLint Presets, Prettier
 │   ├── types/         # Domain, Storage, API & Cloudflare Type Definitions
 │   ├── schemas/       # Zod Validation Schemas (Env, Storage, Health, Food, Manifest)
+│   ├── ai/            # Server-side Gemini provider boundary
 │   ├── localization/  # Shared i18n dictionaries (fa/en), Persian normalizer & RTL logic
 │   ├── storage/       # Backblaze B2 & Memory Storage Providers
 │   └── testing/       # Shared test fixtures & mocks

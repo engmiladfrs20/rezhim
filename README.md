@@ -12,6 +12,7 @@
 - **[x] Phase 8**: Authenticated Food Diary & Daily Nutrition Summaries
 - **[x] Phase 9**: Deterministic Meal Plan Engine
 - **[x] Phase 10**: Deterministic Food Substitution
+- **[x] Phase 11**: Gemini AI Provider Gateway
 
 ---
 
@@ -26,13 +27,14 @@
 │   └── sources/       # مخزن داده‌های پایه غذاهای ایرانی و الگوهای Ingestion
 ├── workers/
 │   ├── api/           # وب‌سرویس REST مبتنی بر Cloudflare Workers و فریم‌ورک Hono
-│   └── ai-jobs/       # پردازشگر پس‌زمینه صف‌های هوش مصنوعی (Placeholder فاز ۱)
+│   └── ai-jobs/       # پردازشگر صف‌های هوش مصنوعی (اجرای پس‌زمینه در فازهای بعد)
 
 ├── packages/
 │   ├── config/        # تنظیمات اشتراکی TSConfig، ESLint و Prettier
 │   ├── types/         # تایپ‌های اشتراکی دامنه، API، Storage و Cloudflare
 │   ├── schemas/       # اسکیمای اعتبارسنجی Zod برای متغیرهای محیطی، سلامت و فایل‌ها
 │   ├── nutrition/      # موتور محاسبات تغذیه، کالری، BMR، TDEE و جمع ارزش غذایی
+│   ├── ai/             # قرارداد و دروازه سروری ارائه‌دهنده Gemini
 │   ├── localization/  # دیکشنری‌های fa/en، ساختار RTL و فرمت‌کننده‌های Intl
 │   ├── storage/       # رابط StorageProvider و ارائه‌دهنده Backblaze B2 S3 API
 │   └── testing/       # ابزارها و ماک‌های تست
@@ -102,6 +104,7 @@ pnpm audit --prod --audit-level=critical
 - **دفترچه غذایی**: `GET/POST /api/v1/diary` و `PATCH/DELETE /api/v1/diary/:id` رکوردهای خصوصی کاربر و جمع روزانه‌ی تغذیه را با همان موتور قطعی محاسبه می‌کنند.
 - **برنامه غذایی**: `POST /api/v1/meal-plans/generate` با استفاده از اهداف تغذیه‌ای و غذاهای فعالِ دارای منشأ معتبر، چهار وعده‌ی روزانه‌ی قطعی تولید می‌کند.
 - **جایگزینی غذا**: `POST /api/v1/substitutions` گزینه‌های فعال و دارای منشأ را بر اساس شباهت کالری و ماکرو، به‌صورت قطعی رتبه‌بندی می‌کند.
+- **دروازه هوش مصنوعی**: `POST /api/v1/ai/generate` فقط در Worker و پس از احراز هویت به Gemini متصل می‌شود؛ در نبود کلید، پاسخ امن ۵۰۳ می‌دهد.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
 

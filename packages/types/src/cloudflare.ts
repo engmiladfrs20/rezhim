@@ -22,6 +22,9 @@ export interface CloudflareEnv {
   B2_BUCKET_NAME?: string | undefined;
   B2_KEY_ID?: string | undefined;
   B2_APPLICATION_KEY?: string | undefined;
+  GEMINI_API_KEY?: string | undefined;
+  GEMINI_MODEL?: string | undefined;
+  GEMINI_ENDPOINT?: string | undefined;
 
   // Cloudflare D1 Database binding placeholder
   DB?: D1Database | undefined;

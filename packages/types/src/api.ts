@@ -47,7 +47,9 @@ export interface ApiErrorResponse {
       | 'RATE_LIMITED'
       | 'FORBIDDEN'
       | 'USER_NOT_FOUND'
-      | 'DIARY_ENTRY_NOT_FOUND';
+      | 'DIARY_ENTRY_NOT_FOUND'
+      | 'AI_UNAVAILABLE'
+      | 'AI_PROVIDER_ERROR';
     message: string;
     details?: unknown;
   };

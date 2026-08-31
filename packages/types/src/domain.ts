@@ -197,3 +197,16 @@ export interface FoodSubstitutionResult {
   reference: FoodPortionNutrition;
   recommendations: FoodSubstitutionRecommendation[];
 }
+
+export interface AiGenerationRequest {
+  prompt: string;
+  systemInstruction?: string | undefined;
+  maxOutputTokens?: number | undefined;
+  temperature?: number | undefined;
+}
+
+export interface AiGenerationResponse {
+  provider: 'gemini';
+  model: string;
+  text: string;
+}
