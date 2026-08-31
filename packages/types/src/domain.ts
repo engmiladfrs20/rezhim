@@ -227,3 +227,9 @@ export interface AiFoodRecognitionResponse extends AiGenerationResponse {
   disclaimer: string;
   locale: SupportedLocale;
 }
+
+export interface AiFoodLogResponse extends AiGenerationResponse {
+  disclaimer: string;
+  date: string;
+  locale: SupportedLocale;
+}

@@ -123,4 +123,31 @@ describe('Phase 11 — AI gateway configuration boundary', () => {
       'AI_UNAVAILABLE',
     );
   });
+
+  it('validates and fails closed for transcript-based food logging', async () => {
+    const invalid = await app.request(
+      '/api/v1/ai/food-log',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ transcript: '', date: '2026-08-31', locale: 'fa' }),
+      },
+      testEnv,
+    );
+    expect(invalid.status).toBe(400);
+
+    const unavailable = await app.request(
+      '/api/v1/ai/food-log',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ transcript: 'دو عدد تخم مرغ برای صبحانه', date: '2026-08-31' }),
+      },
+      testEnv,
+    );
+    expect(unavailable.status).toBe(503);
+    expect(((await unavailable.json()) as { error: { code: string } }).error.code).toBe(
+      'AI_UNAVAILABLE',
+    );
+  });
 });

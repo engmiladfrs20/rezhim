@@ -42,3 +42,10 @@ export const aiFoodRecognitionInputSchema = z.object({
     ),
 });
 export type AiFoodRecognitionInputDto = z.infer<typeof aiFoodRecognitionInputSchema>;
+
+export const aiFoodLogInputSchema = z.object({
+  transcript: z.string().trim().min(1, 'Food log text is required.').max(2000),
+  date: diaryDateSchema,
+  locale: localeEnum.default('fa'),
+});
+export type AiFoodLogInputDto = z.infer<typeof aiFoodLogInputSchema>;

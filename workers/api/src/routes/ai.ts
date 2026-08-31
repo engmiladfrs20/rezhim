@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { parseJsonBody } from '../lib/validation';
 import {
   aiCoachInputSchema,
+  aiFoodLogInputSchema,
   aiFoodRecognitionInputSchema,
   aiGenerateInputSchema,
 } from '@nutriai/schemas';
@@ -14,6 +15,7 @@ import { FoodDiaryService } from '../services/food-diary.service';
 import type {
   AiCoachResponse,
   AiFoodRecognitionResponse,
+  AiFoodLogResponse,
   AiGenerationResponse,
   ApiErrorResponse,
   ApiResponse,
@@ -100,6 +102,31 @@ aiRouter.post('/food-recognition', async (c) => {
   try {
     const result = await new AiService(c.env).recognizeFood(parsed.data);
     const response: ApiResponse<AiFoodRecognitionResponse> = {
+      success: true,
+      data: result,
+      requestId: c.get('requestId'),
+    };
+    return c.json(response, 200);
+  } catch (err) {
+    if (err instanceof AiError) {
+      const response: ApiErrorResponse = {
+        success: false,
+        error: { code: err.code, message: err.message },
+        requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',
+      };
+      return c.json(response, err.code === 'AI_UNAVAILABLE' ? 503 : 502);
+    }
+    throw err;
+  }
+});
+
+aiRouter.post('/food-log', async (c) => {
+  const parsed = await parseJsonBody(c, aiFoodLogInputSchema);
+  if (!parsed.success) return parsed.response;
+
+  try {
+    const result = await new AiService(c.env).interpretFoodLog(parsed.data);
+    const response: ApiResponse<AiFoodLogResponse> = {
       success: true,
       data: result,
       requestId: c.get('requestId'),
