@@ -161,6 +161,30 @@ export interface FoodImportLogRecord {
   created_at: string;
 }
 
+export interface PantryItemRecord {
+  id: string;
+  user_id: string;
+  food_id: string;
+  location: 'pantry' | 'fridge' | 'freezer';
+  quantity_grams: number;
+  expires_at: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShoppingListItemRecord {
+  id: string;
+  user_id: string;
+  food_id: string;
+  required_grams: number;
+  purchased_grams: number;
+  status: 'planned' | 'purchased';
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface FoodDiaryEntryRecord {
   id: string;
   user_id: string;

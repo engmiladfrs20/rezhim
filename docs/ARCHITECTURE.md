@@ -33,6 +33,7 @@ NutriAI Persia is built as a modular TypeScript Monorepo:
 - **`apps/mobile`**: React Native/Expo Android-compatible shell with RTL architecture.
 - **`data/sources`**: Authoritative baseline datasets, license boundary definitions, and typed manifests with SHA-256 integrity checksums.
 - **`workers/api`**: Serverless edge API built with **Hono**, managing robust Cloudflare HTTP interactions. Uses isolated controllers targeting native decoupled Repositories routing queries securely against **Cloudflare D1** SQLite databases.
+- **Inventory routes**: Authenticated `/api/v1/pantry` and `/api/v1/shopping-list` boundaries persist user-owned stock and shopping records with active-food validation.
 - **`workers/api/test`**: Integration tests execute exactly matching the remote worker contexts powered natively by `@cloudflare/vitest-plugin`, simulating exact real D1 bounds directly leveraging bound miniflare executions securely without external mocks.
 - **`packages/storage`**: Decoupled cloud storage layer utilizing Backblaze B2 S3 API with Web Stream support.
 - **`packages/localization`**: Centralized, typed localization with fallback, Persian typography normalizer (`normalizePersianText`), collision comparator (`normalizePersianForComparison`), and Intl formatters.

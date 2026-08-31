@@ -19,6 +19,7 @@
 - **[x] Phase 15**: Barcode Food Lookup Boundary
 - **[x] Phase 16**: Authenticated Backblaze B2 Signed Storage URLs
 - **[x] Phase 17**: Deterministic Recipe Nutrition Engine
+- **[x] Phase 18**: Pantry, Fridge & Shopping List Inventory
 
 ---
 

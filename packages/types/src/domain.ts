@@ -159,6 +159,34 @@ export interface RecipeNutritionResult {
   perServing: RecipeNutritionBreakdown;
 }
 
+export type PantryLocation = 'pantry' | 'fridge' | 'freezer';
+
+export interface PantryItem {
+  id: string;
+  userId: string;
+  foodId: string;
+  location: PantryLocation;
+  quantityGrams: number;
+  expiresAt: string | null;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ShoppingListStatus = 'planned' | 'purchased';
+
+export interface ShoppingListItem {
+  id: string;
+  userId: string;
+  foodId: string;
+  requiredGrams: number;
+  purchasedGrams: number;
+  status: ShoppingListStatus;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type DiaryMealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 export interface FoodDiaryEntry {

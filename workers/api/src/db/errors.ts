@@ -43,6 +43,30 @@ export class DiaryEntryNotFoundError extends Error {
   }
 }
 
+export class PantryItemNotFoundError extends Error {
+  constructor() {
+    super('Pantry item not found.');
+    this.name = 'PantryItemNotFoundError';
+  }
+}
+
+export class ShoppingListItemNotFoundError extends Error {
+  constructor() {
+    super('Shopping list item not found.');
+    this.name = 'ShoppingListItemNotFoundError';
+  }
+}
+
+export class InventoryValidationError extends Error {
+  public readonly field: string | undefined;
+
+  constructor(message: string, field?: string) {
+    super(message);
+    this.name = 'InventoryValidationError';
+    this.field = field;
+  }
+}
+
 export class InvalidCursorError extends Error {
   constructor(message: string = 'Invalid or malformed pagination cursor') {
     super(message);
