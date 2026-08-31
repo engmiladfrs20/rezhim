@@ -17,6 +17,7 @@
 - **[x] Phase 13**: Photo Food Recognition Boundary
 - **[x] Phase 14**: Voice/Text Food Log Interpretation
 - **[x] Phase 15**: Barcode Food Lookup Boundary
+- **[x] Phase 16**: Authenticated Backblaze B2 Signed Storage URLs
 
 ---
 
@@ -113,6 +114,7 @@ pnpm audit --prod --audit-level=critical
 - **تشخیص غذای تصویری**: `POST /api/v1/ai/food-recognition` تصویر JPEG/PNG/WebP را با سقف ۳ مگابایت و فقط از مسیر احراز هویت‌شده به Gemini Vision می‌فرستد؛ تصویر ذخیره نمی‌شود و نتیجه تقریبی همراه disclaimer برمی‌گردد.
 - **ثبت غذا با متن/صدا**: `POST /api/v1/ai/food-log` متن تایپ‌شده یا transcript صوتی را به فهرست قابل‌تأیید تبدیل می‌کند؛ هیچ رکوردی خودکار در دفترچه نوشته نمی‌شود و مقدار تغذیه‌ای از متن حدس زده نمی‌شود.
 - **اسکن بارکد غذا**: `GET /api/v1/foods/barcode/:barcode` ارقام فارسی/عربی و جداکننده‌ها را نرمال می‌کند، فقط غذای active را با locale درخواستی برمی‌گرداند و برای بارکد نامعتبر یا ناشناخته پاسخ پایدار می‌دهد.
+- **فضای ذخیره‌سازی امن**: `POST /api/v1/storage/signed-upload-url` و `POST /api/v1/storage/signed-download-url` فقط برای کاربر احراز‌شده و کلیدهای `user-uploads/{userId}/...` امضای کوتاه‌مدت صادر می‌کنند؛ ACL آپلود همیشه خصوصی است و staging/production بدون تنظیم B2 fail-closed می‌شوند.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
 

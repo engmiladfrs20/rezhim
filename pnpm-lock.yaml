@@ -463,6 +463,9 @@ importers:
       '@nutriai/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
+      '@nutriai/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@nutriai/types':
         specifier: workspace:*
         version: link:../../packages/types

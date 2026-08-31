@@ -23,6 +23,7 @@
     "@nutriai/localization": "workspace:*",
     "@nutriai/nutrition": "workspace:*",
     "@nutriai/schemas": "workspace:*",
+    "@nutriai/storage": "workspace:*",
     "@nutriai/types": "workspace:*",
     "hono": "^4.7.1"
   },
