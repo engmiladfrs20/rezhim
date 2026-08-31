@@ -6,6 +6,7 @@
 - Dedicated D1 databases and KV namespaces provisioned for development, staging, and production.
 - Migrations 0001–0013 applied to all three D1 databases.
 - Staging API deployed at `https://nutriai-api-staging.rezhimvip.workers.dev` and smoke-tested through registration, login, `/me`, lifestyle water, fasting, and daily summary.
+- Production API deployed at `https://nutriai-api-production.rezhimvip.workers.dev`; `/health`, `/ready`, `/api/v1/system`, registration, and token login were smoke-tested.
 - `RATE_LIMIT_HMAC_SECRET` is configured as a Worker secret for staging and production; the value is never committed.
 - Local format, lint, typecheck, test/coverage, build, audit, and diff gates pass.
 
