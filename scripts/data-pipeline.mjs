@@ -559,13 +559,13 @@ export function runDataPipeline(options) {
 
         item.translations.forEach((t) => {
           sqlLines.push(
-            `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at) VALUES (${sqlText(`ft_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(t.locale)}, ${sqlText(t.name)}, ${sqlText(t.description)}, ${sqlText(now)}, ${sqlText(now)});`,
+            `INSERT INTO food_translations (id, food_id, locale, name, description, search_text, created_at, updated_at) VALUES (${sqlText(`ft_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(t.locale)}, ${sqlText(t.name)}, ${sqlText(t.description)}, ${sqlText(normalizePersianForComparison(t.name))}, ${sqlText(now)}, ${sqlText(now)});`,
           );
         });
 
         (item.aliases || []).forEach((a) => {
           sqlLines.push(
-            `INSERT INTO food_aliases (id, food_id, locale, alias, created_at) VALUES (${sqlText(`fa_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(a.locale)}, ${sqlText(a.alias)}, ${sqlText(now)});`,
+            `INSERT INTO food_aliases (id, food_id, locale, alias, search_text, created_at) VALUES (${sqlText(`fa_${crypto.randomUUID()}`)}, ${sqlText(foodId)}, ${sqlText(a.locale)}, ${sqlText(a.alias)}, ${sqlText(normalizePersianForComparison(a.alias))}, ${sqlText(now)});`,
           );
         });
 

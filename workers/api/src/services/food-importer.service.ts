@@ -441,8 +441,8 @@ export class FoodImporterService {
         statements.push(
           this.db
             .prepare(
-              `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO food_translations (id, food_id, locale, name, description, search_text, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             )
             .bind(
               `ft_${crypto.randomUUID()}`,
@@ -450,6 +450,7 @@ export class FoodImporterService {
               t.locale,
               t.name,
               t.description ?? null,
+              normalizePersianForComparison(t.name),
               now,
               now,
             ),
@@ -461,10 +462,17 @@ export class FoodImporterService {
         statements.push(
           this.db
             .prepare(
-              `INSERT INTO food_aliases (id, food_id, locale, alias, created_at)
-               VALUES (?, ?, ?, ?, ?)`,
+              `INSERT INTO food_aliases (id, food_id, locale, alias, search_text, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)`,
             )
-            .bind(`fa_${crypto.randomUUID()}`, foodId, a.locale, a.alias, now),
+            .bind(
+              `fa_${crypto.randomUUID()}`,
+              foodId,
+              a.locale,
+              a.alias,
+              normalizePersianForComparison(a.alias),
+              now,
+            ),
         );
       }
 

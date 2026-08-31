@@ -143,6 +143,7 @@ export class FoodService {
     return await this.foodRepo.listPublic({
       locale: query.locale,
       categoryId: query.category_id,
+      search: query.q,
       cursor: query.cursor,
       limit: query.limit,
     });
@@ -188,6 +189,7 @@ export class FoodService {
       status: query.status,
       categoryId: query.category_id,
       locale: query.locale,
+      search: query.q,
       cursor: query.cursor,
       limit: query.limit,
     });

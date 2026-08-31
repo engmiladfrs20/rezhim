@@ -10,6 +10,7 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
+  Search,
 } from 'lucide-react';
 import type {
   FoodSummary,
@@ -796,6 +797,7 @@ export const FoodFormModal: FC<FoodFormModalProps> = ({ foodToEdit, onClose, onS
 export const FoodCatalogManager: FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'draft' | 'active' | 'archived' | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [cursor, setCursor] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [selectedFoodId, setSelectedFoodId] = useState<string | null>(null);
@@ -817,13 +819,14 @@ export const FoodCatalogManager: FC = () => {
   });
 
   const { data, isLoading, error } = useQuery<ApiResponse<PaginatedResult<FoodSummary>>>({
-    queryKey: ['admin-foods', statusFilter, categoryFilter, cursor],
+    queryKey: ['admin-foods', statusFilter, categoryFilter, searchQuery, cursor],
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: '10',
         status: statusFilter,
       });
       if (categoryFilter) params.set('category_id', categoryFilter);
+      if (searchQuery.trim()) params.set('q', searchQuery.trim());
       if (cursor) params.set('cursor', cursor);
 
       const res = await fetch(`${API_URL}/api/v1/admin/foods?${params.toString()}`, {
@@ -899,6 +902,21 @@ export const FoodCatalogManager: FC = () => {
           <UtensilsCrossed className="w-5 h-5 text-indigo-400" /> Food Catalog Management
         </h2>
         <div className="flex flex-wrap items-center gap-3">
+          <label className="relative flex items-center">
+            <Search className="pointer-events-none absolute left-2.5 h-4 w-4 text-slate-500" />
+            <input
+              aria-label="Search foods"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCursor(null);
+                setHistory([]);
+              }}
+              placeholder="Search Persian or English foods"
+              className="w-56 rounded-lg border border-slate-700 bg-slate-800 py-2 pl-8 pr-3 text-sm text-slate-200 placeholder:text-slate-500"
+            />
+          </label>
           <select
             aria-label="Filter by Category"
             value={categoryFilter}

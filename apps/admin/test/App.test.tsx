@@ -504,6 +504,14 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
     // Filter by Status
     const statusSelect = screen.getByLabelText('Filter by Status');
     fireEvent.change(statusSelect, { target: { value: 'active' } });
+
+    const searchInput = screen.getByLabelText('Search foods');
+    fireEvent.change(searchInput, { target: { value: 'بربری' } });
+    await waitFor(() => {
+      expect(
+        vi.mocked(globalThis.fetch).mock.calls.some(([url]) => String(url).includes('q=')),
+      ).toBe(true);
+    });
   });
 
   it('opens Food Details modal and displays complete information', async () => {

@@ -35,6 +35,7 @@ adminFoodsRouter.get('/', async (c) => {
     status: c.req.query('status') || 'all',
     category_id: c.req.query('category_id') || undefined,
     locale: c.req.query('locale') || 'fa',
+    q: c.req.query('q') || undefined,
     cursor: c.req.query('cursor') || undefined,
     limit: c.req.query('limit') || 20,
   });

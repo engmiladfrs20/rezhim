@@ -410,6 +410,7 @@ export type UpdateFoodDto = z.infer<typeof updateFoodSchema>;
 export const foodListQuerySchema = z.object({
   locale: localeEnum.default('fa'),
   category_id: z.string().trim().min(1).optional(),
+  q: z.string().trim().min(1).max(100).optional(),
   cursor: z.string().trim().max(512).optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
 });
@@ -419,6 +420,7 @@ export const adminFoodListQuerySchema = z.object({
   status: z.enum(['draft', 'active', 'archived', 'all']).default('all'),
   category_id: z.string().trim().min(1).optional(),
   locale: localeEnum.default('fa'),
+  q: z.string().trim().min(1).max(100).optional(),
   cursor: z.string().trim().max(512).optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
 });

@@ -95,6 +95,7 @@ export interface FoodTranslationRecord {
   locale: 'fa' | 'en';
   name: string;
   description: string | null;
+  search_text?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -104,6 +105,7 @@ export interface FoodAliasRecord {
   food_id: string;
   locale: 'fa' | 'en';
   alias: string;
+  search_text?: string | null;
   created_at: string;
 }
 

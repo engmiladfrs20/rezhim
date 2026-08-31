@@ -1136,6 +1136,122 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
     });
   });
 
+  describe('Bilingual Search & Query Validation', () => {
+    it('searches normalized Persian aliases, English names, and canonical barcodes', async () => {
+      const createRes = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            translations: [
+              { locale: 'fa', name: 'برنج کته' },
+              { locale: 'en', name: 'Cooked rice' },
+            ],
+            aliases: [{ locale: 'fa', alias: 'برنج كته' }],
+            barcode: '۱۲۳۴۵۶۷۸',
+            status: 'active',
+            nutrients: verifiedMacros(130),
+          }),
+        },
+        testEnv,
+      );
+      expect(createRes.status).toBe(201);
+
+      const faRes = await app.request(
+        `/api/v1/foods?q=${encodeURIComponent('كته')}`,
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(faRes.status).toBe(200);
+      const faData = (await faRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
+      expect(faData.data.items).toHaveLength(1);
+      expect(faData.data.items[0]?.name).toBe('برنج کته');
+
+      const enRes = await app.request(
+        `/api/v1/foods?q=${encodeURIComponent('cooked rice')}&locale=en`,
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(enRes.status).toBe(200);
+      const enData = (await enRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
+      expect(enData.data.items).toHaveLength(1);
+      expect(enData.data.items[0]?.resolvedLocale).toBe('en');
+
+      const barcodeRes = await app.request(
+        '/api/v1/foods?q=12345678',
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(barcodeRes.status).toBe(200);
+      const barcodeData = (await barcodeRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
+      expect(barcodeData.data.items).toHaveLength(1);
+    });
+
+    it('keeps draft foods private to admin search and applies all query tokens', async () => {
+      const createRes = await app.request(
+        '/api/v1/admin/foods',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            translations: [{ locale: 'fa', name: 'خورش قورمه سبزی' }],
+            aliases: [{ locale: 'fa', alias: 'قورمه سبزی' }],
+            status: 'draft',
+          }),
+        },
+        testEnv,
+      );
+      expect(createRes.status).toBe(201);
+
+      const publicRes = await app.request(
+        `/api/v1/foods?q=${encodeURIComponent('قورمه سبزی')}`,
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(publicRes.status).toBe(200);
+      const publicData = (await publicRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
+      expect(publicData.data.items).toHaveLength(0);
+
+      const adminRes = await app.request(
+        `/api/v1/admin/foods?q=${encodeURIComponent('قورمه سبزی')}`,
+        { headers: { Authorization: `Bearer ${adminToken}` } },
+        testEnv,
+      );
+      expect(adminRes.status).toBe(200);
+      const adminData = (await adminRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
+      expect(adminData.data.items).toHaveLength(1);
+      expect(adminData.data.items[0]?.status).toBe('draft');
+    });
+
+    it('rejects an overlong search query with a typed validation error', async () => {
+      const query = 'x'.repeat(101);
+      const res = await app.request(
+        `/api/v1/foods?q=${query}`,
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(res.status).toBe(400);
+      const payload = (await res.json()) as ApiErrorResponse;
+      expect(payload.error.code).toBe('VALIDATION_ERROR');
+
+      const wildcardRes = await app.request(
+        '/api/v1/foods?q=%25',
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(wildcardRes.status).toBe(200);
+      const wildcardData = (await wildcardRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
+      expect(wildcardData.data.items).toHaveLength(0);
+    });
+  });
+
   describe('RBAC & Security Boundaries', () => {
     it('returns 401 for unauthenticated food requests', async () => {
       const res = await app.request('/api/v1/foods', {}, testEnv);

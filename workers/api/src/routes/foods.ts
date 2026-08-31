@@ -20,6 +20,7 @@ foodsRouter.get('/', async (c) => {
   const queryResult = foodListQuerySchema.safeParse({
     locale: c.req.query('locale') || 'fa',
     category_id: c.req.query('category_id') || undefined,
+    q: c.req.query('q') || undefined,
     cursor: c.req.query('cursor') || undefined,
     limit: c.req.query('limit') || 20,
   });

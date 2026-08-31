@@ -17,6 +17,47 @@ import {
 } from './errors';
 import type { FoodSummary, PaginatedResult, SupportedLocale } from '@nutriai/types';
 import { decodeCursor, encodeCursor } from '../lib/cursor';
+import { normalizePersianForComparison } from '@nutriai/localization';
+
+function searchTokens(value: string | undefined): string[] {
+  if (!value) return [];
+  return normalizePersianForComparison(value)
+    .split(' ')
+    .map((token) => token.trim().replace(/[%_]/g, ''))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function appendSearchFilter(
+  query: string,
+  params: (string | number)[],
+  rawSearch: string | undefined,
+): string {
+  const tokens = searchTokens(rawSearch);
+  if (rawSearch && tokens.length === 0) {
+    return `${query} AND 1 = 0`;
+  }
+  for (const token of tokens) {
+    const pattern = `%${token}%`;
+    query += `
+      AND (
+        lower(COALESCE(f.brand_name, '')) LIKE ?
+        OR COALESCE(f.barcode, '') LIKE ?
+        OR EXISTS (
+          SELECT 1 FROM food_translations search_ft
+          WHERE search_ft.food_id = f.id
+            AND (COALESCE(search_ft.search_text, lower(search_ft.name)) LIKE ?)
+        )
+        OR EXISTS (
+          SELECT 1 FROM food_aliases search_fa
+          WHERE search_fa.food_id = f.id
+            AND (COALESCE(search_fa.search_text, lower(search_fa.alias)) LIKE ?)
+        )
+      )`;
+    params.push(pattern, pattern, pattern, pattern);
+  }
+  return query;
+}
 
 export interface FullFoodDetailRecord {
   food: FoodRecord;
@@ -202,10 +243,11 @@ export class FoodRepository {
   async listPublic(options: {
     locale: SupportedLocale;
     categoryId?: string | undefined;
+    search?: string | undefined;
     cursor?: string | undefined;
     limit: number;
   }): Promise<PaginatedResult<FoodSummary>> {
-    const { locale, categoryId, cursor, limit } = options;
+    const { locale, categoryId, search, cursor, limit } = options;
 
     let cursorCreatedAt: string | null = null;
     let cursorId: string | null = null;
@@ -262,6 +304,8 @@ export class FoodRepository {
         query += ' AND f.category_id = ?';
         params.push(categoryId);
       }
+
+      query = appendSearchFilter(query, params, search);
 
       if (cursorCreatedAt && cursorId) {
         query += ' AND (f.created_at < ? OR (f.created_at = ? AND f.id < ?))';
@@ -344,10 +388,11 @@ export class FoodRepository {
     status?: 'draft' | 'active' | 'archived' | 'all' | undefined;
     categoryId?: string | undefined;
     locale: SupportedLocale;
+    search?: string | undefined;
     cursor?: string | undefined;
     limit: number;
   }): Promise<PaginatedResult<FoodSummary>> {
-    const { status, categoryId, locale, cursor, limit } = options;
+    const { status, categoryId, locale, search, cursor, limit } = options;
 
     let cursorCreatedAt: string | null = null;
     let cursorId: string | null = null;
@@ -409,6 +454,8 @@ export class FoodRepository {
         query += ' AND f.category_id = ?';
         params.push(categoryId);
       }
+
+      query = appendSearchFilter(query, params, search);
 
       if (cursorCreatedAt && cursorId) {
         query += ' AND (f.created_at < ? OR (f.created_at = ? AND f.id < ?))';
@@ -551,10 +598,19 @@ export class FoodRepository {
         statements.push(
           this.db
             .prepare(
-              `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO food_translations (id, food_id, locale, name, description, search_text, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             )
-            .bind(t.id, t.food_id, t.locale, t.name, t.description, t.created_at, t.updated_at),
+            .bind(
+              t.id,
+              t.food_id,
+              t.locale,
+              t.name,
+              t.description,
+              normalizePersianForComparison(t.name),
+              t.created_at,
+              t.updated_at,
+            ),
         );
       }
 
@@ -562,10 +618,17 @@ export class FoodRepository {
         statements.push(
           this.db
             .prepare(
-              `INSERT INTO food_aliases (id, food_id, locale, alias, created_at)
-               VALUES (?, ?, ?, ?, ?)`,
+              `INSERT INTO food_aliases (id, food_id, locale, alias, search_text, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)`,
             )
-            .bind(a.id, a.food_id, a.locale, a.alias, a.created_at),
+            .bind(
+              a.id,
+              a.food_id,
+              a.locale,
+              a.alias,
+              normalizePersianForComparison(a.alias),
+              a.created_at,
+            ),
         );
       }
 
@@ -665,10 +728,19 @@ export class FoodRepository {
           statements.push(
             this.db
               .prepare(
-                `INSERT INTO food_translations (id, food_id, locale, name, description, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO food_translations (id, food_id, locale, name, description, search_text, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
               )
-              .bind(t.id, t.food_id, t.locale, t.name, t.description, t.created_at, t.updated_at),
+              .bind(
+                t.id,
+                t.food_id,
+                t.locale,
+                t.name,
+                t.description,
+                normalizePersianForComparison(t.name),
+                t.created_at,
+                t.updated_at,
+              ),
           );
         }
       }
@@ -681,10 +753,17 @@ export class FoodRepository {
           statements.push(
             this.db
               .prepare(
-                `INSERT INTO food_aliases (id, food_id, locale, alias, created_at)
-                 VALUES (?, ?, ?, ?, ?)`,
+                `INSERT INTO food_aliases (id, food_id, locale, alias, search_text, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
               )
-              .bind(a.id, a.food_id, a.locale, a.alias, a.created_at),
+              .bind(
+                a.id,
+                a.food_id,
+                a.locale,
+                a.alias,
+                normalizePersianForComparison(a.alias),
+                a.created_at,
+              ),
           );
         }
       }
