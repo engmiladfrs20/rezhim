@@ -6,4 +6,5 @@ export * from './food';
 export * from './nutrition';
 export * from './meal-plan';
 export * from './substitution';
+export * from './recipe';
 export * from './ai';

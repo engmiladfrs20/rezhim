@@ -133,6 +133,32 @@ export interface AggregatedNutritionResult {
   warnings?: string[] | undefined;
 }
 
+export interface RecipeIngredientInput {
+  foodId: string;
+  grams: number;
+}
+
+export interface RecipeNutritionBreakdown {
+  portionGrams: number;
+  energyKcal: number;
+  proteinGrams: number;
+  carbsGrams: number;
+  fatGrams: number;
+  nutrients: AggregatedNutrientValue[];
+  missingNutrients?: string[] | undefined;
+  warnings?: string[] | undefined;
+}
+
+export interface RecipeNutritionResult {
+  algorithmVersion: string;
+  yieldGrams: number;
+  servings: number;
+  ingredients: FoodPortionNutrition[];
+  total: RecipeNutritionBreakdown;
+  per100g: RecipeNutritionBreakdown;
+  perServing: RecipeNutritionBreakdown;
+}
+
 export type DiaryMealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 export interface FoodDiaryEntry {
