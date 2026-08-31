@@ -210,3 +210,8 @@ export interface AiGenerationResponse {
   model: string;
   text: string;
 }
+
+export interface AiCoachResponse extends AiGenerationResponse {
+  disclaimer: string;
+  date: string;
+}

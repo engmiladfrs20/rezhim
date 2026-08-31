@@ -62,4 +62,33 @@ describe('Phase 11 — AI gateway configuration boundary', () => {
     const json = (await response.json()) as { error: { code: string } };
     expect(json.error.code).toBe('AI_UNAVAILABLE');
   });
+
+  it('loads the user day context but still fails closed for an unconfigured coach provider', async () => {
+    const response = await app.request(
+      '/api/v1/ai/coach',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          question: 'امروز چه بخورم؟',
+          date: '2026-08-31',
+          locale: 'fa',
+          biometrics: {
+            gender: 'male',
+            age: 30,
+            heightCm: 180,
+            weightKg: 80,
+            activityLevel: 'moderately_active',
+            dietGoal: 'maintenance',
+            formula: 'mifflin_st_jeor',
+          },
+        }),
+      },
+      testEnv,
+    );
+    expect(response.status).toBe(503);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+      'AI_UNAVAILABLE',
+    );
+  });
 });
