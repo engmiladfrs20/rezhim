@@ -299,6 +299,25 @@ importers:
         specifier: ^4.1.0
         version: 4.1.11(@types/node@22.20.1)(@vitest/coverage-istanbul@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0)(vite@6.4.3(@types/node@22.20.1)(jiti@1.21.7)(lightningcss@1.27.0)(terser@5.51.2))
 
+  packages/nutrition:
+    dependencies:
+      '@nutriai/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@nutriai/config':
+        specifier: workspace:*
+        version: link:../config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.0
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.11(@types/node@22.20.1)(@vitest/coverage-istanbul@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0)(vite@6.4.3(@types/node@22.20.1)(jiti@1.21.7)(lightningcss@1.27.0)(terser@5.51.2))
+
   packages/schemas:
     dependencies:
       zod:
@@ -416,6 +435,9 @@ importers:
       '@nutriai/localization':
         specifier: workspace:*
         version: link:../../packages/localization
+      '@nutriai/nutrition':
+        specifier: workspace:*
+        version: link:../../packages/nutrition
       '@nutriai/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

@@ -75,5 +75,11 @@ jobs:
       - name: Build Workspaces & Worker Bundling
         run: pnpm build
 
+      - name: Expo Doctor Quality Check
+        run: npx expo-doctor@latest
+
       - name: Dependency Audit (Critical bounds)
         run: pnpm audit --prod --audit-level=critical
+
+      - name: Git Diff & Trailing Whitespace Check
+        run: git diff --check

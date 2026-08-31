@@ -16,6 +16,7 @@ import { foodsRouter } from './routes/foods';
 import { foodCategoriesRouter } from './routes/food-categories';
 import { nutrientsRouter } from './routes/nutrients';
 import { adminFoodsRouter } from './routes/admin-foods';
+import { nutritionRouter } from './routes/nutrition';
 
 const app = new Hono<AppEnv>();
 
@@ -32,6 +33,7 @@ app.use('/api/v1/foods/*', databaseMiddleware);
 app.use('/api/v1/food-categories/*', databaseMiddleware);
 app.use('/api/v1/nutrients/*', databaseMiddleware);
 app.use('/api/v1/admin/foods/*', databaseMiddleware);
+app.use('/api/v1/nutrition/*', databaseMiddleware);
 
 // Centralized Safe Error Handling
 app.onError(errorHandler);
@@ -49,6 +51,7 @@ app.route('/api/v1/foods', foodsRouter);
 app.route('/api/v1/food-categories', foodCategoriesRouter);
 app.route('/api/v1/nutrients', nutrientsRouter);
 app.route('/api/v1/admin/foods', adminFoodsRouter);
+app.route('/api/v1/nutrition', nutritionRouter);
 
 // Disabled Phase 1 placeholders
 app.all('/api/storage/*', (c) => {

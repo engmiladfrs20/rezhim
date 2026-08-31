@@ -7,6 +7,7 @@
 - **[x] Phase 3**: Authentication and Roles Foundation
 - **[x] Phase 4**: Comprehensive Food Catalog Data Foundation
 - **[x] Phase 5**: Iranian Food Catalog and Provenance Pipeline
+- **[x] Phase 6**: Deterministic Nutrition Engine & Energy Calculations
 
 ---
 
@@ -27,6 +28,7 @@
 │   ├── config/        # تنظیمات اشتراکی TSConfig، ESLint و Prettier
 │   ├── types/         # تایپ‌های اشتراکی دامنه، API، Storage و Cloudflare
 │   ├── schemas/       # اسکیمای اعتبارسنجی Zod برای متغیرهای محیطی، سلامت و فایل‌ها
+│   ├── nutrition/      # موتور محاسبات تغذیه، کالری، BMR، TDEE و جمع ارزش غذایی
 │   ├── localization/  # دیکشنری‌های fa/en، ساختار RTL و فرمت‌کننده‌های Intl
 │   ├── storage/       # رابط StorageProvider و ارائه‌دهنده Backblaze B2 S3 API
 │   └── testing/       # ابزارها و ماک‌های تست
