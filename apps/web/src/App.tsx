@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthProvider';
 import { LoginScreen } from './auth/LoginScreen';
 import { Profile } from './auth/Profile';
 import { RegisterScreen } from './auth/RegisterScreen';
+import { DailyDashboard } from './dashboard/DailyDashboard';
 import {
   i18n,
   formatNumber,
@@ -191,6 +192,8 @@ export const App: FC = () => {
         <section aria-label="User Profile Area" className="w-full">
           <Profile />
         </section>
+
+        <DailyDashboard />
 
         {/* Monorepo Architecture Overview Grid */}
         <section aria-label="Monorepo Modules Overview" className="space-y-4">
