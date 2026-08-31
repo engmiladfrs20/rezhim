@@ -137,7 +137,7 @@ describe('Phase 6 — Nutrition Engine API Tests', () => {
           },
           body: JSON.stringify({
             gender: 'male',
-            age: 5, // Invalid: < 10
+            age: 5, // Invalid: unsupported population (< 19)
             heightCm: 180,
             weightKg: 80,
             activityLevel: 'moderately_active',
@@ -344,6 +344,33 @@ describe('Phase 6 — Nutrition Engine API Tests', () => {
       expect(json.error.message).toContain('Only active foods');
     });
 
+    it('fails closed when an active food has incomplete nutrient provenance', async () => {
+      const db = testEnv.DB!;
+      await db
+        .prepare(
+          "UPDATE food_nutrients SET citation = NULL WHERE food_id = ? AND nutrient_id = 'nut_energy'",
+        )
+        .bind(activeChickenId)
+        .run();
+
+      const res = await app.request(
+        '/api/v1/nutrition/aggregate',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ items: [{ foodId: activeChickenId, grams: 100 }] }),
+        },
+        testEnv,
+      );
+      expect(res.status).toBe(400);
+      const json = (await res.json()) as ApiErrorResponse;
+      expect(json.error.code).toBe('PROVENANCE_REQUIRED');
+      expect(json.error.message).not.toContain('SQL');
+    });
+
     it('returns 400 when serving ID does not exist on the food', async () => {
       const res = await app.request(
         '/api/v1/nutrition/aggregate',
@@ -461,7 +488,8 @@ describe('Phase 6 — Nutrition Engine API Tests', () => {
         data.items[0]!.carbsGrams + data.items[1]!.carbsGrams,
         1,
       );
-      expect(data.totalFatGrams).toBeCloseTo(data.items[0]!.fatGrams + data.items[1]!.fatGrams, 1);
+      // Aggregation keeps full precision internally and rounds only at the final boundary.
+      expect(data.totalFatGrams).toBe(5.1);
     });
   });
 });

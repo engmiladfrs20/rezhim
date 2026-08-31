@@ -2,6 +2,8 @@ import type { NutrientUnit } from './food';
 
 export type Gender = 'male' | 'female';
 
+export type LifeStage = 'adult_non_pregnant_non_lactating' | 'pregnant' | 'lactating';
+
 export type ActivityLevel =
   'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active';
 
@@ -20,6 +22,7 @@ export interface BmrCalculationInput {
   heightCm: number;
   weightKg: number;
   bodyFatPercentage?: number | undefined;
+  lifeStage?: LifeStage | undefined;
   formula: BMRFormula;
 }
 
@@ -34,6 +37,7 @@ export interface UserBiometrics {
   heightCm: number;
   weightKg: number;
   bodyFatPercentage?: number | undefined;
+  lifeStage?: LifeStage | undefined;
   activityLevel: ActivityLevel;
   dietGoal: DietGoal;
   formula: BMRFormula;
@@ -66,9 +70,12 @@ export interface CalculatedNutritionTargets {
   bmr: number;
   tdee: number;
   targetCalories: number;
+  rawTargetCalories?: number | undefined;
   calorieDelta: number;
   macronutrients: MacronutrientTargets;
   micronutrients: MicronutrientTargets;
+  policyVersion?: string | undefined;
+  warnings?: string[] | undefined;
 }
 
 export interface NutritionAggregateItemInput {

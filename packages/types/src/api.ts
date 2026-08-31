@@ -37,6 +37,8 @@ export interface ApiErrorResponse {
       | 'NOT_READY'
       | 'INTERNAL_ERROR'
       | 'VALIDATION_ERROR'
+      | 'UNSUPPORTED_POPULATION'
+      | 'PROVENANCE_REQUIRED'
       | 'EMAIL_ALREADY_EXISTS'
       | 'INVALID_CREDENTIALS'
       | 'AUTHENTICATION_REQUIRED'

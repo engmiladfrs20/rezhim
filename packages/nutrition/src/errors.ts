@@ -1,5 +1,5 @@
 export class NutritionDomainError extends Error {
-  public readonly code: string;
+  public code: string;
 
   constructor(message: string, code = 'NUTRITION_DOMAIN_ERROR') {
     super(message);
@@ -16,6 +16,22 @@ export class NutritionValidationError extends NutritionDomainError {
     super(message, 'NUTRITION_VALIDATION_ERROR');
     this.name = 'NutritionValidationError';
     this.field = field;
+  }
+}
+
+export class UnsupportedPopulationError extends NutritionValidationError {
+  constructor(message: string, field = 'age') {
+    super(message, field);
+    this.name = 'UnsupportedPopulationError';
+    this.code = 'UNSUPPORTED_POPULATION';
+  }
+}
+
+export class NutritionProvenanceError extends NutritionValidationError {
+  constructor(message: string, field = 'provenance') {
+    super(message, field);
+    this.name = 'NutritionProvenanceError';
+    this.code = 'PROVENANCE_REQUIRED';
   }
 }
 

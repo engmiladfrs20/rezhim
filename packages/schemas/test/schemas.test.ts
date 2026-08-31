@@ -11,9 +11,60 @@ import {
   foodServingInputSchema,
   foodNutrientInputSchema,
   createFoodCategorySchema,
+  nutritionTargetsInputSchema,
+  nutritionAggregateItemSchema,
 } from '../src';
 
 describe('Zod Schemas Package', () => {
+  it('enforces supported adult targets and unambiguous portion modes', () => {
+    const validTargets = nutritionTargetsInputSchema.safeParse({
+      gender: 'female',
+      age: 51,
+      heightCm: 165,
+      weightKg: 60,
+      activityLevel: 'moderately_active',
+      dietGoal: 'maintenance',
+      formula: 'mifflin_st_jeor',
+    });
+    expect(validTargets.success).toBe(true);
+    expect(
+      nutritionTargetsInputSchema.safeParse({
+        gender: 'female',
+        age: 18,
+        heightCm: 165,
+        weightKg: 60,
+        activityLevel: 'moderately_active',
+        dietGoal: 'maintenance',
+        formula: 'mifflin_st_jeor',
+      }).success,
+    ).toBe(false);
+    expect(
+      nutritionTargetsInputSchema.safeParse({
+        gender: 'female',
+        age: 30,
+        heightCm: 165,
+        weightKg: 60,
+        lifeStage: 'pregnant',
+        activityLevel: 'moderately_active',
+        dietGoal: 'maintenance',
+        formula: 'mifflin_st_jeor',
+      }).success,
+    ).toBe(false);
+    expect(nutritionAggregateItemSchema.safeParse({ foodId: 'food', grams: 100 }).success).toBe(
+      true,
+    );
+    expect(
+      nutritionAggregateItemSchema.safeParse({ foodId: 'food', servingId: 'cup', quantity: 2 })
+        .success,
+    ).toBe(true);
+    expect(
+      nutritionAggregateItemSchema.safeParse({ foodId: 'food', grams: 100, quantity: 2 }).success,
+    ).toBe(false);
+    expect(
+      nutritionAggregateItemSchema.safeParse({ foodId: 'food', grams: 100, servingId: 'cup' })
+        .success,
+    ).toBe(false);
+  });
   it('validates CloudflareEnvSchema defaults and overrides', () => {
     const defaultEnv = CloudflareEnvSchema.parse({});
     expect(defaultEnv.APP_ENV).toBe('development');

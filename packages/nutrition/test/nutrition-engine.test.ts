@@ -8,11 +8,19 @@ import {
   validateBmrInput,
   validateBiometricsInput,
   NutritionValidationError,
+  UnsupportedPopulationError,
   FormulaPrerequisiteError,
   InvalidPortionError,
   ACTIVITY_FACTORS,
   DIET_GOAL_CALORIE_DELTAS,
   MICRONUTRIENT_GUIDELINES,
+  NUTRIAI_PRODUCT_POLICY_VERSION,
+  getCalciumTargetMg,
+  getIronTargetMg,
+  getPotassiumAiMg,
+  validateFoodDataInput,
+  validateNutritionInput,
+  validateCalculatedOutput,
 } from '../src';
 import type {
   UserBiometrics,
@@ -597,4 +605,114 @@ describe('Nutrition Engine — Food Portion & Multi-Item Aggregation', () => {
       }),
     ).toThrow(InvalidPortionError);
   });
+
+  it('rejects quantity when grams mode is used', () => {
+    expect(() =>
+      calculateFoodPortionNutrition(activeChickenFood, { grams: 100, quantity: 2 }),
+    ).toThrow(InvalidPortionError);
+  });
+
+  it('rejects non-finite scaling and invalid nutrient records', () => {
+    expect(() =>
+      calculateFoodPortionNutrition(activeChickenFood, { grams: Number.MAX_VALUE }),
+    ).toThrow(NutritionValidationError);
+    expect(() =>
+      validateFoodDataInput({
+        ...activeChickenFood,
+        nutrients: [
+          ...activeChickenFood.nutrients,
+          { ...activeChickenFood.nutrients[0], amount_per_100g: 1 },
+        ],
+      }),
+    ).toThrow(NutritionValidationError);
+    expect(() =>
+      validateFoodDataInput({
+        ...activeChickenFood,
+        nutrients: [{ ...activeChickenFood.nutrients[0], unit: 'stone' as never }],
+      }),
+    ).toThrow(NutritionValidationError);
+  });
+
+  it('keeps missing nutrient tracking per item occurrence when the same food repeats', () => {
+    const first = calculateFoodPortionNutrition(activeChickenFood, { grams: 100 });
+    const second = calculateFoodPortionNutrition(activeChickenFood, { grams: 250 });
+    const result = aggregateNutrition([first, second]);
+    expect(result.missingNutrients?.some((message) => message.includes('Sodium'))).toBe(false);
+    expect(result.missingNutrients?.find((message) => message.includes('Dietary Fiber'))).toContain(
+      '2 of 2',
+    );
+  });
+
+  it('aggregates full precision before rounding the final public result', () => {
+    const portions = Array.from({ length: 100 }, () =>
+      calculateFoodPortionNutrition(activeRiceFood, { grams: 0.1 }),
+    );
+    const result = aggregateNutrition(portions);
+    expect(result.totalPortionGrams).toBe(10);
+    expect(result.totalEnergyKcal).toBe(13);
+  });
 });
+
+describe('Nutrition Engine — Population, policy and runtime invariants', () => {
+  it('applies adult age and sex micronutrient bands', () => {
+    expect(getCalciumTargetMg('female', 50)).toBe(1000);
+    expect(getCalciumTargetMg('female', 51)).toBe(1200);
+    expect(getCalciumTargetMg('male', 70)).toBe(1000);
+    expect(getCalciumTargetMg('male', 71)).toBe(1200);
+    expect(getIronTargetMg('female', 50)).toBe(18);
+    expect(getIronTargetMg('female', 51)).toBe(8);
+    expect(getIronTargetMg('male', 71)).toBe(8);
+    expect(getPotassiumAiMg('male')).toBe(3400);
+    expect(getPotassiumAiMg('female')).toBe(2600);
+  });
+
+  it('rejects unsupported life stages and emits a versioned policy warning when floor applies', () => {
+    expect(() =>
+      calculateNutritionTargets({
+        gender: 'female',
+        age: 30,
+        heightCm: 165,
+        weightKg: 60,
+        activityLevel: 'sedentary',
+        dietGoal: 'maintenance',
+        formula: 'mifflin_st_jeor',
+        lifeStage: 'pregnant',
+      }),
+    ).toThrow(UnsupportedPopulationError);
+    const target = calculateNutritionTargets({
+      gender: 'male',
+      age: 100,
+      heightCm: 100,
+      weightKg: 20,
+      activityLevel: 'sedentary',
+      dietGoal: 'weight_loss_aggressive',
+      formula: 'mifflin_st_jeor',
+    });
+    expect(target.targetCalories).toBe(1000);
+    expect(target.rawTargetCalories).toBeLessThan(1000);
+    expect(target.policyVersion).toBe(NUTRIAI_PRODUCT_POLICY_VERSION);
+    expect(target.warnings?.[0]).toContain('not a clinical safety guarantee');
+  });
+
+  it('validates finite outputs and supported nutrition input variants', () => {
+    expect(() => validateCalculatedOutput({ value: Infinity })).toThrow(NutritionValidationError);
+    expect(() => validateNutritionInput({ unknown: true })).toThrow(NutritionValidationError);
+    expect(() => validateNutritionInput({ gender: 'male', formula: 'mifflin_st_jeor' })).toThrow(
+      NutritionValidationError,
+    );
+    expect(() =>
+      validateNutritionInput({ ...activeFoodForValidation, status: 'active' }),
+    ).not.toThrow();
+  });
+});
+
+const activeFoodForValidation: FoodDataInput = {
+  id: 'validation-food',
+  status: 'active',
+  nutrients: [
+    { nutrient_id: 'nut_energy', code: 'energy', unit: 'kcal', amount_per_100g: 100 },
+    { nutrient_id: 'nut_protein', code: 'protein', unit: 'g', amount_per_100g: 10 },
+    { nutrient_id: 'nut_carbohydrate', code: 'carbohydrate', unit: 'g', amount_per_100g: 10 },
+    { nutrient_id: 'nut_fat_total', code: 'fat_total', unit: 'g', amount_per_100g: 1 },
+  ],
+};

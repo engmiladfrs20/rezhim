@@ -6,6 +6,7 @@ import type {
 } from '@nutriai/types';
 import { NutritionValidationError, InvalidPortionError } from './errors';
 import { ENERGY_CONVERSION } from './constants';
+import { validateFoodDataInput, validateFiniteNonNegative } from './validation';
 
 export interface FoodPortionCalculationInput {
   grams?: number | undefined;
@@ -20,6 +21,14 @@ export interface FoodNutrientData {
   name_en?: string | undefined;
   unit: NutrientUnit;
   amount_per_100g: number;
+  source_id?: string | null | undefined;
+  external_id?: string | null | undefined;
+  source_url?: string | null | undefined;
+  citation?: string | null | undefined;
+  dataset_version?: string | null | undefined;
+  method?: string | null | undefined;
+  retrieved_at?: string | null | undefined;
+  license?: string | null | undefined;
 }
 
 export interface FoodServingData {
@@ -31,6 +40,14 @@ export interface FoodServingData {
   weight_g?: number | undefined;
   weightG?: number | undefined;
   household_unit?: string | null | undefined;
+  source_id?: string | null | undefined;
+  external_id?: string | null | undefined;
+  source_url?: string | null | undefined;
+  citation?: string | null | undefined;
+  dataset_version?: string | null | undefined;
+  method?: string | null | undefined;
+  retrieved_at?: string | null | undefined;
+  license?: string | null | undefined;
 }
 
 export interface FoodDataInput {
@@ -46,6 +63,23 @@ export interface FoodDataInput {
 
 const REQUIRED_CORE_MACROS = ['nut_energy', 'nut_protein', 'nut_carbohydrate', 'nut_fat_total'];
 
+interface RawPortionValues {
+  portionGrams: number;
+  nutrients: AggregatedNutrientValue[];
+  energyKcal: number;
+  proteinGrams: number;
+  carbsGrams: number;
+  fatGrams: number;
+}
+
+// Keeps full precision available to aggregateNutrition without exposing internal values in API JSON.
+export const rawPortionValues = new WeakMap<FoodPortionNutrition, RawPortionValues>();
+
+function round(value: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
 /**
  * Calculates portion nutrition for a single active food item.
  *
@@ -57,16 +91,17 @@ export function calculateFoodPortionNutrition(
   food: FoodDataInput,
   portion: FoodPortionCalculationInput,
 ): FoodPortionNutrition {
-  // 1. Food State Validation
-  if (!food || typeof food !== 'object') {
-    throw new NutritionValidationError('Food data must be a valid object');
-  }
-
-  if (food.status !== 'active') {
-    throw new NutritionValidationError(
-      `Cannot calculate nutrition for food "${food.id}" with status "${food.status}". Only active foods are allowed.`,
-      'status',
-    );
+  // 1. Food State and data validation
+  try {
+    validateFoodDataInput(food);
+  } catch (error) {
+    if (
+      error instanceof NutritionValidationError &&
+      (error.field === 'weight_g' || error.message.includes('serving'))
+    ) {
+      throw new InvalidPortionError(error.message, error.field ?? 'servingId');
+    }
+    throw error;
   }
 
   // 2. Portion Validation
@@ -76,10 +111,11 @@ export function calculateFoodPortionNutrition(
 
   const hasGrams = portion.grams !== undefined && portion.grams !== null;
   const hasServing = portion.servingId !== undefined && portion.servingId !== null;
+  const hasQuantity = portion.quantity !== undefined && portion.quantity !== null;
 
-  if (hasGrams && hasServing) {
+  if (hasGrams && (hasServing || hasQuantity)) {
     throw new InvalidPortionError(
-      'Ambiguous portion: specify either "grams" or "servingId", not both.',
+      'In grams mode, "grams" must be provided alone; "servingId" and "quantity" are forbidden.',
     );
   }
 
@@ -133,7 +169,14 @@ export function calculateFoodPortionNutrition(
       );
     }
 
-    portionGrams = servingWeight * quantity;
+    const calculatedGrams = servingWeight * quantity;
+    if (!Number.isFinite(calculatedGrams) || calculatedGrams <= 0) {
+      throw new InvalidPortionError(
+        'Serving grams overflowed the finite numeric range.',
+        'quantity',
+      );
+    }
+    portionGrams = calculatedGrams;
     servingDetail = {
       id: matchedServing.id,
       nameFa: matchedServing.name_fa ?? matchedServing.nameFa ?? '',
@@ -144,7 +187,7 @@ export function calculateFoodPortionNutrition(
   }
 
   // 3. Macronutrient & Nutrient Verification
-  const nutrientsList = food.nutrients || [];
+  const nutrientsList = food.nutrients;
   const nutrientMap = new Map<string, FoodNutrientData>();
   nutrientsList.forEach((n) => nutrientMap.set(n.nutrient_id, n));
 
@@ -163,7 +206,7 @@ export function calculateFoodPortionNutrition(
 
   nutrientsList.forEach((n) => {
     const rawScaled = n.amount_per_100g * factor;
-    const roundedAmount = Math.round(rawScaled * 100) / 100;
+    validateFiniteNonNegative(rawScaled, `${n.nutrient_id}.scaledAmount`);
 
     computedNutrients.push({
       nutrientId: n.nutrient_id,
@@ -171,7 +214,7 @@ export function calculateFoodPortionNutrition(
       nameFa: n.name_fa || '',
       nameEn: n.name_en || '',
       unit: n.unit,
-      amount: roundedAmount,
+      amount: round(rawScaled, 2),
     });
   });
 
@@ -180,10 +223,19 @@ export function calculateFoodPortionNutrition(
   const carbsNutrient = nutrientMap.get('nut_carbohydrate')!;
   const fatNutrient = nutrientMap.get('nut_fat_total')!;
 
-  const energyKcal = Math.round(energyNutrient.amount_per_100g * factor * 10) / 10;
-  const proteinGrams = Math.round(proteinNutrient.amount_per_100g * factor * 10) / 10;
-  const carbsGrams = Math.round(carbsNutrient.amount_per_100g * factor * 10) / 10;
-  const fatGrams = Math.round(fatNutrient.amount_per_100g * factor * 10) / 10;
+  const rawEnergyKcal = energyNutrient.amount_per_100g * factor;
+  const rawProteinGrams = proteinNutrient.amount_per_100g * factor;
+  const rawCarbsGrams = carbsNutrient.amount_per_100g * factor;
+  const rawFatGrams = fatNutrient.amount_per_100g * factor;
+  validateFiniteNonNegative(rawEnergyKcal, 'energyKcal');
+  validateFiniteNonNegative(rawProteinGrams, 'proteinGrams');
+  validateFiniteNonNegative(rawCarbsGrams, 'carbsGrams');
+  validateFiniteNonNegative(rawFatGrams, 'fatGrams');
+
+  const energyKcal = round(rawEnergyKcal, 1);
+  const proteinGrams = round(rawProteinGrams, 1);
+  const carbsGrams = round(rawCarbsGrams, 1);
+  const fatGrams = round(rawFatGrams, 1);
 
   // 5. Calorie Consistency Verification (4/4/9 Atwater Check)
   const expectedKcal =
@@ -201,11 +253,11 @@ export function calculateFoodPortionNutrition(
     );
   }
 
-  return {
+  const result: FoodPortionNutrition = {
     foodId: food.id,
     foodNameFa: food.name_fa ?? food.nameFa ?? '',
     foodNameEn: food.name_en ?? food.nameEn ?? '',
-    portionGrams: Math.round(portionGrams * 10) / 10,
+    portionGrams: round(portionGrams, 1),
     serving: servingDetail,
     nutrients: computedNutrients,
     energyKcal,
@@ -214,4 +266,21 @@ export function calculateFoodPortionNutrition(
     fatGrams,
     warnings: warnings.length > 0 ? warnings : undefined,
   };
+
+  rawPortionValues.set(result, {
+    portionGrams,
+    nutrients: nutrientsList.map((n) => ({
+      nutrientId: n.nutrient_id,
+      code: n.code,
+      nameFa: n.name_fa ?? '',
+      nameEn: n.name_en ?? '',
+      unit: n.unit,
+      amount: n.amount_per_100g * factor,
+    })),
+    energyKcal: rawEnergyKcal,
+    proteinGrams: rawProteinGrams,
+    carbsGrams: rawCarbsGrams,
+    fatGrams: rawFatGrams,
+  });
+  return result;
 }

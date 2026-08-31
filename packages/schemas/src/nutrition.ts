@@ -3,6 +3,9 @@ import { z } from 'zod';
 export const genderEnum = z.enum(['male', 'female']);
 export type GenderDto = z.infer<typeof genderEnum>;
 
+export const lifeStageEnum = z.enum(['adult_non_pregnant_non_lactating', 'pregnant', 'lactating']);
+export type LifeStageDto = z.infer<typeof lifeStageEnum>;
+
 export const activityLevelEnum = z.enum([
   'sedentary',
   'lightly_active',
@@ -29,28 +32,51 @@ export const nutritionTargetsInputSchema = z
     gender: genderEnum,
     age: z
       .number({ required_error: 'Age is required' })
+      .finite('Age must be finite')
       .int('Age must be an integer')
-      .min(10, 'Age must be at least 10')
+      .min(19, 'Nutrition target calculations are restricted to adults aged 19 years or older.')
       .max(120, 'Age must be at most 120'),
     heightCm: z
       .number({ required_error: 'Height in cm is required' })
+      .finite('Height must be finite')
       .min(50, 'Height must be at least 50 cm')
       .max(260, 'Height must be at most 260 cm'),
     weightKg: z
       .number({ required_error: 'Weight in kg is required' })
+      .finite('Weight must be finite')
       .min(20, 'Weight must be at least 20 kg')
       .max(350, 'Weight must be at most 350 kg'),
     bodyFatPercentage: z
       .number()
+      .finite('Body fat percentage must be finite')
       .min(1, 'Body fat percentage must be at least 1%')
       .max(70, 'Body fat percentage must be at most 70%')
       .optional()
       .nullable(),
+    lifeStage: lifeStageEnum.optional().default('adult_non_pregnant_non_lactating'),
     activityLevel: activityLevelEnum,
     dietGoal: dietGoalEnum,
     formula: bmrFormulaEnum,
   })
   .superRefine((data, ctx) => {
+    if (data.age < 19) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'Nutrition target calculations are restricted to adults aged 19 years or older. Children and adolescents (< 19) are not supported.',
+        path: ['age'],
+      });
+    }
+
+    if (data.lifeStage && data.lifeStage !== 'adult_non_pregnant_non_lactating') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'Nutrition target calculations currently only support nonpregnant and nonlactating adults. Pregnancy and lactation are not supported.',
+        path: ['lifeStage'],
+      });
+    }
+
     if (
       data.formula === 'katch_mcardle' &&
       (data.bodyFatPercentage === undefined || data.bodyFatPercentage === null)
@@ -80,23 +106,26 @@ export const nutritionAggregateItemSchema = z
       .positive('Quantity must be greater than 0')
       .finite('Quantity must be finite')
       .optional()
-      .default(1),
+      .nullable(),
   })
   .superRefine((data, ctx) => {
     const hasGrams = data.grams !== undefined && data.grams !== null;
     const hasServing = data.servingId !== undefined && data.servingId !== null;
+    const hasQuantity = data.quantity !== undefined && data.quantity !== null;
 
-    if (hasGrams && hasServing) {
+    if (hasGrams && (hasServing || hasQuantity)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Ambiguous portion: specify either "grams" or "servingId", not both.',
+        message:
+          'In grams mode, "grams" must be provided alone; "servingId" and "quantity" are forbidden.',
       });
     }
 
     if (!hasGrams && !hasServing) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Incomplete portion: either "grams" or "servingId" must be provided.',
+        message:
+          'Incomplete portion: specify either "grams" alone or "servingId" with optional "quantity".',
       });
     }
   });

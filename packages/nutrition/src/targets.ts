@@ -4,7 +4,7 @@ import type {
   MacronutrientTargets,
   MicronutrientTargets,
 } from '@nutriai/types';
-import { validateBiometricsInput } from './validation';
+import { validateBiometricsInput, validateCalculatedOutput } from './validation';
 import { calculateBmr } from './bmr';
 import { calculateTdee } from './tdee';
 import {
@@ -13,6 +13,7 @@ import {
   ENERGY_CONVERSION,
   MICRONUTRIENT_GUIDELINES,
   BIOMETRIC_BOUNDS,
+  NUTRIAI_PRODUCT_POLICY_VERSION,
 } from './constants';
 
 /**
@@ -38,11 +39,10 @@ export function calculateNutritionTargets(input: UserBiometrics): CalculatedNutr
   const roundedBmr = Math.round(rawBmr);
   const roundedTdee = Math.round(rawTdee);
 
-  // Enforce physiological safety floor
-  const targetCalories = Math.max(
-    BIOMETRIC_BOUNDS.MIN_CALORIE_FLOOR,
-    Math.round(rawTdee + goalDelta),
-  );
+  const rawTargetCalories = rawTdee + goalDelta;
+  const policyFloor = BIOMETRIC_BOUNDS.MIN_CALORIE_POLICY_FLOOR;
+  const floorApplied = rawTargetCalories < policyFloor;
+  const targetCalories = Math.round(Math.max(policyFloor, rawTargetCalories));
 
   const calorieDelta = targetCalories - roundedTdee;
 
@@ -77,24 +77,34 @@ export function calculateNutritionTargets(input: UserBiometrics): CalculatedNutr
     carbsPercentage,
   };
 
-  // 3. Evidence-Based Micronutrient & Fluid Recommendations
+  // 3. Reference targets for the supported adult population
   const micronutrients: MicronutrientTargets = {
     recommendedWaterMl: Math.round(input.weightKg * MICRONUTRIENT_GUIDELINES.WATER_ML_PER_KG),
     minimumFiberGrams: Math.round(
       (targetCalories / 1000) * MICRONUTRIENT_GUIDELINES.FIBER_GRAMS_PER_1000_KCAL,
     ),
     maximumSodiumMg: MICRONUTRIENT_GUIDELINES.SODIUM_MAX_MG,
-    recommendedCalciumMg: MICRONUTRIENT_GUIDELINES.CALCIUM_RDA_MG,
-    recommendedIronMg: MICRONUTRIENT_GUIDELINES.IRON_RDA_MG[input.gender],
-    recommendedPotassiumMg: MICRONUTRIENT_GUIDELINES.POTASSIUM_RDA_MG[input.gender],
+    recommendedCalciumMg: MICRONUTRIENT_GUIDELINES.getCalciumTargetMg(input.gender, input.age),
+    recommendedIronMg: MICRONUTRIENT_GUIDELINES.getIronTargetMg(input.gender, input.age),
+    recommendedPotassiumMg: MICRONUTRIENT_GUIDELINES.getPotassiumAiMg(input.gender),
   };
 
-  return {
+  const result: CalculatedNutritionTargets = {
     bmr: roundedBmr,
     tdee: roundedTdee,
     targetCalories,
+    rawTargetCalories,
     calorieDelta,
     macronutrients,
     micronutrients,
+    policyVersion: NUTRIAI_PRODUCT_POLICY_VERSION,
+    warnings: floorApplied
+      ? [
+          `The NutriAI product-policy calorie floor (${policyFloor} kcal/day) was applied to a raw target of ${Math.round(rawTargetCalories)} kcal/day; this is not a clinical safety guarantee.`,
+        ]
+      : undefined,
   };
+
+  validateCalculatedOutput(result);
+  return result;
 }

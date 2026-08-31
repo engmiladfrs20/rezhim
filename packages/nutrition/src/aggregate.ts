@@ -5,6 +5,8 @@ import type {
   NutrientUnit,
 } from '@nutriai/types';
 import { NutritionValidationError } from './errors';
+import { rawPortionValues } from './portion';
+import { validateFiniteNonNegative, validateFiniteNumber } from './validation';
 
 const TRACKED_OPTIONAL_NUTRIENTS = [
   { id: 'nut_fiber', nameFa: 'فیبر رژیمی', nameEn: 'Dietary Fiber', unit: 'g' as NutrientUnit },
@@ -50,6 +52,55 @@ export function aggregateNutrition(items: FoodPortionNutrition[]): AggregatedNut
     };
   }
 
+  items.forEach((item, index) => {
+    if (!item || typeof item !== 'object') {
+      throw new NutritionValidationError(`Item at index ${index} must be a valid object.`, 'items');
+    }
+    if (typeof item.foodId !== 'string' || item.foodId.trim() === '') {
+      throw new NutritionValidationError(`Item at index ${index} has an invalid foodId.`, 'foodId');
+    }
+    validateFiniteNonNegative(item.portionGrams, `items[${index}].portionGrams`);
+    validateFiniteNonNegative(item.energyKcal, `items[${index}].energyKcal`);
+    validateFiniteNonNegative(item.proteinGrams, `items[${index}].proteinGrams`);
+    validateFiniteNonNegative(item.carbsGrams, `items[${index}].carbsGrams`);
+    validateFiniteNonNegative(item.fatGrams, `items[${index}].fatGrams`);
+    if (!Array.isArray(item.nutrients)) {
+      throw new NutritionValidationError(
+        `Item at index ${index} nutrients must be an array.`,
+        'nutrients',
+      );
+    }
+    const seenIds = new Set<string>();
+    item.nutrients.forEach((nutrient, nutrientIndex) => {
+      if (!nutrient || typeof nutrient !== 'object') {
+        throw new NutritionValidationError(
+          `Item at index ${index} nutrient ${nutrientIndex} is invalid.`,
+          'nutrients',
+        );
+      }
+      if (typeof nutrient.nutrientId !== 'string' || nutrient.nutrientId.trim() === '') {
+        throw new NutritionValidationError(
+          `Item at index ${index} contains a nutrient without a valid nutrientId.`,
+          'nutrientId',
+        );
+      }
+      if (seenIds.has(nutrient.nutrientId)) {
+        throw new NutritionValidationError(
+          `Item at index ${index} contains duplicate nutrient "${nutrient.nutrientId}".`,
+          'nutrients',
+        );
+      }
+      seenIds.add(nutrient.nutrientId);
+      validateFiniteNonNegative(
+        nutrient.amount,
+        `items[${index}].nutrients[${nutrientIndex}].amount`,
+      );
+      if (!nutrient.unit) {
+        throw new NutritionValidationError('Nutrient unit is required.', 'unit');
+      }
+    });
+  });
+
   let totalPortionGrams = 0;
   let totalEnergyKcal = 0;
   let totalProteinGrams = 0;
@@ -69,23 +120,43 @@ export function aggregateNutrition(items: FoodPortionNutrition[]): AggregatedNut
   >();
 
   const allWarnings: string[] = [];
-  const foodPresenceMap = new Map<string, Set<string>>(); // nutrientId -> Set<foodId>
+  const foodPresenceMap = new Map<string, Set<number>>(); // nutrientId -> set of item occurrences
 
-  items.forEach((item) => {
-    totalPortionGrams += item.portionGrams;
-    totalEnergyKcal += item.energyKcal;
-    totalProteinGrams += item.proteinGrams;
-    totalCarbsGrams += item.carbsGrams;
-    totalFatGrams += item.fatGrams;
+  items.forEach((item, itemIndex) => {
+    const raw = rawPortionValues.get(item);
+    const portionGrams = raw?.portionGrams ?? item.portionGrams;
+    const energyKcal = raw?.energyKcal ?? item.energyKcal;
+    const proteinGrams = raw?.proteinGrams ?? item.proteinGrams;
+    const carbsGrams = raw?.carbsGrams ?? item.carbsGrams;
+    const fatGrams = raw?.fatGrams ?? item.fatGrams;
+    totalPortionGrams += portionGrams;
+    totalEnergyKcal += energyKcal;
+    totalProteinGrams += proteinGrams;
+    totalCarbsGrams += carbsGrams;
+    totalFatGrams += fatGrams;
+
+    validateFiniteNumber(totalPortionGrams, 'totalPortionGrams');
+    validateFiniteNumber(totalEnergyKcal, 'totalEnergyKcal');
+    validateFiniteNumber(totalProteinGrams, 'totalProteinGrams');
+    validateFiniteNumber(totalCarbsGrams, 'totalCarbsGrams');
+    validateFiniteNumber(totalFatGrams, 'totalFatGrams');
 
     if (item.warnings && item.warnings.length > 0) {
       allWarnings.push(...item.warnings);
     }
 
-    item.nutrients.forEach((n) => {
+    const rawNutrients = raw?.nutrients ?? item.nutrients;
+    rawNutrients.forEach((n) => {
       const existing = nutrientAggregationMap.get(n.nutrientId);
       if (existing) {
+        if (existing.unit !== n.unit) {
+          throw new NutritionValidationError(
+            `Nutrient "${n.nutrientId}" has conflicting units across items (${existing.unit} vs ${n.unit}).`,
+            'unit',
+          );
+        }
         existing.totalAmount += n.amount;
+        validateFiniteNonNegative(existing.totalAmount, `nutrients.${n.nutrientId}.totalAmount`);
       } else {
         nutrientAggregationMap.set(n.nutrientId, {
           nutrientId: n.nutrientId,
@@ -100,7 +171,7 @@ export function aggregateNutrition(items: FoodPortionNutrition[]): AggregatedNut
       if (!foodPresenceMap.has(n.nutrientId)) {
         foodPresenceMap.set(n.nutrientId, new Set());
       }
-      foodPresenceMap.get(n.nutrientId)!.add(item.foodId);
+      foodPresenceMap.get(n.nutrientId)!.add(itemIndex);
     });
   });
 
@@ -116,17 +187,26 @@ export function aggregateNutrition(items: FoodPortionNutrition[]): AggregatedNut
     }
   });
 
-  // Convert nutrient map to sorted array
-  const aggregatedNutrients: AggregatedNutrientValue[] = Array.from(
-    nutrientAggregationMap.values(),
-  ).map((n) => ({
-    nutrientId: n.nutrientId,
-    code: n.code,
-    nameFa: n.nameFa,
-    nameEn: n.nameEn,
-    unit: n.unit,
-    amount: Math.round(n.totalAmount * 100) / 100,
-  }));
+  // Convert nutrient map to a canonical, deterministic array. Round only here.
+  const aggregatedNutrients: AggregatedNutrientValue[] = Array.from(nutrientAggregationMap.values())
+    .sort((a, b) => a.nutrientId.localeCompare(b.nutrientId))
+    .map((n) => ({
+      nutrientId: n.nutrientId,
+      code: n.code,
+      nameFa: n.nameFa,
+      nameEn: n.nameEn,
+      unit: n.unit,
+      amount: Math.round(n.totalAmount * 100) / 100,
+    }));
+
+  [
+    totalPortionGrams,
+    totalEnergyKcal,
+    totalProteinGrams,
+    totalCarbsGrams,
+    totalFatGrams,
+    ...aggregatedNutrients.map((n) => n.amount),
+  ].forEach((value, index) => validateFiniteNonNegative(value, `aggregateOutput[${index}]`));
 
   return {
     totalPortionGrams: Math.round(totalPortionGrams * 10) / 10,

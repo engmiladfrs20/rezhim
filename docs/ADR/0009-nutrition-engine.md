@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-NutriAI Persia requires a scientific, deterministic, and type-safe calculation engine to compute user energy requirements, personalized macronutrient and micronutrient targets, and composite meal nutrition aggregations. Prior systems in this domain often suffer from hidden heuristic fallbacks, non-deterministic outputs, silent defaults, or loose coupling with AI models that hallucinate nutritional values.
+NutriAI Persia requires a deterministic and type-safe calculation engine to compute estimated energy requirements, explicit product-policy targets, adult reference micronutrients, and composite meal nutrition aggregations. The engine is not a clinical decision tool and never substitutes for a qualified clinician.
 
 Phase 6 requires a pure, testable domain engine decoupled from Cloudflare Workers, D1, React, or network layers, capable of:
 
@@ -20,6 +20,8 @@ Phase 6 requires a pure, testable domain engine decoupled from Cloudflare Worker
 5. Calculating nutrition for food portions scaled from the 100g database convention by grams or serving units.
 6. Aggregating nutrition across multiple food items while maintaining strict provenance guarantees and reporting missing data transparently.
 7. Exposing authenticated, stateless REST API endpoints in Cloudflare Workers.
+
+The supported target population in this phase is nonpregnant, nonlactating adults aged 19–120. Children, adolescents, pregnancy and lactation are rejected until dedicated reference tables are implemented.
 
 ## Decision
 
@@ -51,7 +53,7 @@ We created the `@nutriai/nutrition` workspace package located at `packages/nutri
 
 ### 3. Physical Activity Multipliers
 
-Multipliers reflect FAO/WHO/UNU Human Energy Requirements:
+Multipliers are versioned NutriAI product-policy values (v2026.1), informed by energy-requirement literature but not asserted to be the exact FAO PAL categories:
 
 - `sedentary`: `1.2` (desk work, little to no exercise)
 - `lightly_active`: `1.375` (light exercise 1–3 days/week)
@@ -71,8 +73,7 @@ Explicit calorie delta constants are defined in `DIET_GOAL_CALORIE_DELTAS`:
 - `muscle_gain_mild`: `+300 kcal/day` (~0.3 kg lean gain/week)
 - `muscle_gain_aggressive`: `+500 kcal/day` (~0.5 kg gain/week)
 
-**Safety Floor**: Daily calorie targets are clamped to an absolute physiological floor of `1,000 kcal/day`.
-`calorieDelta = targetCalories - tdee`
+The `1,000 kcal/day` lower bound is a product-policy floor, not a physiological or clinical safety guarantee. When applied, the response includes `rawTargetCalories`, `policyVersion` and a warning. `calorieDelta = targetCalories - roundedTdee`.
 
 ### 5. Macronutrient Distributions and Rounding Invariants
 
@@ -91,18 +92,19 @@ Explicit calorie delta constants are defined in `DIET_GOAL_CALORIE_DELTAS`:
 - **Rounding Rules**:
   - Internal calculations maintain full IEEE 754 floating point precision.
   - Final metrics are rounded at the output boundary.
+  - Aggregations retain unrounded internal values and use a canonical nutrient-ID sort before final rounding.
   - Percentage invariant: `proteinPercentage + carbsPercentage + fatPercentage === 100` strictly guaranteed.
 
-### 6. Evidence-Based Micronutrient Guidelines
+### 6. Adult Reference Micronutrient Guidelines
 
-Derived from US National Academies DRI & World Health Organization (WHO) standards:
+Reference values are drawn from the cited NIH Office of Dietary Supplements and National Academies tables; hydration, fiber and product-policy values are explicitly labeled as references or policy rather than clinical prescriptions:
 
 - **Hydration**: `35 ml/kg` of body weight.
 - **Dietary Fiber**: `14 g per 1,000 kcal` intake (IOM DRI standard).
 - **Sodium**: Maximum `2,300 mg/day` (AHA / Dietary Guidelines for Americans).
-- **Calcium**: Recommended `1,000 mg/day` (Adult RDA).
-- **Iron**: Gender-differentiated adult RDA (`8 mg/day` for men, `18 mg/day` for pre-menopausal women).
-- **Potassium**: Gender-differentiated adult RDA (`3,400 mg/day` for men, `2,600 mg/day` for women; NASEM 2019).
+- **Calcium**: Adult age/sex-banded RDA (1,000 or 1,200 mg/day).
+- **Iron**: Adult age/sex-banded RDA (8 or 18 mg/day).
+- **Potassium**: Gender-differentiated Adequate Intake (AI), not RDA (3,400 mg/day for men, 2,600 mg/day for women; NASEM 2019).
 
 ### 7. Food Nutrition Calculation and Aggregation
 
@@ -110,7 +112,7 @@ All nutrient values in the catalog are stored per 100 grams.
 
 - **Portion by Grams**: `nutrientAmount = amountPer100g × grams / 100`
 - **Portion by Serving**: `nutrientAmount = amountPer100g × serving.weight_g × quantity / 100`
-- **Data Gate**: Only `active` foods with verified provenance are permitted in calculations. Requests referencing `draft` or `archived` foods are rejected with `400 VALIDATION_ERROR`.
+- **Data Gate**: Only `active` foods with complete provenance on every used nutrient and selected serving are permitted. Every provenance source must exist and have a publicly usable license. Requests referencing `draft`, `archived`, incomplete or restricted data are rejected with a stable 400 error.
 - **4/4/9 Consistency Check**: If reported energy diverges from macro calculation by >20 kcal and >15%, a non-blocking `warnings` flag is emitted for transparency.
 - **Missing Nutrient Transparency**: If optional micronutrients (fiber, sodium, potassium, calcium, iron, vitamins) are not reported in any aggregated items, they are explicitly listed in `missingNutrients` rather than silently zeroed.
 

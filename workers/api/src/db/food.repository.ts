@@ -60,6 +60,23 @@ export class FoodRepository {
     }
   }
 
+  async findSourcesByIds(ids: readonly string[]): Promise<FoodSourceRecord[]> {
+    const uniqueIds = [...new Set(ids.filter((id) => id.trim().length > 0))];
+    if (uniqueIds.length === 0) return [];
+    try {
+      const placeholders = uniqueIds.map(() => '?').join(', ');
+      const result = await this.db
+        .prepare(`SELECT * FROM food_sources WHERE id IN (${placeholders})`)
+        .bind(...uniqueIds)
+        .all<FoodSourceRecord>();
+      return result.results ?? [];
+    } catch (err) {
+      throw new DatabaseError(
+        `Failed to verify food provenance sources: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
   async findByBarcode(barcode: string): Promise<FoodRecord | null> {
     try {
       const stmt = this.db.prepare('SELECT * FROM foods WHERE barcode = ?').bind(barcode);

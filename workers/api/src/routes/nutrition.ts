@@ -64,7 +64,12 @@ nutritionRouter.post('/targets', async (c) => {
       const errResp: ApiErrorResponse = {
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
+          code:
+            err.code === 'UNSUPPORTED_POPULATION'
+              ? 'UNSUPPORTED_POPULATION'
+              : err.code === 'PROVENANCE_REQUIRED'
+                ? 'PROVENANCE_REQUIRED'
+                : 'VALIDATION_ERROR',
           message: err.message,
         },
         requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',
@@ -124,7 +129,7 @@ nutritionRouter.post('/aggregate', async (c) => {
       const errResp: ApiErrorResponse = {
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
+          code: err.code === 'PROVENANCE_REQUIRED' ? 'PROVENANCE_REQUIRED' : 'VALIDATION_ERROR',
           message: err.message,
         },
         requestId: c.get('requestId') || '00000000-0000-0000-0000-000000000000',

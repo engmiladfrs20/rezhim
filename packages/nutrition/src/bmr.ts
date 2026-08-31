@@ -1,5 +1,6 @@
 import type { BmrCalculationInput } from '@nutriai/types';
-import { validateBmrInput } from './validation';
+import { validateBmrInput, validateFiniteNonNegative } from './validation';
+import { NutritionValidationError } from './errors';
 
 /**
  * Calculates Basal Metabolic Rate (BMR) in kcal/day.
@@ -25,23 +26,28 @@ export function calculateBmr(input: BmrCalculationInput): number {
 
   const { gender, age, heightCm, weightKg, formula, bodyFatPercentage } = input;
 
+  let result: number;
   switch (formula) {
     case 'mifflin_st_jeor': {
       const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
-      return gender === 'male' ? base + 5 : base - 161;
+      result = gender === 'male' ? base + 5 : base - 161;
+      break;
     }
 
     case 'harris_benedict': {
       if (gender === 'male') {
-        return 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
+        result = 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
+        break;
       }
-      return 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.33 * age;
+      result = 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.33 * age;
+      break;
     }
 
     case 'katch_mcardle': {
       // bodyFatPercentage is validated to be non-null and numeric by validateBmrInput
       const leanBodyMassKg = weightKg * (1 - (bodyFatPercentage as number) / 100);
-      return 370 + 21.6 * leanBodyMassKg;
+      result = 370 + 21.6 * leanBodyMassKg;
+      break;
     }
 
     default: {
@@ -49,4 +55,10 @@ export function calculateBmr(input: BmrCalculationInput): number {
       throw new Error(`Unhandled formula: ${String(exhaustiveCheck)}`);
     }
   }
+
+  validateFiniteNonNegative(result, 'bmr');
+  if (result === 0) {
+    throw new NutritionValidationError('BMR must be greater than zero.', 'bmr');
+  }
+  return result;
 }
