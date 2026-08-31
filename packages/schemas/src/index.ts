@@ -4,3 +4,4 @@ export * from './auth';
 export * from './storage';
 export * from './food';
 export * from './nutrition';
+export * from './meal-plan';

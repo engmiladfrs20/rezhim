@@ -1,4 +1,5 @@
 import type { NutrientUnit } from './food';
+import type { SupportedLocale } from './localization';
 
 export type Gender = 'male' | 'female';
 
@@ -156,4 +157,31 @@ export interface DailyDiarySummary {
   date: string;
   entries: FoodDiaryEntryWithNutrition[];
   nutrition: AggregatedNutritionResult;
+}
+
+export interface MealPlanGenerationInput {
+  targets: CalculatedNutritionTargets;
+  candidates: FoodPortionNutrition[];
+  days: number;
+  locale?: SupportedLocale | undefined;
+}
+
+export interface MealPlanMeal {
+  mealType: DiaryMealType;
+  targetCalories: number;
+  nutrition: AggregatedNutritionResult;
+}
+
+export interface MealPlanDay {
+  day: number;
+  meals: MealPlanMeal[];
+  nutrition: AggregatedNutritionResult;
+}
+
+export interface GeneratedMealPlan {
+  algorithmVersion: string;
+  requestedLocale: SupportedLocale;
+  days: MealPlanDay[];
+  targetCaloriesPerDay: number;
+  candidateFoodIds: string[];
 }
