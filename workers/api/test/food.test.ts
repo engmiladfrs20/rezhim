@@ -1189,6 +1189,23 @@ describe('Food Catalog Data Foundation & Security Integration Tests', () => {
       expect(barcodeRes.status).toBe(200);
       const barcodeData = (await barcodeRes.json()) as ApiResponse<PaginatedResult<FoodSummary>>;
       expect(barcodeData.data.items).toHaveLength(1);
+
+      const barcodeLookup = await app.request(
+        '/api/v1/foods/barcode/۱۲۳۴-۵۶۷۸?locale=en',
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(barcodeLookup.status).toBe(200);
+      const lookupData = (await barcodeLookup.json()) as ApiResponse<{ food: FoodDetail }>;
+      expect(lookupData.data.food.barcode).toBe('12345678');
+      expect(lookupData.data.food.name).toBe('Cooked rice');
+
+      const invalidLookup = await app.request(
+        '/api/v1/foods/barcode/1234',
+        { headers: { Authorization: `Bearer ${userToken}` } },
+        testEnv,
+      );
+      expect(invalidLookup.status).toBe(400);
     });
 
     it('keeps draft foods private to admin search and applies all query tokens', async () => {

@@ -16,6 +16,7 @@
 - **[x] Phase 12**: AI Coach with Diary Context
 - **[x] Phase 13**: Photo Food Recognition Boundary
 - **[x] Phase 14**: Voice/Text Food Log Interpretation
+- **[x] Phase 15**: Barcode Food Lookup Boundary
 
 ---
 
@@ -111,6 +112,7 @@ pnpm audit --prod --audit-level=critical
 - **مربی هوش مصنوعی**: `POST /api/v1/ai/coach` با احراز هویت، جمع تغذیه روزانه کاربر را از دفترچه غذایی می‌خواند، اهداف را سمت سرور محاسبه می‌کند و پرسش را با دستورهای ایمنی ثابت به Gemini می‌فرستد؛ هیچ شناسه یا داده حساس کاربر وارد prompt نمی‌شود.
 - **تشخیص غذای تصویری**: `POST /api/v1/ai/food-recognition` تصویر JPEG/PNG/WebP را با سقف ۳ مگابایت و فقط از مسیر احراز هویت‌شده به Gemini Vision می‌فرستد؛ تصویر ذخیره نمی‌شود و نتیجه تقریبی همراه disclaimer برمی‌گردد.
 - **ثبت غذا با متن/صدا**: `POST /api/v1/ai/food-log` متن تایپ‌شده یا transcript صوتی را به فهرست قابل‌تأیید تبدیل می‌کند؛ هیچ رکوردی خودکار در دفترچه نوشته نمی‌شود و مقدار تغذیه‌ای از متن حدس زده نمی‌شود.
+- **اسکن بارکد غذا**: `GET /api/v1/foods/barcode/:barcode` ارقام فارسی/عربی و جداکننده‌ها را نرمال می‌کند، فقط غذای active را با locale درخواستی برمی‌گرداند و برای بارکد نامعتبر یا ناشناخته پاسخ پایدار می‌دهد.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
 

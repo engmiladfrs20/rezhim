@@ -25,6 +25,7 @@ import type {
   FoodNutrientInputDto,
   FoodServingInputDto,
 } from '@nutriai/schemas';
+import { isValidBarcode, normalizeBarcode } from '@nutriai/schemas';
 import type {
   FoodRecord,
   FoodTranslationRecord,
@@ -152,6 +153,22 @@ export class FoodService {
   async getPublicFoodDetail(id: string, locale: SupportedLocale): Promise<FoodDetail> {
     const full = await this.foodRepo.findFullDetailById(id);
     if (!full || full.food.status !== 'active') {
+      throw new FoodNotFoundError();
+    }
+    return FoodMapper.toFoodDetail(full, locale);
+  }
+
+  async getPublicFoodByBarcode(rawBarcode: string, locale: SupportedLocale): Promise<FoodDetail> {
+    const barcode = normalizeBarcode(rawBarcode);
+    if (!barcode || !isValidBarcode(barcode)) {
+      throw new FoodValidationError('Barcode must contain between 8 and 18 numeric digits.');
+    }
+    const food = await this.foodRepo.findByBarcode(barcode);
+    if (!food || food.status !== 'active') {
+      throw new FoodNotFoundError();
+    }
+    const full = await this.foodRepo.findFullDetailById(food.id);
+    if (!full) {
       throw new FoodNotFoundError();
     }
     return FoodMapper.toFoodDetail(full, locale);
