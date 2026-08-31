@@ -185,3 +185,15 @@ export interface GeneratedMealPlan {
   targetCaloriesPerDay: number;
   candidateFoodIds: string[];
 }
+
+export interface FoodSubstitutionRecommendation {
+  food: FoodPortionNutrition;
+  similarityScore: number;
+  reasons: string[];
+}
+
+export interface FoodSubstitutionResult {
+  algorithmVersion: string;
+  reference: FoodPortionNutrition;
+  recommendations: FoodSubstitutionRecommendation[];
+}

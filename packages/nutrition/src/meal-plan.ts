@@ -26,7 +26,10 @@ function round(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
-function scalePortion(base: FoodPortionNutrition, grams: number): FoodPortionNutrition {
+export function scaleFoodPortionNutrition(
+  base: FoodPortionNutrition,
+  grams: number,
+): FoodPortionNutrition {
   const factor = grams / base.portionGrams;
   return {
     ...base,
@@ -106,7 +109,7 @@ function buildMeal(
   const gramsPerKcal = candidate.portionGrams / candidate.energyKcal;
   const rawGrams = targetCalories * gramsPerKcal;
   const portionGrams = Math.min(MAX_PORTION_GRAMS, Math.max(MIN_PORTION_GRAMS, rawGrams));
-  const item = scalePortion(candidate, portionGrams);
+  const item = scaleFoodPortionNutrition(candidate, portionGrams);
   const nutrition: AggregatedNutritionResult = aggregateNutrition([item]);
   return { mealType: type, targetCalories, nutrition };
 }

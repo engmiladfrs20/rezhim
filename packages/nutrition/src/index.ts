@@ -7,3 +7,4 @@ export * from './targets';
 export * from './portion';
 export * from './aggregate';
 export * from './meal-plan';
+export * from './substitution';

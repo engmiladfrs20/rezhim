@@ -11,6 +11,7 @@
 - **[x] Phase 7**: Bilingual Food Search & Discovery
 - **[x] Phase 8**: Authenticated Food Diary & Daily Nutrition Summaries
 - **[x] Phase 9**: Deterministic Meal Plan Engine
+- **[x] Phase 10**: Deterministic Food Substitution
 
 ---
 
@@ -100,6 +101,7 @@ pnpm audit --prod --audit-level=critical
 - **جست‌وجوی غذا**: `GET /api/v1/foods?q=...` و مسیر مدیریتی متن فارسی/انگلیسی، alias، برند و بارکد را با نرمال‌سازی قطعی جست‌وجو می‌کنند.
 - **دفترچه غذایی**: `GET/POST /api/v1/diary` و `PATCH/DELETE /api/v1/diary/:id` رکوردهای خصوصی کاربر و جمع روزانه‌ی تغذیه را با همان موتور قطعی محاسبه می‌کنند.
 - **برنامه غذایی**: `POST /api/v1/meal-plans/generate` با استفاده از اهداف تغذیه‌ای و غذاهای فعالِ دارای منشأ معتبر، چهار وعده‌ی روزانه‌ی قطعی تولید می‌کند.
+- **جایگزینی غذا**: `POST /api/v1/substitutions` گزینه‌های فعال و دارای منشأ را بر اساس شباهت کالری و ماکرو، به‌صورت قطعی رتبه‌بندی می‌کند.
 - **Backblaze B2**: رابط `StorageProvider` پیاده‌سازی شده و از طریق API سازگار با S3 با Web Streams و `Uint8Array` ارتباط برقرار می‌کند.
 - **RTL/LTR**: مدیریت کامل جهت و زبان در وب (`html[lang]` و `html[dir]`) و موبایل (`I18nManager.forceRTL`).
 
