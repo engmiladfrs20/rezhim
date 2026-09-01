@@ -25,7 +25,8 @@ describe('Gemini provider boundary', () => {
     expect(fetcher).toHaveBeenCalledOnce();
     const [url, init] = fetcher.mock.calls[0]!;
     expect(String(url)).toContain('test-model:generateContent');
-    expect(String(url)).toContain('key=secret-key-123');
+    expect(String(url)).not.toContain('secret-key-123');
+    expect(new Headers(init?.headers).get('x-goog-api-key')).toBe('secret-key-123');
     expect(String(init?.body)).toContain('سلام');
   });
 

@@ -97,7 +97,7 @@ export class GeminiProvider implements AiProvider {
     parts: Array<Record<string, string | Record<string, string>>>,
   ): Promise<AiGenerationResponse> {
     validateRequest(request);
-    const url = `${this.endpoint}/v1beta/models/${encodeURIComponent(this.model)}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+    const url = `${this.endpoint}/v1beta/models/${encodeURIComponent(this.model)}:generateContent`;
     const payload = {
       contents: [{ role: 'user', parts }],
       ...(request.systemInstruction
@@ -113,7 +113,10 @@ export class GeminiProvider implements AiProvider {
     try {
       response = await this.fetcher(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.apiKey,
+        },
         body: JSON.stringify(payload),
       });
     } catch {

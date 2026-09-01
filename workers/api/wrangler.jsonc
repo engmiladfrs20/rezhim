@@ -40,6 +40,9 @@
         "SERVICE_NAME": "nutriai-api-staging",
         "APP_VERSION": "1.0.0",
         "ALLOWED_ORIGINS": "https://staging.nutriai.persia,https://staging-admin.nutriai.persia",
+        "B2_ENDPOINT": "https://s3.us-east-005.backblazeb2.com",
+        "B2_REGION": "us-east-005",
+        "B2_BUCKET_NAME": "rezhim",
       },
       "d1_databases": [
         {
@@ -71,6 +74,9 @@
         "SERVICE_NAME": "nutriai-api-production",
         "APP_VERSION": "1.0.0",
         "ALLOWED_ORIGINS": "https://nutriai.persia,https://app.nutriai.persia,https://admin.nutriai.persia",
+        "B2_ENDPOINT": "https://s3.us-east-005.backblazeb2.com",
+        "B2_REGION": "us-east-005",
+        "B2_BUCKET_NAME": "rezhim",
       },
       "d1_databases": [
         {
