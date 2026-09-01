@@ -64,6 +64,27 @@ describe('Web App - Authentication, Profile, Session Restoration, & Localization
     expect(screen.getByRole('button', { name: /Create Account/i })).toBeInTheDocument();
   });
 
+  it('switches the unauthenticated login screen between Persian RTL and English LTR', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      if (String(url).includes('/api/v1/auth/me')) {
+        return new Response(JSON.stringify({ success: false }), { status: 401 });
+      }
+      return new Response(JSON.stringify({}), { status: 200 });
+    });
+
+    renderApp();
+
+    const faButton = await screen.findByRole('button', { name: 'فارسی' });
+    fireEvent.click(faButton);
+    expect(screen.getByRole('heading', { name: /ورود به NutriAI/i })).toBeInTheDocument();
+    expect(faButton.closest('[dir]')).toHaveAttribute('dir', 'rtl');
+    expect(screen.getByRole('button', { name: 'ورود امن' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+    expect(screen.getByRole('heading', { name: /Sign in to NutriAI/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Secure Login' })).toBeInTheDocument();
+  });
+
   it('handles user login submission and displays error on failure', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
       const urlStr = String(url);

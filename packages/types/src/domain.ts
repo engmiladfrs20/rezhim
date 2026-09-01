@@ -346,7 +346,7 @@ export interface AiVisionRequest extends AiGenerationRequest {
 }
 
 export interface AiGenerationResponse {
-  provider: 'gemini';
+  provider: 'gemini' | 'cloudflare-workers-ai';
   model: string;
   text: string;
 }

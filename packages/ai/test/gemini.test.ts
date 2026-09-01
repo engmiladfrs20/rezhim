@@ -1,16 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AiProviderError, AiUnavailableError, GeminiProvider, createGeminiProvider } from '../src';
+import {
+  AiProviderError,
+  AiUnavailableError,
+  CloudflareAiProvider,
+  GeminiProvider,
+  createAiProvider,
+  createGeminiProvider,
+} from '../src';
+import type { CloudflareEnv } from '@nutriai/types';
 
 describe('Gemini provider boundary', () => {
   it('builds a safe request and extracts text without exposing the API key', async () => {
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({ candidates: [{ content: { parts: [{ text: ' پاسخ ' }] } }] }),
-          { status: 200 },
-        ),
-      );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: ' پاسخ ' } }] }), {
+        status: 200,
+      }),
+    );
     const provider = new GeminiProvider(
       { apiKey: 'secret-key-123', model: 'test-model', endpoint: 'https://example.test/' },
       fetcher,
@@ -24,9 +29,9 @@ describe('Gemini provider boundary', () => {
     expect(result).toEqual({ provider: 'gemini', model: 'test-model', text: 'پاسخ' });
     expect(fetcher).toHaveBeenCalledOnce();
     const [url, init] = fetcher.mock.calls[0]!;
-    expect(String(url)).toContain('test-model:generateContent');
+    expect(String(url)).toContain('/v1beta/openai/chat/completions');
     expect(String(url)).not.toContain('secret-key-123');
-    expect(new Headers(init?.headers).get('x-goog-api-key')).toBe('secret-key-123');
+    expect(new Headers(init?.headers).get('authorization')).toBe('Bearer secret-key-123');
     expect(String(init?.body)).toContain('سلام');
   });
 
@@ -47,7 +52,7 @@ describe('Gemini provider boundary', () => {
 
   it('sends vision content as bounded inline data', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'نان' }] } }] }), {
+      new Response(JSON.stringify({ choices: [{ message: { content: 'نان' } }] }), {
         status: 200,
       }),
     );
@@ -61,10 +66,11 @@ describe('Gemini provider boundary', () => {
     ).resolves.toMatchObject({ text: 'نان' });
     const [, init] = fetcher.mock.calls[0]!;
     const payload = JSON.parse(String(init?.body)) as {
-      contents: Array<{ parts: Array<Record<string, unknown>> }>;
+      messages: Array<{ content: Array<Record<string, unknown>> }>;
     };
-    expect(payload.contents[0]?.parts[1]).toEqual({
-      inline_data: { mime_type: 'image/jpeg', data: 'aGVsbG8gd29ybGQ=' },
+    expect(payload.messages[0]?.content[1]).toEqual({
+      type: 'image_url',
+      image_url: { url: 'data:image/jpeg;base64,aGVsbG8gd29ybGQ=' },
     });
   });
 
@@ -79,5 +85,46 @@ describe('Gemini provider boundary', () => {
       }),
     ).rejects.toThrow('valid base64');
     expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('uses the Cloudflare-hosted Google fallback when edge Gemini egress fails', async () => {
+    const run = vi.fn().mockResolvedValue({ response: 'fallback OK' });
+    const provider = createAiProvider(
+      {
+        APP_ENV: 'production',
+        GEMINI_API_KEY: 'secret-key-123',
+        AI: { run },
+      } as CloudflareEnv,
+      vi.fn<typeof fetch>().mockResolvedValue(new Response('{}', { status: 503 })),
+    );
+    expect(provider).not.toBeNull();
+    const result = await provider!.generate({ prompt: 'hello' });
+    expect(result).toEqual({
+      provider: 'cloudflare-workers-ai',
+      model: '@cf/google/gemma-4-26b-a4b-it',
+      text: 'fallback OK',
+    });
+    expect(run).toHaveBeenCalledWith(
+      '@cf/google/gemma-4-26b-a4b-it',
+      expect.objectContaining({ messages: [{ role: 'user', content: 'hello' }] }),
+    );
+  });
+
+  it('supports multimodal content through the Cloudflare fallback binding', async () => {
+    const run = vi.fn().mockResolvedValue({
+      choices: [{ message: { content: 'rice' } }],
+    });
+    const provider = new CloudflareAiProvider({ binding: { run } });
+    const result = await provider.generateVision({
+      prompt: 'Identify the food.',
+      imageBase64: 'aGVsbG8gd29ybGQ=',
+      mimeType: 'image/png',
+    });
+    expect(result.provider).toBe('cloudflare-workers-ai');
+    const [, input] = run.mock.calls[0]!;
+    expect(input.messages[0].content[1]).toEqual({
+      type: 'image_url',
+      image_url: { url: 'data:image/png;base64,aGVsbG8gd29ybGQ=' },
+    });
   });
 });

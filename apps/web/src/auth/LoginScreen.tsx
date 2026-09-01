@@ -1,11 +1,39 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginDto } from '@nutriai/schemas';
+import { i18n, type SupportedLocale } from '@nutriai/localization';
 import { useAuth } from './AuthProvider';
 import { Activity } from 'lucide-react';
 
 export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
   const { login } = useAuth();
+  const [locale, setLocale] = useState<SupportedLocale>('en');
+
+  const copy =
+    locale === 'fa'
+      ? {
+          title: 'ورود به NutriAI',
+          subtitle: 'برای ورود به سامانه تغذیه، اطلاعات خود را وارد کنید.',
+          email: 'ایمیل',
+          password: 'رمز عبور',
+          submit: 'ورود امن',
+          submitting: 'در حال احراز هویت...',
+          registerPrompt: 'حساب کاربری ندارید؟',
+          register: 'ثبت‌نام',
+          direction: 'rtl' as const,
+        }
+      : {
+          title: 'Sign in to NutriAI',
+          subtitle: 'Provide your credentials to access your nutrition platform.',
+          email: 'Email Address',
+          password: 'Master Password',
+          submit: 'Secure Login',
+          submitting: 'Authenticating...',
+          registerPrompt: "Don't have an account?",
+          register: 'Create One',
+          direction: 'ltr' as const,
+        };
 
   const {
     register,
@@ -26,16 +54,45 @@ export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+    <div
+      className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4"
+      dir={copy.direction}
+    >
       <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-6">
+        <div className="flex justify-end gap-2 text-xs" aria-label="Login language">
+          <button
+            type="button"
+            onClick={() => {
+              setLocale('fa');
+              i18n.setLocale('fa');
+            }}
+            aria-pressed={locale === 'fa'}
+            className={`px-2.5 py-1 rounded ${
+              locale === 'fa' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            فارسی
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setLocale('en');
+              i18n.setLocale('en');
+            }}
+            aria-pressed={locale === 'en'}
+            className={`px-2.5 py-1 rounded ${
+              locale === 'en' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            EN
+          </button>
+        </div>
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shadow-sm mb-4">
             <Activity className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Sign in to NutriAI</h2>
-          <p className="text-slate-500 text-sm mt-1">
-            Provide your credentials to access your nutrition platform.
-          </p>
+          <h2 className="text-2xl font-bold text-slate-900">{copy.title}</h2>
+          <p className="text-slate-500 text-sm mt-1">{copy.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -47,7 +104,7 @@ export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
 
           <div className="space-y-1.5">
             <label htmlFor="loginEmail" className="text-sm font-medium text-slate-700">
-              Email Address
+              {copy.email}
             </label>
             <input
               id="loginEmail"
@@ -61,7 +118,7 @@ export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
 
           <div className="space-y-1.5">
             <label htmlFor="loginPassword" className="text-sm font-medium text-slate-700">
-              Master Password
+              {copy.password}
             </label>
             <input
               id="loginPassword"
@@ -78,17 +135,17 @@ export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
             disabled={!isValid || isSubmitting}
             className="w-full bg-emerald-600 text-white font-medium rounded-lg px-4 py-2.5 hover:bg-emerald-700 disabled:opacity-50 transition-colors mt-2"
           >
-            {isSubmitting ? 'Authenticating...' : 'Secure Login'}
+            {isSubmitting ? copy.submitting : copy.submit}
           </button>
 
           <div className="text-center pt-2 text-sm text-slate-600">
-            Don't have an account?{' '}
+            {copy.registerPrompt}{' '}
             <button
               type="button"
               onClick={onSwap}
               className="text-emerald-600 hover:underline font-semibold"
             >
-              Create One
+              {copy.register}
             </button>
           </div>
         </form>

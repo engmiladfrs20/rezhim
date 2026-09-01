@@ -32,7 +32,10 @@ export class MobileAuthApi {
       return 'http://localhost:8787';
     }
 
-    throw new Error('EXPO_PUBLIC_API_URL is required in production environment.');
+    // The public API host is safe to embed in a client bundle. Keep the
+    // environment override for previews/self-hosted builds, but make the
+    // release APK usable when no .env file is present at build time.
+    return 'https://nutriai-api-production.rezhimvip.workers.dev';
   }
 
   private static async handleResponse<T>(res: Response): Promise<T> {

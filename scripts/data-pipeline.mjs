@@ -236,7 +236,7 @@ const foodDatasetItemSchema = z
     }
   });
 
-function executeD1Command(command) {
+function executeD1Command(command, { remote = false, database = 'DB' } = {}) {
   const raw = executePnpm(
     [
       '--filter',
@@ -245,8 +245,8 @@ function executeD1Command(command) {
       'wrangler',
       'd1',
       'execute',
-      'DB',
-      '--local',
+      database,
+      remote ? '--remote' : '--local',
       '--json',
       '--command',
       command,
@@ -267,6 +267,9 @@ function executeD1Command(command) {
 
 export function runDataPipeline(options) {
   const { sourceDir, mode, allowLicensedLocal, environment } = options;
+  const remoteImport = mode === 'import-remote';
+  const databaseName = remoteImport ? process.env.NUTRIAI_D1_DATABASE || 'DB' : 'DB';
+  const d1Options = { remote: remoteImport, database: databaseName };
   const manifestPath = path.join(sourceDir, 'source-manifest.json');
   const standardFoodsPath = path.join(sourceDir, 'foods.json');
   const templateFoodsPath = path.join(sourceDir, 'sample-template.json');
@@ -395,15 +398,15 @@ export function runDataPipeline(options) {
 
   const success = errors.length === 0;
 
-  // D1 Database Interactivity for dry-run and local import
+  // D1 Database Interactivity for dry-run and local/remote import
   let d1InitialCount = 0;
   let d1FinalCount = 0;
   let insertedCount = 0;
   let unchangedCount = 0;
   let updatedCount = 0;
 
-  if (success && (mode === 'dry-run' || mode === 'import-local')) {
-    const countRes = executeD1Command('SELECT count(*) as total FROM foods');
+  if (success && (mode === 'dry-run' || mode === 'import-local' || mode === 'import-remote')) {
+    const countRes = executeD1Command('SELECT count(*) as total FROM foods', d1Options);
     if (countRes && countRes[0]) {
       d1InitialCount = Number(countRes[0].total) || 0;
     }
@@ -411,26 +414,32 @@ export function runDataPipeline(options) {
     const sourceId = manifestParsed.data.id;
     const existingFoods = executeD1Command(
       `SELECT * FROM foods WHERE source_id = ${sqlText(sourceId)}`,
+      d1Options,
     );
     const existingTranslations = executeD1Command(
       `SELECT * FROM food_translations WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+      d1Options,
     );
     const existingAliases = executeD1Command(
       `SELECT * FROM food_aliases WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+      d1Options,
     );
     const existingNutrients = executeD1Command(
       `SELECT * FROM food_nutrients WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+      d1Options,
     );
     const existingServings = executeD1Command(
       `SELECT * FROM food_servings WHERE food_id IN (SELECT id FROM foods WHERE source_id = ${sqlText(sourceId)})`,
+      d1Options,
     );
     const categoryRows = executeD1Command(
       "SELECT id, slug FROM food_categories WHERE status = 'active'",
+      d1Options,
     );
     const categoryIdsBySlug = new Map(categoryRows.map((row) => [row.slug, row.id]));
     const resolveCategoryId = (item) =>
       item.category_id ??
-      (item.category_slug ? categoryIdsBySlug.get(item.category_slug) ?? null : null);
+      (item.category_slug ? (categoryIdsBySlug.get(item.category_slug) ?? null) : null);
 
     const existingMap = new Map();
     existingFoods.forEach((f) => {
@@ -531,10 +540,10 @@ export function runDataPipeline(options) {
       }
     });
 
-    if (mode === 'import-local') {
+    if (mode === 'import-local' || mode === 'import-remote') {
       const tmpSqlPath = path.join(rootDir, '.wrangler', `import_${Date.now()}.sql`);
       const now = new Date().toISOString();
-      const sqlLines = ['BEGIN TRANSACTION;'];
+      const sqlLines = remoteImport ? [] : ['BEGIN TRANSACTION;'];
 
       // Source upsert
       const m = manifestParsed.data;
@@ -585,7 +594,7 @@ export function runDataPipeline(options) {
       sqlLines.push(
         `INSERT INTO food_import_logs (id, source_id, dataset_name, file_checksum, total_records, inserted_count, updated_count, unchanged_count, skipped_count, status, error_summary, executed_by, created_at) VALUES (${sqlText(`imp_${crypto.randomUUID()}`)}, ${sqlText(m.id)}, ${sqlText(m.name)}, ${sqlText(computedChecksum)}, ${validItems.length}, ${insertedCount}, ${updatedCount}, ${unchangedCount}, 0, 'success', NULL, 'cli_local', ${sqlText(now)});`,
       );
-      sqlLines.push('COMMIT;');
+      if (!remoteImport) sqlLines.push('COMMIT;');
 
       fs.mkdirSync(path.dirname(tmpSqlPath), { recursive: true });
       fs.writeFileSync(tmpSqlPath, sqlLines.join('\n'), 'utf-8');
@@ -599,18 +608,18 @@ export function runDataPipeline(options) {
             'wrangler',
             'd1',
             'execute',
-            'DB',
-            '--local',
+            databaseName,
+            remoteImport ? '--remote' : '--local',
             `--file=${tmpSqlPath}`,
           ],
-          { cwd: rootDir, stdio: ['pipe', 'pipe', 'pipe'] },
+          { cwd: rootDir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
         );
       } finally {
         if (fs.existsSync(tmpSqlPath)) fs.unlinkSync(tmpSqlPath);
       }
     }
 
-    const postRes = executeD1Command('SELECT count(*) as total FROM foods');
+    const postRes = executeD1Command('SELECT count(*) as total FROM foods', d1Options);
     if (postRes && postRes[0]) {
       d1FinalCount = Number(postRes[0].total) || 0;
     }
@@ -631,6 +640,11 @@ export function runDataPipeline(options) {
   } else if (mode === 'import-local') {
     console.log(
       ` D1 Ingestion Executed: inserted ${insertedCount}, unchanged ${unchangedCount}, updated ${updatedCount}`,
+    );
+    console.log(` D1 Records: Rows before = ${d1InitialCount}, Rows now = ${d1FinalCount}`);
+  } else if (mode === 'import-remote') {
+    console.log(
+      ` Remote D1 Ingestion Executed: inserted ${insertedCount}, unchanged ${unchangedCount}, updated ${updatedCount}`,
     );
     console.log(` D1 Records: Rows before = ${d1InitialCount}, Rows now = ${d1FinalCount}`);
   }
@@ -658,6 +672,7 @@ const targetDir =
 let mode = 'validate';
 if (args.includes('--dry-run')) mode = 'dry-run';
 if (args.includes('--import-local')) mode = 'import-local';
+if (args.includes('--import-remote')) mode = 'import-remote';
 
 const allowLicensedLocal = args.includes('--licensed-local');
 const detectedEnvironment =

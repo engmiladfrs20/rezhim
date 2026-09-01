@@ -3,7 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PublicUser } from '@nutriai/types';
 import type { LoginDto } from '@nutriai/schemas';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV
+    ? 'http://localhost:8787'
+    : 'https://nutriai-api-production.rezhimvip.workers.dev');
 
 interface AdminAuthContextType {
   user: PublicUser | null;

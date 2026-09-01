@@ -49,7 +49,7 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
   });
 
   describe('MobileAuthApi Endpoints & Error Class', () => {
-    it('resolves base URL in development and throws in production if missing', () => {
+    it('resolves base URL in development and uses the public production host when unset', () => {
       const origEnv = process.env.EXPO_PUBLIC_API_URL;
       const origNodeEnv = process.env.NODE_ENV;
 
@@ -64,8 +64,8 @@ describe('Mobile App - Full Integration & Component Test Suite', () => {
         process.env.NODE_ENV = 'production';
         delete process.env.APP_ENV;
         delete process.env.VITEST;
-        expect(() => MobileAuthApi.getBaseUrl()).toThrow(
-          'EXPO_PUBLIC_API_URL is required in production environment.',
+        expect(MobileAuthApi.getBaseUrl()).toBe(
+          'https://nutriai-api-production.rezhimvip.workers.dev',
         );
       } finally {
         process.env.EXPO_PUBLIC_API_URL = origEnv;

@@ -16,8 +16,24 @@ interface GeminiResponse {
   candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }>;
 }
 
+interface OpenAiCompatibleResponse {
+  choices?: Array<{ message?: { content?: unknown } }>;
+}
+
 function isGeminiResponse(value: unknown): value is GeminiResponse {
   return typeof value === 'object' && value !== null;
+}
+
+function readResponseText(value: unknown): string | undefined {
+  if (!isGeminiResponse(value)) return undefined;
+  const gemini = value as GeminiResponse & OpenAiCompatibleResponse;
+  const openAiText = gemini.choices?.[0]?.message?.content;
+  if (typeof openAiText === 'string' && openAiText.trim()) return openAiText.trim();
+  const geminiText = gemini.candidates?.[0]?.content?.parts
+    ?.map((part) => (typeof part.text === 'string' ? part.text : ''))
+    .join('')
+    .trim();
+  return geminiText || undefined;
 }
 
 function validateRequest(request: AiGenerationRequest): void {
@@ -61,6 +77,28 @@ function validateVisionRequest(request: AiVisionRequest): void {
   }
 }
 
+function describeNetworkError(error: unknown): string {
+  const candidate =
+    error instanceof Error
+      ? error
+      : typeof error === 'object' && error !== null
+        ? (error as { message?: unknown; cause?: unknown })
+        : undefined;
+  const cause = candidate?.cause;
+  const causeText =
+    cause instanceof Error
+      ? cause.message
+      : typeof cause === 'object' && cause !== null && 'message' in cause
+        ? String((cause as { message?: unknown }).message ?? '')
+        : typeof cause === 'string'
+          ? cause
+          : '';
+  const detail =
+    causeText || (candidate?.message ? String(candidate.message) : String(error ?? ''));
+  if (detail && detail.length <= 160) return `AI provider network request failed: ${detail}`;
+  return 'AI provider network request failed.';
+}
+
 export class GeminiProvider implements AiProvider {
   private readonly model: string;
   private readonly endpoint: string;
@@ -70,7 +108,7 @@ export class GeminiProvider implements AiProvider {
     if (!config.apiKey || config.apiKey.trim().length < 10) {
       throw new AiUnavailableError();
     }
-    this.model = config.model?.trim() || 'gemini-2.0-flash';
+    this.model = config.model?.trim() || 'gemini-3.6-flash';
     this.endpoint = (
       config.endpoint?.trim() || 'https://generativelanguage.googleapis.com'
     ).replace(/\/$/, '');
@@ -97,30 +135,50 @@ export class GeminiProvider implements AiProvider {
     parts: Array<Record<string, string | Record<string, string>>>,
   ): Promise<AiGenerationResponse> {
     validateRequest(request);
-    const url = `${this.endpoint}/v1beta/models/${encodeURIComponent(this.model)}:generateContent`;
+    // Use Gemini's official OpenAI-compatible endpoint. It avoids edge TLS
+    // transport failures seen with the native generateContent route while
+    // preserving the same Gemini models and API key.
+    const url = `${this.endpoint}/v1beta/openai/chat/completions`;
+    const content =
+      parts.length === 1 && 'text' in parts[0]!
+        ? parts[0]!.text
+        : parts.map((part) => {
+            if ('inline_data' in part) {
+              const inlineData = part.inline_data as Record<string, string>;
+              return {
+                type: 'image_url',
+                image_url: {
+                  url: `data:${inlineData.mime_type};base64,${inlineData.data}`,
+                },
+              };
+            }
+            return { type: 'text', text: String(part.text ?? '') };
+          });
     const payload = {
-      contents: [{ role: 'user', parts }],
-      ...(request.systemInstruction
-        ? { systemInstruction: { parts: [{ text: request.systemInstruction }] } }
-        : {}),
-      generationConfig: {
-        maxOutputTokens: request.maxOutputTokens ?? 512,
-        temperature: request.temperature ?? 0.2,
-      },
+      model: this.model,
+      messages: [
+        ...(request.systemInstruction
+          ? [{ role: 'system', content: request.systemInstruction }]
+          : []),
+        { role: 'user', content },
+      ],
+      max_tokens: request.maxOutputTokens ?? 512,
+      temperature: request.temperature ?? 0.2,
     };
 
     let response: Response;
+    const requestInit: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    };
     try {
-      response = await this.fetcher(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': this.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      throw new AiProviderError('AI provider network request failed.');
+      response = await this.fetcher(url, requestInit);
+    } catch (error) {
+      throw new AiProviderError(describeNetworkError(error));
     }
     if (!response.ok) {
       throw new AiProviderError(`AI provider returned HTTP ${response.status}.`);
@@ -129,10 +187,7 @@ export class GeminiProvider implements AiProvider {
     if (!isGeminiResponse(body)) {
       throw new AiProviderError('AI provider returned an invalid response.');
     }
-    const text = body.candidates?.[0]?.content?.parts
-      ?.map((part) => (typeof part.text === 'string' ? part.text : ''))
-      .join('')
-      .trim();
+    const text = readResponseText(body);
     if (!text) {
       throw new AiProviderError('AI provider returned no text candidate.');
     }

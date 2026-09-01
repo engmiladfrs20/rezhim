@@ -19,6 +19,7 @@
     "data:validate": "node scripts/data-pipeline.mjs",
     "data:dry-run": "node scripts/data-pipeline.mjs --dry-run",
     "data:import:local": "node scripts/data-pipeline.mjs --import-local",
+    "data:import:remote": "node scripts/data-pipeline.mjs --import-remote",
     "clean": "turbo run clean"
   },
   "devDependencies": {
@@ -34,7 +35,7 @@
   },
   "pnpm": {
     "overrides": {
-      "tar": ">=6.2.2",
+      "tar": "7.5.22",
       "image-size": ">=2.0.2",
       "postcss@<8.5.10": ">=8.5.10",
       "@xmldom/xmldom@<0.8.12": ">=0.8.12",

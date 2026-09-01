@@ -8,6 +8,10 @@ import type {
 
 export type { ExecutionContext, MessageBatch, D1Database, KVNamespace, Queue };
 
+export interface CloudflareAiBinding {
+  run(model: string, inputs: Record<string, unknown>): Promise<unknown>;
+}
+
 export interface CloudflareEnv {
   // Environment metadata
   APP_ENV?: 'development' | 'staging' | 'production' | 'test' | undefined;
@@ -25,6 +29,7 @@ export interface CloudflareEnv {
   GEMINI_API_KEY?: string | undefined;
   GEMINI_MODEL?: string | undefined;
   GEMINI_ENDPOINT?: string | undefined;
+  CLOUDFLARE_AI_MODEL?: string | undefined;
   STRIPE_SECRET_KEY?: string | undefined;
   STRIPE_PRICE_PRO?: string | undefined;
 
@@ -36,4 +41,5 @@ export interface CloudflareEnv {
 
   // Cloudflare Queue binding placeholder
   AI_JOBS_QUEUE?: Queue | undefined;
+  AI?: CloudflareAiBinding | undefined;
 }

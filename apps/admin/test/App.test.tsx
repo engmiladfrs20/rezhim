@@ -84,6 +84,27 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
     expect(screen.getByRole('button', { name: /Sign In as Admin/i })).toBeInTheDocument();
   });
 
+  it('switches the unauthenticated login screen between Persian RTL and English LTR', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      if (String(url).includes('/api/v1/auth/me')) {
+        return new Response(JSON.stringify({ success: false }), { status: 401 });
+      }
+      return new Response(JSON.stringify({}), { status: 200 });
+    });
+
+    renderAdminApp();
+
+    const faButton = await screen.findByRole('button', { name: 'فارسی' });
+    fireEvent.click(faButton);
+    expect(screen.getByRole('heading', { name: /پنل مدیریت/i })).toBeInTheDocument();
+    expect(faButton.closest('[dir]')).toHaveAttribute('dir', 'rtl');
+    expect(screen.getByRole('button', { name: 'ورود مدیر' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+    expect(screen.getByRole('heading', { name: /Admin Portal/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign In as Admin' })).toBeInTheDocument();
+  });
+
   it('handles admin login successfully and displays dashboard with credentials: include', async () => {
     const fetchCalls: Array<{ url: string; init?: RequestInit | undefined }> = [];
 

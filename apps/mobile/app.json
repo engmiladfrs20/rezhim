@@ -7,6 +7,9 @@
     "userInterfaceStyle": "light",
     "extra": {
       "supportsRTL": true
+    },
+    "android": {
+      "package": "com.rezhim.nutriaipersia"
     }
   }
 }

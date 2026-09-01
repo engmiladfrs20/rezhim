@@ -4,7 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Droplets, Scale, Timer } from 'lucide-react';
 import type { ApiResponse, DailyLifestyleSummary, WeightTrend } from '@nutriai/types';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV
+    ? 'http://localhost:8787'
+    : 'https://nutriai-api-production.rezhimvip.workers.dev');
 
 async function readData<T>(response: Response): Promise<T> {
   if (!response.ok) throw new Error('API request failed');

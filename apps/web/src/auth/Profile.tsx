@@ -5,7 +5,11 @@ import { i18n } from '@nutriai/localization';
 import { User, Lock, Save, CheckCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV
+    ? 'http://localhost:8787'
+    : 'https://nutriai-api-production.rezhimvip.workers.dev');
 
 export const Profile: FC = () => {
   const { user } = useAuth();

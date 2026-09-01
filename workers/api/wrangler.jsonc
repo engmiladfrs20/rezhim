@@ -9,6 +9,8 @@
     "SERVICE_NAME": "nutriai-api",
     "APP_VERSION": "1.0.0",
     "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:3001",
+    "GEMINI_MODEL": "gemini-3.6-flash",
+    "CLOUDFLARE_AI_MODEL": "@cf/google/gemma-4-26b-a4b-it",
   },
   "d1_databases": [
     {
@@ -32,6 +34,9 @@
       },
     ],
   },
+  "ai": {
+    "binding": "AI",
+  },
   "env": {
     "staging": {
       "name": "nutriai-api-staging",
@@ -40,6 +45,8 @@
         "SERVICE_NAME": "nutriai-api-staging",
         "APP_VERSION": "1.0.0",
         "ALLOWED_ORIGINS": "https://staging.nutriai.persia,https://staging-admin.nutriai.persia,https://nutriai-web.pages.dev,https://nutriai-admin.pages.dev",
+        "GEMINI_MODEL": "gemini-3.6-flash",
+        "CLOUDFLARE_AI_MODEL": "@cf/google/gemma-4-26b-a4b-it",
         "B2_ENDPOINT": "https://s3.us-east-005.backblazeb2.com",
         "B2_REGION": "us-east-005",
         "B2_BUCKET_NAME": "rezhim",
@@ -66,6 +73,9 @@
           },
         ],
       },
+      "ai": {
+        "binding": "AI",
+      },
     },
     "production": {
       "name": "nutriai-api-production",
@@ -74,6 +84,8 @@
         "SERVICE_NAME": "nutriai-api-production",
         "APP_VERSION": "1.0.0",
         "ALLOWED_ORIGINS": "https://nutriai.persia,https://app.nutriai.persia,https://admin.nutriai.persia,https://nutriai-web.pages.dev,https://nutriai-admin.pages.dev",
+        "GEMINI_MODEL": "gemini-3.6-flash",
+        "CLOUDFLARE_AI_MODEL": "@cf/google/gemma-4-26b-a4b-it",
         "B2_ENDPOINT": "https://s3.us-east-005.backblazeb2.com",
         "B2_REGION": "us-east-005",
         "B2_BUCKET_NAME": "rezhim",
@@ -99,6 +111,9 @@
             "queue": "nutriai-ai-jobs-prod",
           },
         ],
+      },
+      "ai": {
+        "binding": "AI",
       },
     },
   },

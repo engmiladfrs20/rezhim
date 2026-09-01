@@ -57,7 +57,11 @@ export const App: FC = () => {
     setLoadingHealth(true);
     try {
       // In local or integrated worker environments
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+      const apiUrl =
+        import.meta.env.VITE_API_BASE_URL ||
+        (import.meta.env.DEV
+          ? 'http://localhost:8787'
+          : 'https://nutriai-api-production.rezhimvip.workers.dev');
       const res = await fetch(`${apiUrl}/health`);
       if (res.ok) {
         const data = (await res.json()) as HealthCheckResponse;
