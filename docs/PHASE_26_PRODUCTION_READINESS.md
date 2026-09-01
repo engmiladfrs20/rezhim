@@ -7,6 +7,9 @@
 - Migrations 0001–0013 applied to all three D1 databases.
 - Staging API deployed at `https://nutriai-api-staging.rezhimvip.workers.dev` and smoke-tested through registration, login, `/me`, lifestyle water, fasting, and daily summary.
 - Production API deployed at `https://nutriai-api-production.rezhimvip.workers.dev`; `/health`, `/ready`, `/api/v1/system`, registration, and token login were smoke-tested.
+- Production D1 contains the verified Iranian catalog baseline (30 foods: 10 active and 20 draft), and the remote ingestion CLI is idempotent (`data:import:remote`).
+- Production AI smoke test returns HTTP 200 through the Cloudflare Workers AI fallback (`@cf/google/gemma-4-26b-a4b-it`) when Google AI Studio egress is unavailable; provider credentials remain server-side.
+- Web and Admin Pages are deployed at `https://nutriai-web.pages.dev` and `https://nutriai-admin.pages.dev` with bilingual Persian/English login screens. A debug-signed Android release APK was built from the checked-in native project for device testing.
 - `RATE_LIMIT_HMAC_SECRET` is configured as a Worker secret for staging and production; the value is never committed.
 - Backblaze B2 bucket `rezhim` is configured for both environments through non-secret endpoint/region/bucket variables; signed upload URL smoke tests returned 200 in staging and production.
 - `B2_KEY_ID`, `B2_APPLICATION_KEY`, and `GEMINI_API_KEY` are stored as Worker secrets and are not present in the repository or client bundles.
@@ -15,7 +18,7 @@
 ## Explicit blockers before public production traffic
 
 - Keep the B2 bucket private, restrict the application key to the bucket and required operations, and rotate the test credentials that were exposed during setup.
-- Gemini calls currently return `502 AI_PROVIDER_ERROR` from both deployed Workers and require verification of the supplied provider key/account or an approved egress endpoint before public traffic.
+- Direct Google AI Studio egress can still fail from some Worker edge paths; the deployed provider factory fails over to Workers AI so user-facing AI requests no longer return `502 AI_PROVIDER_ERROR`.
 - Configure and verify the production allowed custom origins and billing provider/webhooks through secret management.
 - Add a real browser/mobile end-to-end run and EAS signing/build credentials.
 - Configure queue retry and dead-letter policy and deploy the AI jobs consumer after its job persistence contract is approved.
