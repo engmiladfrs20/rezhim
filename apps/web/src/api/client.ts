@@ -4,7 +4,7 @@ export const API_URL =
     ? 'http://localhost:8787'
     : 'https://nutriai-api-production.rezhimvip.workers.dev');
 
-export type ApiMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+export type ApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export class ApiClientError extends Error {
   readonly status: number;

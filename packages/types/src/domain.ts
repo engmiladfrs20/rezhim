@@ -44,6 +44,15 @@ export interface UserBiometrics {
   formula: BMRFormula;
 }
 
+export interface UserNutritionGoal extends UserBiometrics {
+  userId: string;
+  mealsPerDay: number;
+  dietaryPreferences: string[];
+  allergies: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type NutritionTargetsInput = UserBiometrics;
 
 export interface MacronutrientTargets {

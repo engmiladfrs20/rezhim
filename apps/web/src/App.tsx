@@ -1,105 +1,74 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import { useAuth } from './auth/AuthProvider';
-import { LoginScreen } from './auth/LoginScreen';
-import { Profile } from './auth/Profile';
-import { RegisterScreen } from './auth/RegisterScreen';
-import { DailyDashboard } from './dashboard/DailyDashboard';
-import { FeatureWorkspace } from './features/FeatureWorkspace';
-import {
-  i18n,
-  formatNumber,
-  formatDate,
-  type SupportedLocale,
-  type Direction,
-} from '@nutriai/localization';
-import type { HealthCheckResponse } from '@nutriai/types';
 import {
   Activity,
-  Globe,
-  Layers,
-  Server,
-  Database,
-  Smartphone,
+  ChevronDown,
+  CircleHelp,
+  LogOut,
+  Settings2,
   ShieldCheck,
-  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
+import { useAuth } from './auth/AuthProvider';
+import { LoginScreen } from './auth/LoginScreen';
+import { RegisterScreen } from './auth/RegisterScreen';
+import { Profile } from './auth/Profile';
+import { DailyDashboard } from './dashboard/DailyDashboard';
+import { UserDashboard } from './dashboard/UserDashboard';
+import { FeatureWorkspace } from './features/FeatureWorkspace';
+import { i18n, type Direction, type SupportedLocale } from '@nutriai/localization';
+import type { HealthCheckResponse } from '@nutriai/types';
 
 export const App: FC = () => {
+  const { user, logout, isLoading: authLoading } = useAuth();
   const [locale, setLocale] = useState<SupportedLocale>(i18n.getLocale());
   const [direction, setDirection] = useState<Direction>(i18n.getDirection());
-  const [healthStatus, setHealthStatus] = useState<HealthCheckResponse | null>(null);
-  const [loadingHealth, setLoadingHealth] = useState(false);
-  const { user, logout, isLoading: authLoading } = useAuth();
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [authLocale, setAuthLocale] = useState<SupportedLocale>('en');
+  const [healthStatus, setHealthStatus] = useState<HealthCheckResponse | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
-    // Synchronize HTML element lang & dir attributes
     document.documentElement.lang = locale;
     document.documentElement.dir = direction;
-
-    const unsubscribe = i18n.subscribe((newLocale, newDir) => {
-      setLocale(newLocale);
-      setDirection(newDir);
-      document.documentElement.lang = newLocale;
-      document.documentElement.dir = newDir;
+    return i18n.subscribe((nextLocale, nextDirection) => {
+      setLocale(nextLocale);
+      setDirection(nextDirection);
+      document.documentElement.lang = nextLocale;
+      document.documentElement.dir = nextDirection;
     });
-
-    return () => unsubscribe();
   }, [locale, direction]);
 
-  const handleToggleLocale = (targetLocale: SupportedLocale) => {
-    i18n.setLocale(targetLocale);
-    setLocale(targetLocale);
+  const toggleLocale = (nextLocale: SupportedLocale) => {
+    i18n.setLocale(nextLocale);
+    setLocale(nextLocale);
     setDirection(i18n.getDirection());
   };
 
-  const handleCheckHealth = async () => {
-    setLoadingHealth(true);
+  const checkHealth = async () => {
+    setHealthLoading(true);
     try {
-      // In local or integrated worker environments
-      const apiUrl =
+      const base =
         import.meta.env.VITE_API_BASE_URL ||
         (import.meta.env.DEV
           ? 'http://localhost:8787'
           : 'https://nutriai-api-production.rezhimvip.workers.dev');
-      const res = await fetch(`${apiUrl}/health`);
-      if (res.ok) {
-        const data = (await res.json()) as HealthCheckResponse;
-        setHealthStatus(data);
-      } else {
-        setHealthStatus({
-          status: 'degraded',
-          service: 'nutriai-api',
-          version: '1.0.0',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      const response = await fetch(`${base}/health`);
+      setHealthStatus(response.ok ? ((await response.json()) as HealthCheckResponse) : null);
     } catch {
-      // A browser/network failure must be visible as degraded, not as a false healthy mock.
-      setHealthStatus({
-        status: 'degraded',
-        service: 'nutriai-api',
-        version: 'unknown',
-        timestamp: new Date().toISOString(),
-      });
+      setHealthStatus(null);
     } finally {
-      setLoadingHealth(false);
+      setHealthLoading(false);
     }
   };
 
-  const currentDate = new Date();
-
-  if (authLoading) {
+  if (authLoading)
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      <div className="grid min-h-screen place-items-center bg-slate-950">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent" />
       </div>
     );
-  }
-
-  if (!user) {
+  if (!user)
     return authView === 'login' ? (
       <LoginScreen
         initialLocale={authLocale}
@@ -117,269 +86,167 @@ export const App: FC = () => {
         }}
       />
     );
-  }
 
   return (
-    <main id="app-root" className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      {/* Header */}
+    <main id="app-root" className="min-h-screen bg-[#f5f7fb] text-slate-900">
       <header
         id="main-header"
-        className="w-full bg-white border-b border-slate-200 sticky top-0 z-10 px-4 sm:px-8 py-3.5 flex items-center justify-between"
+        className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur-xl sm:px-8"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            NA
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight">
-              {i18n.t('common.appName')}
-            </h1>
-            <p className="text-xs text-slate-500">{i18n.t('common.tagline')}</p>
-          </div>
-        </div>
-
-        {/* Locale Switcher */}
-        <nav aria-label="Language selection" className="flex items-center gap-2">
-          <div
-            id="locale-switch-group"
-            className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium"
-          >
-            <button
-              id="btn-lang-fa"
-              type="button"
-              onClick={() => handleToggleLocale('fa')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                locale === 'fa'
-                  ? 'bg-white text-emerald-700 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              فارسی (FA)
-            </button>
-            <button
-              id="btn-lang-en"
-              type="button"
-              onClick={() => handleToggleLocale('en')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                locale === 'en'
-                  ? 'bg-white text-emerald-700 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              English (EN)
-            </button>
-          </div>
-
-          <button
-            onClick={() => logout()}
-            className="px-4 py-1.5 ml-2 mr-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
-          >
-            {i18n.t('auth.logout') || 'Logout'}
-          </button>
-        </nav>
-      </header>
-
-      {/* Main Content Area */}
-      <div className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-8 py-8 space-y-8">
-        {/* Phase 1 Status Banner */}
-        <section
-          id="phase1-banner"
-          aria-labelledby="banner-heading"
-          className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-        >
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span id="banner-heading">{i18n.t('common.phase1Notice')}</span>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-sm font-black text-white shadow-lg shadow-emerald-200">
+              NA
             </div>
-            <p className="text-xs text-emerald-700">
-              {i18n.t('apps.web.architectureNote')} &bull; {formatDate(currentDate, locale)}
-            </p>
+            <div>
+              <p className="text-base font-black tracking-tight text-slate-900">NutriAI Persia</p>
+              <p className="hidden text-[11px] text-slate-500 sm:block">
+                دستیار شخصی سلامت و تغذیه
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-xs bg-white/80 backdrop-blur-xs px-3.5 py-2 rounded-xl border border-emerald-100 text-emerald-900">
-            <span>
-              {i18n.t('common.version')}: <strong>1.0.0</strong>
-            </span>
-            <span className="text-emerald-300">|</span>
-            <span>
-              {i18n.t('common.direction')}: <strong>{direction.toUpperCase()}</strong>
-            </span>
-          </div>
-        </section>
-
-        <section aria-label="User Profile Area" className="w-full">
-          <Profile />
-        </section>
-
-        <DailyDashboard />
-
-        <FeatureWorkspace isAdmin={user.role === 'admin'} />
-
-        {/* Monorepo Architecture Overview Grid */}
-        <section aria-label="Monorepo Modules Overview" className="space-y-4">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-base">
-            <Layers className="w-5 h-5 text-emerald-600" />
-            <h2>معماری ماژولار پروژه (Turborepo & pnpm Monorepo)</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Apps: Web */}
-            <article
-              id="card-app-web"
-              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
+          <nav aria-label="Language selection" className="flex items-center gap-2">
+            <div
+              id="locale-switch-group"
+              className="flex rounded-xl bg-slate-100 p-1 text-xs font-bold"
             >
-              <div className="space-y-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <Globe className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {i18n.t('apps.web.title')} (apps/web)
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {i18n.t('apps.web.description')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-600 font-medium">
-                <span>React 18 &bull; Vite &bull; Tailwind</span>
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </article>
-
-            {/* Apps: Admin */}
-            <article
-              id="card-app-admin"
-              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
+              <button
+                id="btn-lang-fa"
+                type="button"
+                onClick={() => toggleLocale('fa')}
+                className={`rounded-lg px-3 py-1.5 transition ${locale === 'fa' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}
+              >
+                فارسی
+              </button>
+              <button
+                id="btn-lang-en"
+                type="button"
+                onClick={() => toggleLocale('en')}
+                className={`rounded-lg px-3 py-1.5 transition ${locale === 'en' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}
+              >
+                English
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 hover:bg-red-50 hover:text-red-600"
             >
-              <div className="space-y-3">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <Server className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {i18n.t('apps.admin.title')} (apps/admin)
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {i18n.t('apps.admin.description')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-indigo-600 font-medium">
-                <span>Admin Shell &bull; Isolated Router</span>
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </article>
-
-            {/* Apps: Mobile */}
-            <article
-              id="card-app-mobile"
-              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-                  <Smartphone className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {i18n.t('apps.mobile.title')} (apps/mobile)
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {i18n.t('apps.mobile.description')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-teal-600 font-medium">
-                <span>Expo &bull; React Native</span>
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </article>
+              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
+            </button>
+          </nav>
+        </div>
+      </header>
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+            <Sparkles className="h-3.5 w-3.5" /> برنامهٔ شخصی تو، همین‌جا
           </div>
-        </section>
-
-        {/* Backend & Storage Foundations */}
-        <section
-          aria-label="Backend & Infrastructure"
-          className="grid grid-cols-1 md:grid-cols-2 gap-5"
+          <p className="hidden text-xs text-slate-400 sm:block">
+            نسخهٔ وب پیش‌رونده · {direction.toUpperCase()}
+          </p>
+        </div>
+        <UserDashboard
+          user={user}
+          locale={locale}
+          onOpenSettings={() =>
+            document.getElementById('account-settings')?.scrollIntoView({ behavior: 'smooth' })
+          }
+        />
+        <details
+          open
+          className="group rounded-[1.75rem] border border-slate-200 bg-white shadow-sm"
         >
-          {/* Cloudflare Workers & Hono */}
-          <article
-            id="card-workers-api"
-            className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm">
-                    Cloudflare Workers & Hono API
-                  </h3>
-                  <span className="text-xs text-slate-500">workers/api (Serverless Edge)</span>
-                </div>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-50 text-sky-600">
+                <Activity className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-black text-slate-900">ردگیری روزانه</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  آب، وزن و روزه‌ات را در یک نگاه ثبت کن.
+                </p>
+              </div>
+            </div>
+            <ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-slate-100 p-5 sm:p-6">
+            <DailyDashboard />
+          </div>
+        </details>
+        <details
+          id="account-settings"
+          className="group rounded-[1.75rem] border border-slate-200 bg-white shadow-sm"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600">
+                <Settings2 className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-black text-slate-900">تنظیمات حساب</h2>
+                <p className="mt-1 text-xs text-slate-500">پروفایل، رمز عبور و زبان برنامه</p>
+              </div>
+            </div>
+            <ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-slate-100 p-5 sm:p-6">
+            <Profile />
+          </div>
+        </details>
+        <details className="group rounded-[1.75rem] border border-slate-200 bg-slate-900 shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-white sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-emerald-300">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-black">ابزار فنی و مدیریت</h2>
+                <p className="mt-1 text-xs text-slate-400">
+                  برای بررسی API و قابلیت‌های مدیریتی؛ مناسب تیم محصول
+                </p>
+              </div>
+            </div>
+            <ChevronDown className="h-5 w-5 text-slate-400 transition group-open:rotate-180" />
+          </summary>
+          <div className="space-y-5 border-t border-white/10 p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/5 p-4">
+              <div>
+                <p className="text-sm font-bold text-white">وضعیت اتصال سرویس</p>
+                <p className="mt-1 text-xs text-slate-400">این بخش برای کاربر عادی ضروری نیست.</p>
               </div>
               <button
                 id="btn-check-health"
                 type="button"
-                onClick={handleCheckHealth}
-                disabled={loadingHealth}
-                className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 disabled:opacity-50 transition-opacity"
+                onClick={() => void checkHealth()}
+                disabled={healthLoading}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-60"
               >
-                {loadingHealth ? i18n.t('apps.web.checkingHealth') : 'تست GET /health'}
+                {healthLoading ? 'در حال بررسی…' : 'تست GET /health'}
               </button>
-            </div>
-
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2 text-xs">
-              <div className="flex justify-between items-center text-slate-700">
-                <span>وضعیت API:</span>
-                <span className="font-semibold text-emerald-600">
-                  {healthStatus ? healthStatus.status.toUpperCase() : 'آماده برای تست'}
+              {healthStatus && (
+                <span className="rounded-lg bg-emerald-400/15 px-3 py-2 text-xs font-bold text-emerald-300">
+                  {healthStatus.status === 'ok' ? 'OK' : healthStatus.status.toUpperCase()}
                 </span>
-              </div>
-              <div className="flex justify-between items-center text-slate-700">
-                <span>سرویس:</span>
-                <span className="font-mono text-slate-600">
-                  {healthStatus ? healthStatus.service : 'nutriai-api'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-slate-700">
-                <span>تعداد کل ماژول‌های فعال:</span>
-                <span className="font-bold">{formatNumber(19, locale)} ماژول</span>
-              </div>
+              )}
             </div>
-          </article>
-
-          {/* Storage Provider */}
-          <article
-            id="card-storage-provider"
-            className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
-                <Database className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {i18n.t('apps.web.storageFoundation')}
-                </h3>
-                <span className="text-xs text-slate-500">packages/storage</span>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              پیاده‌سازی ماژولار بر پایه رابط استاندارد StorageProvider با سازگاری کامل با Backblaze
-              B2 S3 API و Web Streams بدون وابستگی مستقیم به توابع Node.js.
-            </p>
-
-            <div className="bg-sky-50/50 rounded-xl p-3.5 border border-sky-100 text-xs text-sky-900 flex items-center justify-between">
-              <span>تست قرارداد Provider در CI:</span>
-              <span className="font-semibold text-emerald-600">پاس شده (Pass)</span>
-            </div>
-          </article>
+            <FeatureWorkspace isAdmin={user.role === 'admin'} />
+          </div>
+        </details>
+        <section className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-6 text-amber-900">
+          <CircleHelp className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <p>
+            NutriAI برای کمک به برنامه‌ریزی روزانه است؛ اگر بیماری زمینه‌ای، بارداری یا داروی خاص
+            دارید قبل از تغییر رژیم با متخصص تغذیه مشورت کنید.
+          </p>
         </section>
       </div>
-
-      {/* Footer */}
       <footer
         id="main-footer"
-        className="w-full bg-white border-t border-slate-200 px-4 sm:px-8 py-4 text-center text-xs text-slate-500"
+        className="border-t border-slate-200 bg-white px-4 py-6 text-center text-xs text-slate-400"
       >
-        <span>NutriAI Persia &bull; Phase 1 Foundation Architecture &bull; 2026</span>
+        NutriAI Persia · دستیار سلامت شخصی · ۲۰۲۶
       </footer>
     </main>
   );

@@ -16,6 +16,30 @@ export interface UserRecord {
   updated_at: string;
 }
 
+export interface UserNutritionGoalRecord {
+  user_id: string;
+  gender: 'male' | 'female';
+  age: number;
+  height_cm: number;
+  weight_kg: number;
+  body_fat_percentage: number | null;
+  life_stage: 'adult_non_pregnant_non_lactating' | 'pregnant' | 'lactating';
+  activity_level:
+    'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active';
+  diet_goal:
+    | 'weight_loss_aggressive'
+    | 'weight_loss_mild'
+    | 'maintenance'
+    | 'muscle_gain_mild'
+    | 'muscle_gain_aggressive';
+  formula: 'mifflin_st_jeor' | 'harris_benedict' | 'katch_mcardle';
+  meals_per_day: number;
+  dietary_preferences: string;
+  allergies: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuthSessionRecord {
   id: string;
   user_id: string;

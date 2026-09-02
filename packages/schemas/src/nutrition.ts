@@ -91,6 +91,16 @@ export const nutritionTargetsInputSchema = z
 
 export type NutritionTargetsInputDto = z.infer<typeof nutritionTargetsInputSchema>;
 
+/** Persisted onboarding preferences used to recreate a user's plan on any device. */
+export const userNutritionGoalSchema = nutritionTargetsInputSchema.and(
+  z.object({
+    mealsPerDay: z.number().int().min(3).max(6).default(4),
+    dietaryPreferences: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+    allergies: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+  }),
+);
+export type UserNutritionGoalDto = z.infer<typeof userNutritionGoalSchema>;
+
 export const nutritionAggregateItemSchema = z
   .object({
     foodId: z.string({ required_error: 'foodId is required' }).trim().min(1, 'foodId is required'),
