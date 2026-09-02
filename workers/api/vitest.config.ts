@@ -21,6 +21,11 @@ export default async () => {
     ],
     test: {
       fileParallelism: false,
+      // D1/Workerd integration calls can take several seconds when the
+      // worker test environment is starting or when CI shares a runner.
+      // Keep the tests deterministic without masking genuine hangs.
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
       setupFiles: ['./test/apply-migrations.ts'],
       coverage: {
         provider: 'istanbul',
