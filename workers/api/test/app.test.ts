@@ -170,6 +170,46 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
       expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
     });
 
+    it('allows first-party Cloudflare Pages deployment previews only', async () => {
+      const previewOrigin = 'https://9e41d4b7.nutriai-web.pages.dev';
+      const req = new Request('http://localhost/api/v1/system', {
+        headers: { Origin: previewOrigin },
+      });
+      const ctx = createExecutionContext();
+      const res = await worker.fetch(
+        req,
+        { ...env, APP_ENV: 'production', ALLOWED_ORIGINS: 'https://nutriai-web.pages.dev' },
+        ctx,
+      );
+      await waitOnExecutionContext(ctx);
+
+      expect(res.headers.get('Access-Control-Allow-Origin')).toBe(previewOrigin);
+      expect(res.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+    });
+
+    it('rejects lookalike and nested Pages origins', async () => {
+      const origins = [
+        'https://evil.nutriai-web.pages.dev.attacker.example',
+        'https://nested.preview.nutriai-web.pages.dev',
+        'http://9e41d4b7.nutriai-web.pages.dev',
+      ];
+
+      for (const origin of origins) {
+        const req = new Request('http://localhost/api/v1/system', {
+          method: 'OPTIONS',
+          headers: { Origin: origin },
+        });
+        const ctx = createExecutionContext();
+        const res = await worker.fetch(
+          req,
+          { ...env, APP_ENV: 'production', ALLOWED_ORIGINS: 'https://nutriai-web.pages.dev' },
+          ctx,
+        );
+        await waitOnExecutionContext(ctx);
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
+      }
+    });
+
     it('omits Access-Control-Allow-Origin for illegitimate standard origins', async () => {
       const req = new Request('http://localhost/api/v1/system', {
         method: 'OPTIONS',

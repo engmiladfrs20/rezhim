@@ -46,6 +46,21 @@ export function isAllowedOrigin(origin: string | undefined | null, env: Cloudfla
     }
   }
 
+  // Cloudflare Pages creates a new, immutable hostname for every production
+  // deployment (for example, `9e41d4b7.nutriai-web.pages.dev`). These
+  // hostnames are the same application as the canonical Pages domain and are
+  // used for smoke testing before the custom/canonical alias is refreshed.
+  // Allow only a single, DNS-label subdomain of our own Pages projects over
+  // HTTPS; never accept arbitrary `pages.dev` origins or nested subdomains.
+  if (
+    url.protocol === 'https:' &&
+    /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)\.(?:nutriai-web|nutriai-admin)\.pages\.dev$/i.test(
+      url.hostname,
+    )
+  ) {
+    return true;
+  }
+
   return false;
 }
 
