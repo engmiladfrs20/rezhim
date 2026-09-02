@@ -13,6 +13,10 @@ export default async () => {
   return defineConfig({
     plugins: [
       cloudflareTest({
+        // CI has no interactive Wrangler profile. Keep D1 and all test
+        // bindings in the local Miniflare runtime; provider calls are tested
+        // through the fail-closed boundary and production smoke checks.
+        remoteBindings: false,
         wrangler: { configPath: './wrangler.jsonc' },
         miniflare: {
           bindings: { TEST_MIGRATIONS: migrations },
