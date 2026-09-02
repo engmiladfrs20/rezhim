@@ -6,18 +6,59 @@ export interface CloudflareAiBinding {
   run(model: string, inputs: Record<string, unknown>): Promise<unknown>;
 }
 
-interface ChatResponse {
-  response?: unknown;
-  choices?: Array<{ message?: { content?: unknown } }>;
-}
-
-function readText(value: unknown): string | undefined {
+/**
+ * Workers AI has returned a few compatible response envelopes over time. The
+ * binding normally returns `{ response: string }`, while OpenAI-compatible
+ * routes return `choices[0].message.content`. Some model/runtime versions wrap
+ * either shape in `result`, or expose multimodal content as an array. Keep the
+ * extraction tolerant of those envelopes without treating arbitrary provider
+ * metadata (for example an error message) as generated text.
+ */
+function readText(value: unknown, depth = 0): string | undefined {
+  if (depth > 6 || value == null) return undefined;
   if (typeof value === 'string' && value.trim()) return value.trim();
-  if (!value || typeof value !== 'object') return undefined;
-  const body = value as ChatResponse;
-  if (typeof body.response === 'string' && body.response.trim()) return body.response.trim();
-  const choiceText = body.choices?.[0]?.message?.content;
-  if (typeof choiceText === 'string' && choiceText.trim()) return choiceText.trim();
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const text = readText(item, depth + 1);
+      if (text) return text;
+    }
+    return undefined;
+  }
+  if (typeof value !== 'object') return undefined;
+
+  const body = value as Record<string, unknown>;
+  const choices = body.choices;
+  const choiceItems = Array.isArray(choices)
+    ? choices
+    : choices && typeof choices === 'object'
+      ? Object.values(choices)
+      : [];
+  if (choiceItems.length > 0) {
+    for (const choice of choiceItems) {
+      if (!choice || typeof choice !== 'object') continue;
+      const choiceBody = choice as Record<string, unknown>;
+      const messageText = readText(choiceBody.message, depth + 1);
+      if (messageText) return messageText;
+      const choiceText = readText(choiceBody.text, depth + 1);
+      if (choiceText) return choiceText;
+      const deltaText = readText(choiceBody.delta, depth + 1);
+      if (deltaText) return deltaText;
+    }
+  }
+
+  for (const key of [
+    'response',
+    'result',
+    'output',
+    'output_text',
+    'generated_text',
+    'reasoning_content',
+    'text',
+    'content',
+  ]) {
+    const text = readText(body[key], depth + 1);
+    if (text) return text;
+  }
   return undefined;
 }
 

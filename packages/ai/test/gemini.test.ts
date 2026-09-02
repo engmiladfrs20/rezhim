@@ -127,4 +127,29 @@ describe('Gemini provider boundary', () => {
       image_url: { url: 'data:image/png;base64,aGVsbG8gd29ybGQ=' },
     });
   });
+
+  it('extracts text from nested Workers AI and multimodal response envelopes', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({ result: { response: { output: 'nested fallback' } } })
+      .mockResolvedValueOnce({
+        choices: [{ message: { content: [{ type: 'text', text: 'vision fallback' }] } }],
+      })
+      .mockResolvedValueOnce({ choices: { 0: { message: { content: 'object choices' } } } });
+    const provider = new CloudflareAiProvider({ binding: { run } });
+
+    await expect(provider.generate({ prompt: 'hello' })).resolves.toMatchObject({
+      text: 'nested fallback',
+    });
+    await expect(
+      provider.generateVision({
+        prompt: 'Identify the food.',
+        imageBase64: 'aGVsbG8gd29ybGQ=',
+        mimeType: 'image/jpeg',
+      }),
+    ).resolves.toMatchObject({ text: 'vision fallback' });
+    await expect(provider.generate({ prompt: 'hello again' })).resolves.toMatchObject({
+      text: 'object choices',
+    });
+  });
 });
