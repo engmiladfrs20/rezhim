@@ -107,15 +107,21 @@ describe('Admin App - Auth, RBAC, User Management, Modals & Localization', () =>
 
   it('handles admin login successfully and displays dashboard with credentials: include', async () => {
     const fetchCalls: Array<{ url: string; init?: RequestInit | undefined }> = [];
+    let loggedIn = false;
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
       const urlStr = String(url);
       fetchCalls.push({ url: urlStr, init });
 
       if (urlStr.includes('/api/v1/auth/me')) {
-        return new Response(JSON.stringify({ success: false }), { status: 401 });
+        return loggedIn
+          ? new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
+              status: 200,
+            })
+          : new Response(JSON.stringify({ success: false }), { status: 401 });
       }
       if (urlStr.includes('/api/v1/auth/login')) {
+        loggedIn = true;
         return new Response(JSON.stringify({ success: true, data: { user: mockAdminUser } }), {
           status: 200,
         });

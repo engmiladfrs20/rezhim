@@ -17,22 +17,34 @@ export const authRouter = new Hono<AppEnv>();
 export const AUTH_COOKIE_PROD = '__Host-nutriai_session';
 export const AUTH_COOKIE_DEV = 'nutriai_session';
 
+function isDeployedEnvironment(c: Context<AppEnv>): boolean {
+  return c.env.APP_ENV === 'staging' || c.env.APP_ENV === 'production';
+}
+
 export function applyAuthCookie(c: Context<AppEnv>, token: string): void {
   const isProd = c.env.APP_ENV === 'production';
+  const isDeployed = isDeployedEnvironment(c);
   const cookieName = isProd ? AUTH_COOKIE_PROD : AUTH_COOKIE_DEV;
   setCookie(c, cookieName, token, {
     path: '/',
-    secure: isProd,
+    // Pages and the Worker live on different sites in the hosted setup. A
+    // cross-site credentialed fetch requires SameSite=None and Secure.
+    secure: isDeployed,
     httpOnly: true,
-    sameSite: 'Lax',
+    sameSite: isDeployed ? 'None' : 'Lax',
     maxAge: 14 * 24 * 60 * 60, // 14 Days
   });
 }
 
 export function clearAuthCookie(c: Context<AppEnv>): void {
   const isProd = c.env.APP_ENV === 'production';
+  const isDeployed = isDeployedEnvironment(c);
   const cookieName = isProd ? AUTH_COOKIE_PROD : AUTH_COOKIE_DEV;
-  deleteCookie(c, cookieName, { path: '/', secure: isProd });
+  deleteCookie(c, cookieName, {
+    path: '/',
+    secure: isDeployed,
+    sameSite: isDeployed ? 'None' : 'Lax',
+  });
 }
 
 /**

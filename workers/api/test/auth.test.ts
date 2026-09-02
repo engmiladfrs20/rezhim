@@ -143,7 +143,7 @@ describe('Authentication API & Security Integration Tests', () => {
       expect(prodCookie).toContain('__Host-nutriai_session=');
       expect(prodCookie).toContain('Secure');
       expect(prodCookie).toContain('HttpOnly');
-      expect(prodCookie).toContain('SameSite=Lax');
+      expect(prodCookie).toContain('SameSite=None');
 
       const prodData = (await prodResp.json()) as ApiResponse<{ user: PublicUser }>;
       expectPublicUser(prodData.data.user as unknown as Record<string, unknown>);
