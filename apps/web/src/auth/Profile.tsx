@@ -142,7 +142,11 @@ export const Profile: FC = () => {
             <select
               id="localeSelect"
               value={locale}
-              onChange={(e) => setLocale(e.target.value as 'fa' | 'en')}
+              onChange={(e) => {
+                const nextLocale = e.target.value as 'fa' | 'en';
+                setLocale(nextLocale);
+                i18n.setLocale(nextLocale);
+              }}
               className="px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500"
             >
               <option value="fa">فارسی (FA)</option>

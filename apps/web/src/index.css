@@ -3,9 +3,19 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Vazirmatn', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Vazirmatn',
+    'Plus Jakarta Sans',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
-[dir="ltr"] {
-  font-family: 'Plus Jakarta Sans', 'Vazirmatn', system-ui, -apple-system, sans-serif;
+[dir='ltr'] {
+  font-family:
+    'Plus Jakarta Sans',
+    'Vazirmatn',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }

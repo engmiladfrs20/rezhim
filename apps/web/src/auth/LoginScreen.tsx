@@ -6,9 +6,15 @@ import { i18n, type SupportedLocale } from '@nutriai/localization';
 import { useAuth } from './AuthProvider';
 import { Activity } from 'lucide-react';
 
-export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
+export const LoginScreen = ({
+  onSwap,
+  initialLocale = 'en',
+}: {
+  onSwap: (locale: SupportedLocale) => void;
+  initialLocale?: SupportedLocale;
+}) => {
   const { login } = useAuth();
-  const [locale, setLocale] = useState<SupportedLocale>('en');
+  const [locale, setLocale] = useState<SupportedLocale>(initialLocale);
 
   const copy =
     locale === 'fa'
@@ -142,7 +148,7 @@ export const LoginScreen = ({ onSwap }: { onSwap: () => void }) => {
             {copy.registerPrompt}{' '}
             <button
               type="button"
-              onClick={onSwap}
+              onClick={() => onSwap(locale)}
               className="text-emerald-600 hover:underline font-semibold"
             >
               {copy.register}

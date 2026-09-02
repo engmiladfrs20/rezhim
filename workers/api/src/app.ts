@@ -38,6 +38,11 @@ app.use('*', securityHeadersMiddleware);
 
 // Restrictive CORS
 app.use('/api/*', corsMiddleware);
+// The public liveness/readiness probes are called directly from the web dashboard.
+// Apply the same origin policy here as for API routes so browsers do not fall back
+// to a misleading local mock when the real health endpoint is reachable.
+app.use('/health', corsMiddleware);
+app.use('/ready', corsMiddleware);
 app.use('/api/v1/auth/*', databaseMiddleware);
 app.use('/api/v1/users/*', databaseMiddleware);
 app.use('/api/v1/admin/users/*', databaseMiddleware);

@@ -19,6 +19,23 @@ describe('NutriAI API Worker Integration Tests (D1 Bound)', () => {
       const data = await response.json<{ status: string; database?: string }>();
       expect(data.status).toBe('ok');
     });
+
+    it('exposes CORS headers for the browser dashboard origin', async () => {
+      const request = new Request('http://localhost/health', {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      const ctx = createExecutionContext();
+      const response = await worker.fetch(
+        request,
+        { ...env, ALLOWED_ORIGINS: 'http://localhost:3000' },
+        ctx,
+      );
+      await waitOnExecutionContext(ctx);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
+      expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+    });
   });
 
   describe('GET /ready', () => {

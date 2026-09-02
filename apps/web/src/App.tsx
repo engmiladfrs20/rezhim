@@ -5,6 +5,7 @@ import { LoginScreen } from './auth/LoginScreen';
 import { Profile } from './auth/Profile';
 import { RegisterScreen } from './auth/RegisterScreen';
 import { DailyDashboard } from './dashboard/DailyDashboard';
+import { FeatureWorkspace } from './features/FeatureWorkspace';
 import {
   i18n,
   formatNumber,
@@ -31,6 +32,7 @@ export const App: FC = () => {
   const [loadingHealth, setLoadingHealth] = useState(false);
   const { user, logout, isLoading: authLoading } = useAuth();
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const [authLocale, setAuthLocale] = useState<SupportedLocale>('en');
 
   useEffect(() => {
     // Synchronize HTML element lang & dir attributes
@@ -75,11 +77,11 @@ export const App: FC = () => {
         });
       }
     } catch {
-      // Fallback display for client test environments
+      // A browser/network failure must be visible as degraded, not as a false healthy mock.
       setHealthStatus({
-        status: 'ok',
-        service: 'nutriai-api (Local Mock Mode)',
-        version: '1.0.0',
+        status: 'degraded',
+        service: 'nutriai-api',
+        version: 'unknown',
         timestamp: new Date().toISOString(),
       });
     } finally {
@@ -99,9 +101,21 @@ export const App: FC = () => {
 
   if (!user) {
     return authView === 'login' ? (
-      <LoginScreen onSwap={() => setAuthView('register')} />
+      <LoginScreen
+        initialLocale={authLocale}
+        onSwap={(nextLocale) => {
+          setAuthLocale(nextLocale);
+          setAuthView('register');
+        }}
+      />
     ) : (
-      <RegisterScreen onSwap={() => setAuthView('login')} />
+      <RegisterScreen
+        initialLocale={authLocale}
+        onSwap={(nextLocale) => {
+          setAuthLocale(nextLocale);
+          setAuthView('login');
+        }}
+      />
     );
   }
 
@@ -198,6 +212,8 @@ export const App: FC = () => {
         </section>
 
         <DailyDashboard />
+
+        <FeatureWorkspace isAdmin={user.role === 'admin'} />
 
         {/* Monorepo Architecture Overview Grid */}
         <section aria-label="Monorepo Modules Overview" className="space-y-4">
@@ -323,7 +339,7 @@ export const App: FC = () => {
               </div>
               <div className="flex justify-between items-center text-slate-700">
                 <span>تعداد کل ماژول‌های فعال:</span>
-                <span className="font-bold">{formatNumber(8, locale)} ماژول</span>
+                <span className="font-bold">{formatNumber(19, locale)} ماژول</span>
               </div>
             </div>
           </article>
