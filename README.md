@@ -34,6 +34,7 @@
 ```text
 ├── apps/
 │   ├── web/           # سامانه وب React 18 + Vite + Tailwind (پوسته اصلی کاربر)
+│   │                  # راهنمای امکانات و PWA: docs/WEB_APP.md
 │   ├── admin/         # پنل مدیریت React 18 + Vite (پوسته ایزوله ادمین)
 │   └── mobile/        # اپلیکیشن موبایل React Native + Expo (پشتیبانی کامل از اندروید و RTL)
 ├── data/
