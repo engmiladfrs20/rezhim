@@ -24,6 +24,7 @@ export const RegisterScreen = ({
           displayName: 'نام نمایشی',
           email: 'ایمیل',
           password: 'رمز عبور (حداقل ۱۲ کاراکتر)',
+          requirements: 'نام، ایمیل معتبر و رمز عبور حداقل ۱۲ کاراکتری را وارد کنید.',
           submit: 'ساخت حساب',
           submitting: 'در حال ثبت‌نام...',
           prompt: 'قبلاً حساب دارید؟',
@@ -36,6 +37,8 @@ export const RegisterScreen = ({
           displayName: 'Display Name',
           email: 'Email Address',
           password: 'Master Password (12+ chars)',
+          requirements:
+            'Enter a display name, a valid email, and a password of at least 12 characters.',
           submit: 'Create Account',
           submitting: 'Registering...',
           prompt: 'Already have an account?',
@@ -105,7 +108,11 @@ export const RegisterScreen = ({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {errors.root && (
-            <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm border border-red-100 flex items-center">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="bg-red-50 text-red-700 p-3 rounded-lg text-sm border border-red-100 flex items-center"
+            >
               {errors.root.message}
             </div>
           )}
@@ -147,10 +154,14 @@ export const RegisterScreen = ({
               id="regPassword"
               type="password"
               {...register('password')}
+              autoComplete="new-password"
               dir="ltr"
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
             />
             {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
+            <p className="text-slate-500 text-xs" role="note">
+              {copy.requirements}
+            </p>
           </div>
 
           <button
