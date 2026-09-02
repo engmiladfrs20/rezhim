@@ -144,6 +144,28 @@ describe('UserDashboard', () => {
         return new Response(JSON.stringify({ success: true, data: targets }), { status: 200 });
       if (url.includes('/api/v1/meal-plans/generate'))
         return new Response(JSON.stringify({ success: true, data: plan }), { status: 200 });
+      if (url.includes('/api/v1/substitutions'))
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              algorithmVersion: 'test',
+              reference: plan.days[0]!.meals[0]!.nutrition.items[0],
+              recommendations: [
+                {
+                  food: {
+                    ...plan.days[0]!.meals[1]!.nutrition.items[0],
+                    foodId: 'food-2',
+                    foodNameFa: 'نخود پخته',
+                  },
+                  similarityScore: 0.9,
+                  reasons: ['هم‌ارزش'],
+                },
+              ],
+            },
+          }),
+          { status: 200 },
+        );
       if (url.includes('/api/v1/diary') && init?.method === 'POST')
         return new Response(JSON.stringify({ success: true, data: { entry: {} } }), {
           status: 201,
@@ -182,6 +204,8 @@ describe('UserDashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ساخت برنامه من' }));
     expect(await screen.findByText('برنامهٔ اختصاصی تو آماده شد ✨')).toBeInTheDocument();
     expect(screen.getByText('وعده‌هایت آماده‌اند')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'تعویض غذا' })[0]!);
+    expect(await screen.findByText('نخود پخته جایگزین وعده شد.')).toBeInTheDocument();
     const search = screen.getByPlaceholderText(/عدس/);
     fireEvent.change(search, { target: { value: 'عدس' } });
     expect(await screen.findByRole('button', { name: /عدس پخته/ })).toBeInTheDocument();

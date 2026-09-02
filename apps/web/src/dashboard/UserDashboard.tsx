@@ -5,7 +5,9 @@ import type {
   CalculatedNutritionTargets,
   DailyDiarySummary,
   FoodSummary,
+  FoodPortionNutrition,
   GeneratedMealPlan,
+  FoodSubstitutionResult,
   PublicUser,
   PaginatedResult,
   UserNutritionGoal,
@@ -470,6 +472,54 @@ export const UserDashboard: FC<{
     },
     onError: (error) => setNotice(errorMessage(error)),
   });
+  const replaceMeal = useMutation({
+    mutationFn: (input: { mealType: string; item: FoodPortionNutrition }) =>
+      apiRequest<FoodSubstitutionResult>('/api/v1/substitutions', {
+        method: 'POST',
+        body: {
+          food_id: input.item.foodId,
+          grams: input.item.portionGrams,
+          candidate_food_ids: (plan?.candidateFoodIds ?? []).filter(
+            (id) => id !== input.item.foodId,
+          ),
+          limit: 1,
+        },
+      }),
+    onSuccess: (result, input) => {
+      const replacement = result.recommendations[0]?.food;
+      if (!replacement) {
+        setNotice('جایگزین مناسبی برای این وعده پیدا نشد.');
+        return;
+      }
+      setPlan((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          days: current.days.map((day) => ({
+            ...day,
+            meals: day.meals.map((meal) =>
+              meal.mealType === input.mealType
+                ? {
+                    ...meal,
+                    nutrition: {
+                      ...meal.nutrition,
+                      totalPortionGrams: replacement.portionGrams,
+                      totalEnergyKcal: replacement.energyKcal,
+                      totalProteinGrams: replacement.proteinGrams,
+                      totalCarbsGrams: replacement.carbsGrams,
+                      totalFatGrams: replacement.fatGrams,
+                      items: [replacement],
+                    },
+                  }
+                : meal,
+            ),
+          })),
+        };
+      });
+      setNotice(`${replacement.foodNameFa} جایگزین وعده شد.`);
+    },
+    onError: (error) => setNotice(errorMessage(error)),
+  });
   const meals = plan?.days[0]?.meals ?? [];
   const consumed = diary.data?.nutrition;
   const calorieProgress =
@@ -675,7 +725,8 @@ export const UserDashboard: FC<{
                   </button>
                   <button
                     type="button"
-                    onClick={() => setWizardOpen(true)}
+                    disabled={replaceMeal.isPending}
+                    onClick={() => item && replaceMeal.mutate({ mealType: meal.mealType, item })}
                     className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:border-emerald-300 hover:text-emerald-700"
                     aria-label="تعویض غذا"
                   >
