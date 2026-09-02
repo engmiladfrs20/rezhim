@@ -55,7 +55,10 @@ jobs:
         run: pnpm typecheck
 
       - name: Unit Tests with Coverage
-        run: pnpm test:coverage
+        # Cloudflare Workerd integration tests are resource-heavy and share
+        # a runner with the frontend Vitest suites. Serializing Turbo tasks
+        # avoids runner contention and makes the D1 test result reproducible.
+        run: pnpm test:coverage --concurrency=1
 
       - name: Dataset Validation & Provenance Check
         run: pnpm data:validate
